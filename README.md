@@ -9,7 +9,8 @@ Hệ thống được xây dựng theo kiến trúc Microservices hướng tới
 - **Backend:** FastAPI (Python) - API First Design.
 - **Database:** MongoDB (Lưu trữ đơn hàng, vận đơn), PostgreSQL (Data Warehouse).
 - **AI Module:** YOLOv8 + CRNN (Nhận diện biển số xe tải ra vào kho).
-- **Data Engineering:** - **Apache Spark:** Xử lý và chuyển đổi dữ liệu (ETL).
+- **Data Engineering:**
+    - **Apache Spark:** Xử lý và chuyển đổi dữ liệu (ETL).
     - **Apache Airflow:** Điều phối và lập lịch các job dữ liệu.
 - **Security:** Keycloak (Centralized Identity Management).
 
