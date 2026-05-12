@@ -70,8 +70,13 @@ export default function Home() {
                   {orders.map((order, index) => (
                     <div key={index} className="p-4 border rounded-lg flex justify-between items-center bg-gray-50">
                       <div>
-                        <p className="font-bold text-blue-800">{order.id}</p>
-                        <p className="text-sm text-gray-600">Tài xế: {order.driver}</p>
+                        {/* Dùng order_code (KH-9999) hoặc _id của MongoDB */}
+                        <p className="font-bold text-blue-800">Mã: {order.order_code || order._id}</p>
+                        
+                        {/* Nếu chưa có tài xế thì hiện chữ "Chưa phân công" */}
+                        <p className="text-sm text-gray-600">
+                          Tài xế: <span className="font-medium text-gray-800">{order.assigned_driver_id || "Chưa phân công"}</span>
+                        </p>
                       </div>
                       <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
                         {order.status}
