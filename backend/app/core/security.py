@@ -36,17 +36,15 @@ class RequireRole:
         self.allowed_roles = allowed_roles
 
     def __call__(self, user: dict = Depends(verify_token)):
-        # Trích xuất danh sách huy hiệu từ Token của Keycloak
-        realm_access = user.get("realm_access", {})
-        user_roles = realm_access.get("roles", [])
+    # Thay vì user.get("realm_access"), hãy lấy trực tiếp từ root
+        user_roles = user.get("roles", []) 
 
-        # Kiểm tra xem user có sở hữu ít nhất 1 quyền được phép không
         for role in self.allowed_roles:
             if role in user_roles:
-                return user # Cho qua chốt kiểm soát
+                return user
                 
-        # Nếu quét hết mà không thấy quyền, thẳng tay đuổi ra!
         raise HTTPException(
             status_code=403, 
-            detail="403 Forbidden: Bạn không có quyền Admin để thực hiện hành động này!"
+            detail=f"Quyền truy cập bị từ chối. Yêu cầu vai trò: {self.allowed_roles}"
         )
+            

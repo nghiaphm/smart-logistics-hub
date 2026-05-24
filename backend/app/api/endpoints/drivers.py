@@ -1,56 +1,71 @@
-from fastapi import APIRouter, Depends, HTTPException # Chuyển HTTPException sang đây
+# app/api/endpoints/drivers.py
+
+from backend.app.api.deps import get_current_driver_from_db
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from datetime import datetime, timezone
-from bson import ObjectId # Cần thiết để xử lý ID của MongoDB
-from bson.errors import InvalidId # Xử lý lỗi nếu ID không đúng định dạng
+from bson import ObjectId
+from bson.errors import InvalidId
 
-from ...models.driver import DriverCreate, DriverResponse
+from ...schemas.driver import DriverCreate, DriverResponse
 from ...db.database import drivers_collection
-from ...core.security import verify_token
+# Import thêm RequireRole ở đây
+from ...core.security import verify_token, RequireRole 
 
 router = APIRouter()
 
-# Đã bỏ dấu "/" đi để tránh lỗi 307 Redirect
-@router.post("")
+# --- CHỨC NĂNG DÀNH CHO ADMIN ---
+
+@router.post("", dependencies=[Depends(RequireRole(["admin"]))])
 async def create_driver(driver: DriverCreate, user: dict = Depends(verify_token)):
+    """Chỉ Admin mới được tạo tài xế mới"""
     driver_dict = driver.model_dump(by_alias=True)
     driver_dict["status"] = "AVAILABLE"
     driver_dict["current_location"] = None
-    
-    # Dùng datetime có timezone chuẩn
     driver_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     driver_dict["created_by"] = user.get("preferred_username")
     
     await drivers_collection.insert_one(driver_dict)
     return {"message": "Driver created successfully", "driver_code": driver_dict["driver_code"]}
-    
 
-# Đã bỏ dấu "/" đi
-@router.get("", response_model=list[DriverResponse])
-async def get_drivers(user: dict = Depends(verify_token)):
+@router.get("", response_model=list[DriverResponse], dependencies=[Depends(RequireRole(["admin"]))])
+async def get_drivers():
+    """Chỉ Admin mới được xem danh sách tất cả tài xế"""
     drivers = []
     async for doc in drivers_collection.find({}):
         doc["_id"] = str(doc["_id"])
         drivers.append(doc)
     return drivers
 
-
-class LocationUpdate(BaseModel):
-    lat: float
-    lng: float
-
-
-@router.delete("/{driver_id}")
-async def delete_driver(driver_id: str, user: dict = Depends(verify_token)):
+@router.delete("/{driver_id}", dependencies=[Depends(RequireRole(["admin"]))])
+async def delete_driver(driver_id: str):
+    """Chỉ Admin mới có quyền xóa tài xế"""
     try:
-        # Ép kiểu String thành ObjectId để MongoDB có thể hiểu được
         obj_id = ObjectId(driver_id)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Định dạng ID không hợp lệ")
 
     result = await drivers_collection.delete_one({"_id": obj_id})
-    
     if result.deleted_count == 1:
         return {"message": f"Đã xóa thành công tài xế có ID: {driver_id}"}
-    else:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài xế này!")
+    raise HTTPException(status_code=404, detail="Không tìm thấy tài xế này!")
+
+
+# --- CHỨC NĂNG DÀNH RIÊNG CHO DRIVER ---
+
+@router.get("/me")
+async def get_my_driver_profile(full_data: dict = Depends(get_current_driver_from_db)):
+    # Bây giờ dữ liệu này chắc chắn đã tồn tại trong DB
+    db_profile = full_data["profile"]
+    identity = full_data["identity"]
+    
+    return {
+        "status": "success",
+        "driver_info": {
+            "name": identity.get("name"),
+            "hub": identity.get("HUB_MY_THO"),
+            "db_status": db_profile.get("status"),
+            "phone_in_db": db_profile.get("phone"),
+            "license_plate": db_profile.get("vehicle", {}).get("license_plate")
+        }
+    }
