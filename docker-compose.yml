@@ -1,4 +1,61 @@
 services:
+  # --- MARIADB (Primary business database) ---
+  mariadb:
+    platform: linux/amd64
+    image: mariadb:11
+    container_name: smart-logistic-project-mariadb-1
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: smart_logistics
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - my-network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # --- BACKEND (Go API) ---
+  backend:
+    platform: linux/amd64
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+      - "9090:9090"
+    environment:
+      APP_ENV: development
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: "8000"
+      METRICS_ENABLED: "true"
+      METRICS_HOST: 0.0.0.0
+      METRICS_PORT: "9090"
+      MARIADB_HOST: mariadb
+      MARIADB_PORT: "3306"
+      MARIADB_USER: root
+      MARIADB_PASSWORD: root
+      MARIADB_DB_NAME: smart_logistics
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: web-app-project
+      KEYCLOAK_CLIENT_ID: fastapi_backend_client
+      DEV_SKIP_AUTH: "true"
+      REDIS_ENABLED: "false"
+      FRONTEND_URL: http://localhost:3000
+      AUTO_MIGRATE: "false"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - my-network
+
   # --- CỤM KEYCLOAK (Auth) ---
   postgres-keycloak:
     image: postgres:16
@@ -28,38 +85,10 @@ services:
     networks:
       - my-network
 
-  # --- CỤM MONGODB (Database chính cho Ứng dụng) ---
-  mongodb:
-    image: mongo:latest
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - my-network
-
-  mongo-express:
-    image: mongo-express:latest
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: password
-      ME_CONFIG_MONGODB_URL: mongodb://admin:password@mongodb:27017/
-      ME_CONFIG_BASICAUTH_USERNAME: dev
-      ME_CONFIG_BASICAUTH_PASSWORD: dev
-    ports:
-      - "8081:8081"
-    depends_on:
-      - mongodb
-    networks:
-      - my-network
-
 networks:
   my-network:
     driver: bridge
 
 volumes:
   keycloak_db_data:
-  mongodb_data:
+  mariadb_data:
