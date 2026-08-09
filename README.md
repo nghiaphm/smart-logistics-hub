@@ -145,3 +145,4 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR:
 ## Why MariaDB?
 
 MariaDB was chosen over MongoDB for the business domain because the majority of logistics data (orders, inventory, billing, trips) is inherently relational — requiring joins, transactional integrity, and referential constraints between entities like orders and order_items, inventory levels per warehouse, driver-to-trip assignments, and tracking event timelines.
+
