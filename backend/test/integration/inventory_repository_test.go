@@ -6,15 +6,16 @@ import (
 	"testing"
 
 	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
-	"my-web-app.com/smart-logistic-hub/internal/inventory"
+	"my-web-app.com/smart-logistic-hub/internal/inventory/entity"
+	invrepo "my-web-app.com/smart-logistic-hub/internal/inventory/repository"
 )
 
 func TestInventoryRepositoryCRUD(t *testing.T) {
 	truncateTables(t)
 	ctx := context.Background()
-	repo := inventory.NewRepository(testDB)
+	repo := invrepo.NewRepository(testDB)
 
-	inv := &inventory.Inventory{
+	inv := &entity.Inventory{
 		ProductID:    100,
 		WarehouseID:  200,
 		AvailableQty: 10,
@@ -68,7 +69,7 @@ func TestInventoryRepositoryCRUD(t *testing.T) {
 func TestInventoryRepositoryNotFound(t *testing.T) {
 	truncateTables(t)
 	ctx := context.Background()
-	repo := inventory.NewRepository(testDB)
+	repo := invrepo.NewRepository(testDB)
 
 	if _, err := repo.GetByID(ctx, 999999); !errors.Is(err, apierrors.ErrNotFound) {
 		t.Errorf("GetByID() error = %v, want ErrNotFound", err)
@@ -76,7 +77,7 @@ func TestInventoryRepositoryNotFound(t *testing.T) {
 	if _, err := repo.GetByProductWarehouse(ctx, 1, 2); !errors.Is(err, apierrors.ErrNotFound) {
 		t.Errorf("GetByProductWarehouse() error = %v, want ErrNotFound", err)
 	}
-	if err := repo.Update(ctx, 999999, &inventory.Inventory{}); !errors.Is(err, apierrors.ErrNotFound) {
+	if err := repo.Update(ctx, 999999, &entity.Inventory{}); !errors.Is(err, apierrors.ErrNotFound) {
 		t.Errorf("Update() error = %v, want ErrNotFound", err)
 	}
 	if err := repo.Delete(ctx, 999999); !errors.Is(err, apierrors.ErrNotFound) {
@@ -87,10 +88,10 @@ func TestInventoryRepositoryNotFound(t *testing.T) {
 func TestInventoryRepositoryListAndCount(t *testing.T) {
 	truncateTables(t)
 	ctx := context.Background()
-	repo := inventory.NewRepository(testDB)
+	repo := invrepo.NewRepository(testDB)
 
 	for i := int64(1); i <= 3; i++ {
-		inv := &inventory.Inventory{
+		inv := &entity.Inventory{
 			ProductID:    1000 + i,
 			WarehouseID:  2000 + i,
 			AvailableQty: int(i),

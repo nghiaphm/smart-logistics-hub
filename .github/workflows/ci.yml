@@ -44,6 +44,15 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      - name: Run migrations
+        run: go run ./cmd/migrate up
+        env:
+          MARIADB_HOST: localhost
+          MARIADB_PORT: "3306"
+          MARIADB_USER: root
+          MARIADB_PASSWORD: root
+          MARIADB_DB_NAME: smart_logistics
+
       - name: Test
         run: go test ./...
         env:

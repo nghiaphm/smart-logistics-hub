@@ -1,274 +1,147 @@
-# 🚚 Smart Logistics Hub (SPX Clone)
+# Smart Logistics Hub
 
-Smart Logistics Hub là dự án mô phỏng hệ thống vận hành kho bãi và giao vận hiện đại dựa trên mô hình của Shopee Express (SPX).
-Hệ thống được xây dựng theo định hướng thực tế với kiến trúc Backend, AI và Data Engineering nhằm mô phỏng các bài toán logistics quy mô lớn như:
+Smart Logistics Hub is a Go-based logistics operations system modeling the warehouse and delivery workflows of Shopee Express (SPX). It serves as a learning vehicle for Go backend development, production-oriented architecture, and microservices readiness.
 
-* Quản lý vận đơn và điều phối giao hàng
-* Warehouse Management System (WMS)
-* Transportation Management System (TMS)
-* AI nhận diện biển số xe tải tại cổng kho
-* Data Pipeline & Analytics phục vụ phân tích vận hành
+**Tech stack (current)**: Go 1.26 + Gin v1.12, MariaDB 11, Keycloak (JWT RS256), Prometheus metrics, Docker Compose.
 
 ---
 
-# 🏗️ System Architecture
-
-Hệ thống được xây dựng theo mô hình **Modular Monolith kết hợp Microservices** nhằm đảm bảo:
-
-* Dễ mở rộng
-* Tách biệt domain
-* Tối ưu hiệu năng cho AI processing
-* Hỗ trợ Data Engineering pipeline
-
-## ⚙️ Tech Stack
-
-### Frontend
-
-* **Next.js**
-* Mô phỏng giao diện quản lý vận đơn và vận hành kho của SPX
-
-### Backend
-
-* **FastAPI (Python)**
-* API First Design
-* RESTful API
-* Pydantic Validation
-
-### Database
-
-* **MongoDB**
-
-  * OLTP Database
-  * Lưu trữ dữ liệu vận hành:
-
-    * Orders
-    * Trips
-    * Tracking Logs
-    * Inventory
-    * AI Events
-
-* **PostgreSQL**
-
-  * Data Warehouse (OLAP)
-  * Phân tích dữ liệu doanh thu và hiệu suất vận hành
-
-### AI Module
-
-* **YOLOv8 + CRNN**
-* Nhận diện biển số xe tải tại cổng kho
-* Vehicle Matching & Tracking
-
-### Data Engineering
-
-* **Apache Spark**
-
-  * ETL Pipeline
-  * Data Transformation
-
-* **Apache Airflow**
-
-  * Workflow Scheduling
-  * Pipeline Automation
-
-### Security
-
-* **Keycloak**
-* Centralized Identity & Access Management
-
----
-
-# 🧩 Core Business Flow
-
-## 📦 Logistics Flow
-
-Order Created
-→ Assign Driver
-→ Create Trip
-→ Tracking Logs
-→ Delivery Completed
-
----
-
-## 🏭 Warehouse Flow
-
-Inbound
-→ Inventory Update
-→ Picking
-→ Dispatch
-→ Outbound
-
----
-
-## 🤖 AI Gate Flow
-
-Camera Detection
-→ Plate Recognition
-→ Driver Matching
-→ AI Event Created
-→ Tracking Updated
-
----
-
-# 🗄️ Database Design
-
-## Core MongoDB Collections
-
-* `orders`
-* `drivers`
-* `trips`
-* `tracking_logs`
-* `inventory`
-* `warehouses`
-* `inbounds`
-* `billing`
-* `ai_events`
-
----
-
-# 🚀 Current Features
-
-* [x] Order Management System
-* [x] Tracking Log System
-* [x] Warehouse & Inventory Schema
-* [x] Transportation & Trip Management
-* [x] MongoDB Schema Design
-* [x] RESTful API Structure
-* [x] API First Backend Architecture
-
-### 🚧 In Progress
-
-* [ ] AI Gate Automation
-* [ ] Vehicle Plate Recognition
-* [ ] Spark ETL Pipeline
-* [ ] Airflow DAG Automation
-* [ ] PostgreSQL Data Warehouse
-* [ ] Analytics Dashboard
-
----
-
-# 📌 Roadmap
-
-## v0.1 - Core Logistics Backend
-
-* [x] Orders
-* [x] Drivers
-* [x] Trips
-* [x] Tracking Logs
-* [x] Warehouses
-* [x] MongoDB Integration
-
-## v0.2 - Warehouse Operations
-
-* [ ] Inventory Management
-* [ ] Inbound Operations
-* [ ] Inventory Movements
-
-## v0.3 - AI Smart Gate
-
-* [ ] YOLOv8 Integration
-* [ ] OCR License Plate Recognition
-* [ ] Driver & Vehicle Matching
-
-## v0.4 - Data Engineering Platform
-
-* [ ] Spark ETL
-* [ ] Airflow Scheduling
-* [ ] PostgreSQL OLAP
-* [ ] Analytics Dashboard
-
----
-
-# 📄 Why MongoDB?
-
-MongoDB được sử dụng cho hệ thống vận hành (OLTP) vì:
-
-* Flexible schema cho logistics domain
-* High write throughput
-* Hỗ trợ tracking logs & GPS data
-* Tối ưu cho nested document structures
-* Dễ mở rộng cho event-based systems
-
----
-
-# 🛠️ Project Structure
-
-```text
-.
-├── backend/                  # FastAPI Backend
-│   ├── app/
-│   │   ├── api/              # API Endpoints
-│   │   ├── models/           # Pydantic Schemas
-│   │   ├── services/         # Business Logic
-│   │   ├── repositories/     # Database Layer
-│   │   └── core/             # Config & Security
-│   └── requirements.txt
-│
-├── frontend/                 # Next.js Frontend
-│
-├── ai_module/                # YOLOv8 & OCR Service
-│
-├── data_pipeline/            # Spark Jobs & Airflow DAGs
-│
-├── docs/
-│   ├── architecture/
-│   ├── database/
-│   ├── business-flow/
-│   └── api/
-│
-└── .gitignore
-```
-
----
-
-# ⚙️ Getting Started
-
-## Backend
+## Quick Start
 
 ```bash
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+# 1. Start infrastructure (MariaDB + Keycloak + backend)
+docker compose up -d
+
+# 2. Run database migrations (if not using AUTO_MIGRATE)
+docker compose exec backend /migrate up
+
+# 3. Verify
+curl http://localhost:8000/healthz
+curl http://localhost:8000/readyz
+curl http://localhost:9090/metrics
+```
+
+The backend exposes:
+- **API** on `localhost:8000` (`/api/v1/orders`, `/api/v1/drivers`, `/api/v1/inventory`, `/api/v1/tracking-logs`)
+- **Liveness** at `/healthz` (no DB check)
+- **Readiness** at `/readyz` (DB ping)
+- **Prometheus metrics** on `localhost:9090` (separate internal port)
+
+---
+
+## Architecture
+
+**Modular monolith** with domain-first structure under `backend/internal/`:
+
+```
+backend/
+├── cmd/api/main.go              # Entry point (API + metrics server)
+├── cmd/migrate/main.go          # Migration CLI (golang-migrate)
+├── migrations/                  # SQL migration files
+├── docker-entrypoint.sh         # Container startup (migrate + server)
+├── internal/
+│   ├── driver/                  # Driver domain (CRUD)
+│   ├── order/                   # Order domain (CRUD + RBAC)
+│   ├── inventory/               # Inventory domain (CRUD)
+│   ├── tracking/                # Tracking domain (CRUD)
+│   ├── ai/                      # AI event entity (planned)
+│   ├── billing/                 # Billing entity (planned)
+│   ├── inbound/                 # Inbound entity (planned)
+│   ├── product/                 # Product entity (planned)
+│   ├── trip/                    # Trip entity (planned)
+│   ├── warehouse/               # Warehouse entity (planned)
+│   ├── common/errors/           # Shared APIError sentinels
+│   └── infrastructure/
+│       ├── config/              # Env-based config
+│       ├── database/            # MariaDB connection
+│       ├── redis/               # Redis client (optional)
+│       ├── keycloak/            # JWT verifier (JWKS)
+│       ├── middleware/          # auth, cors, rbac, error, request_id, metrics
+│       └── logger/              # slog wrapper
+└── test/integration/            # Repository integration tests
+```
+
+**Domain pattern** (handler → service → repository → MariaDB):
+```
+driver/
+├── entity/driver.go
+├── dto/request.go, response.go
+├── handler/handler.go
+├── service/service.go, service_test.go
+├── repository/mariadb.go
+└── routes.go
 ```
 
 ---
 
-## Frontend
+## Running Tests
 
 ```bash
-cd frontend
-npm install
-npm run dev
+# Unit tests (mock repos, no DB needed)
+go test ./internal/...
+
+# Integration tests (requires running MariaDB)
+# Start the compose stack or set MARIADB_* env vars pointing to a test DB:
+MARIADB_HOST=localhost MARIADB_PORT=3306 MARIADB_USER=root \
+MARIADB_PASSWORD=root MARIADB_DB_NAME=smart_logistics \
+go test ./test/integration/...
 ```
 
----
-
-# 🎯 Project Goal
-
-Mục tiêu của dự án là xây dựng mô hình Smart Logistics Hub hiện đại với:
-
-* Warehouse Management System (WMS)
-* Transportation Management System (TMS)
-* AI-based Logistics Monitoring
-* Big Data Analytics Pipeline
-
-Dự án tập trung vào:
-
-* System Design
-* Backend Engineering
-* AI Integration
-* Data Engineering
-* Real-world Logistics Workflow
+Tests apply migrations automatically (down → up) to ensure a clean schema per run.
 
 ---
 
-# 📚 Future Improvements
+## Database Migrations
 
-* Redis Caching
-* Kafka Event Streaming
-* Route Optimization
-* Real-time GPS Tracking
-* AI-based Warehouse Monitoring
-* BI Dashboard & Reporting
-* Microservices Migration
+Managed by [golang-migrate](https://github.com/golang-migrate/migrate) (`cmd/migrate`):
+
+```bash
+# From host (using compose)
+docker compose exec backend /migrate up
+docker compose exec backend /migrate version
+
+# From local Go
+go run ./cmd/migrate up
+go run ./cmd/migrate down
+go run ./cmd/migrate version
+```
+
+**AUTO_MIGRATE** (default `false` in `docker-compose.yml`): set `true` in development overrides (`docker-compose.override.yml`) to auto-run migrations on every container start. In CI, migrations run as an explicit step before `go test`.
 
 ---
+
+## Configuration
+
+| Env | Purpose |
+|---|---|
+| `APP_ENV` | `development` / `production` |
+| `SERVER_HOST` / `SERVER_PORT` | API listen address |
+| `MARIADB_HOST` / `PORT` / `USER` / `PASSWORD` / `DB_NAME` | Database connection |
+| `METRICS_ENABLED` / `HOST` / `PORT` | Prometheus metrics server |
+| `AUTO_MIGRATE` | Run migrations on container start |
+| `KEYCLOAK_SERVER_URL` / `REALM` / `CLIENT_ID` | Keycloak auth |
+| `DEV_SKIP_AUTH` | Skip JWT verification (development only) |
+| `REDIS_ENABLED` | Enable Redis caching (optional) |
+
+See `backend/.env.example` for full template. `docker-compose.yml` provides suitable development defaults.
+
+---
+
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR:
+
+1. gofmt check → 2. go vet → 3. migrate up (MariaDB service) → 4. go test → 5. go build
+
+---
+
+## Stub Directories
+
+- **`ai_service/`** — placeholder for future AI-based plate recognition (YOLOv8 + OCR). No implementation yet.
+- **`data_pipeline/`** — placeholder for future Spark/ETL + Airflow DAGs. No implementation yet.
+
+---
+
+## Why MariaDB?
+
+MariaDB was chosen over MongoDB for the business domain because the majority of logistics data (orders, inventory, billing, trips) is inherently relational — requiring joins, transactional integrity, and referential constraints between entities like orders and order_items, inventory levels per warehouse, driver-to-trip assignments, and tracking event timelines.

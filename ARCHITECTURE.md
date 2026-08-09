@@ -52,38 +52,40 @@ smart-logistic-project/
 │   └── architecture-refactor.md
 └── backend/
     ├── .env                      # Empty
-    ├── .env.example              # Template: MariaDB, Redis, S3, Keycloak, server
-    ├── Dockerfile                # Multi-stage Go build (golang:1.24-alpine → alpine:3.21)
+    ├── .env.example              # Template: MariaDB, Redis, S3, Keycloak, server, metrics, AUTO_MIGRATE
+    ├── Dockerfile                # Multi-stage Go build (golang:1.26-alpine → alpine:3.20)
+    ├── docker-entrypoint.sh      # Runs /migrate up (unless AUTO_MIGRATE=false) then execs /server
     ├── go.mod / go.sum
-    ├── cmd/api/main.go           # Application entry point
+    ├── cmd/api/main.go           # Application entry point (API + metrics server)
+    ├── cmd/migrate/main.go       # golang-migrate CLI (up / down / version)
     ├── migrations/
-    │   ├── 000001_initial_schema.up.sql    # 13 tables
+    │   ├── 000001_initial_schema.up.sql    # 13 tables (golang-migrate format)
     │   └── 000001_initial_schema.down.sql  # Drop all tables
-    ├── pkg/utils/logger.go       # ORPHANED — unused by any other package
     └── internal/
         ├── common/
         │   └── errors/errors.go  # APIError struct + 6 sentinel errors
         ├── infrastructure/
-        │   ├── config/config.go          # Env-based config loading
+        │   ├── config/config.go          # Env-based config loading (incl. metrics)
         │   ├── database/mariadb.go       # MariaDB connection + pool
         │   ├── redis/client.go           # Redis client factory
         │   ├── keycloak/verifier.go      # JWTVerifier with JWKS + RSA
-        │   ├── keycloak/client.go        # ORPHANED — FetchJWKS never called
         │   ├── middleware/auth.go        # JWT auth middleware (accepts verifier interface)
         │   ├── middleware/cors.go        # CORS middleware
         │   ├── middleware/rbac.go        # RequireRole middleware
+        │   ├── middleware/error_handler.go  # Centralized error rendering (c.Error)
+        │   ├── middleware/request_id.go  # Request ID middleware + request-scoped logger
+        │   ├── middleware/metrics.go     # Prometheus HTTP metrics middleware
         │   └── logger/logger.go         # slog wrapper
         ├── driver/                       # FULLY IMPLEMENTED
         ├── order/                        # FULLY IMPLEMENTED
-        ├── inventory/                    # FULLY IMPLEMENTED (flat structure)
-        ├── tracking/                     # FULLY IMPLEMENTED (flat structure)
-        ├── auth/                         # STUB — 1-line file only
-        ├── ai/                           # Entity/DTO only (MongoDB-era bson tags)
-        ├── billing/                      # Entity/DTO only (MongoDB-era bson tags)
-        ├── inbound/                      # Entity/DTO only (MongoDB-era bson tags)
-        ├── product/                      # Entity/DTO only (MongoDB-era bson tags)
-        ├── trip/                         # Entity/DTO only (MongoDB-era bson tags)
-        └── warehouse/                    # Entity/DTO only (MongoDB-era bson tags)
+        ├── inventory/                    # FULLY IMPLEMENTED
+        ├── tracking/                     # FULLY IMPLEMENTED
+        ├── ai/                           # Entity/DTO only (SQL db tags, planned)
+        ├── billing/                      # Entity/DTO only (SQL db tags, planned)
+        ├── inbound/                      # Entity/DTO only (SQL db tags, planned)
+        ├── product/                      # Entity/DTO only (SQL db tags, planned)
+        ├── trip/                         # Entity/DTO only (SQL db tags, planned)
+        └── warehouse/                    # Entity/DTO only (SQL db tags, planned)
 ```
 
 ---
@@ -148,14 +150,15 @@ The entry point performs bootstrap in order:
 6. `middleware.AuthMiddleware(cfg, devSkipAuth, verifier)` — JWT auth middleware
 7. `middleware.CORSMiddleware(frontendURL)` — CORS middleware
 8. Gin router setup:
-   - Global: `gin.Recovery()`, CORS
-   - `/health` — public, pings DB
-   - `/readiness` — public, pings DB
+   - Global middleware chain: `RequestIDMiddleware()` → `gin.Recovery()` → CORS → `MetricsMiddleware()` → `ErrorHandler()`
+   - `/healthz` — public liveness, returns 200 while the process is alive (no DB check)
+   - `/readyz` — public readiness, pings MariaDB (503 when DB unreachable)
    - `/api/v1/orders/*` — auth-protected CRUD (admin-only DELETE)
    - `/api/v1/drivers/*` — auth-protected CRUD
-   - `/api/v1/inventory/*` — **no auth** CRUD
-   - `/api/v1/tracking-logs/*` — **no auth** CRUD
-9. HTTP server with graceful shutdown (SIGINT/SIGTERM, 10s drain)
+   - `/api/v1/inventory/*` — auth-protected CRUD (admin-only DELETE)
+   - `/api/v1/tracking-logs/*` — auth-protected CRUD (admin-only DELETE)
+9. Optional internal Prometheus metrics server on a separate port (`METRICS_PORT`, default 9090, controlled by `METRICS_ENABLED`) serving `/metrics`
+10. HTTP server with graceful shutdown (SIGINT/SIGTERM, 10s drain); both API and metrics servers are shut down cleanly
 
 **Dependency injection**: All dependencies wired manually in `main()` — no framework used.
 
@@ -177,8 +180,19 @@ The entry point performs bootstrap in order:
 
 ### 4.3 Domain Architecture Patterns
 
-**Implemented domains** (driver, order, inventory, tracking) follow:
+**All implemented domains** (driver, order, inventory, tracking) follow the same subdirectory structure:
 
+```
+internal/{domain}/
+├── entity/{entity}.go
+├── dto/request.go, dto/response.go
+├── handler/handler.go
+├── service/service.go, service_test.go
+├── repository/mariadb.go
+└── routes.go
+```
+
+Pattern:
 ```
 Handler (Gin context → typed DTO binding → calls service)
   ↓
@@ -189,38 +203,9 @@ Repository (SQL queries via database/sql)
 MariaDB
 ```
 
-**Two structural styles coexist**:
-
-1. **Subdirectory style** (driver, order):
-   ```
-   internal/order/
-   ├── entity/order.go, entity/order_item.go
-   ├── dto/request.go, dto/response.go
-   ├── handler/handler.go
-   ├── service/service.go
-   ├── repository/mariadb.go
-   └── routes.go
-   ```
-
-2. **Flat style** (inventory, tracking):
-   ```
-   internal/inventory/
-   ├── entity.go, dto.go, response.go
-   ├── handler.go, service.go, repository.go
-   └── routes.go
-   ```
-
-Both are valid. Package names match subdirectories for style 1, and the domain name for style 2.
-
 ### 4.4 Stub Domains (Entity/DTO Only)
 
-The domains `ai`, `billing`, `inbound`, `product`, `trip`, `warehouse` contain only entity and DTO definitions. Notable issues:
-
-- Entity files use `package models` with **`bson` struct tags** (MongoDB-era, never migrated to SQL)
-- DTO files use domain-specific packages (`package ai_events`, `package billings`, etc.)
-- No MariaDB repository, service, handler, or routes exist
-- These structs are **not imported** by any runtime code
-- They represent **planned but unimplemented** business capabilities
+The domains `ai`, `billing`, `inbound`, `product`, `trip`, `warehouse` contain only entity and DTO definitions with MariaDB-compatible `db` struct tags matching the migration schema. No handler, service, or repository implementations exist yet. These represent **planned** business capabilities with corresponding tables already in the MariaDB schema.
 
 ---
 
@@ -277,7 +262,9 @@ The domains `ai`, `billing`, `inbound`, `product`, `trip`, `warehouse` contain o
 | `auth.go` | `type JWTVerifier interface`, `func AuthMiddleware(cfg, devSkipAuth, verifier) gin.HandlerFunc` | Bearer token extraction, dev mode mock user, JWT verification via interface |
 | `cors.go` | `func CORSMiddleware(frontendURL string) gin.HandlerFunc` | CORS for configured frontend origin, common methods/headers, credentials, 12h max age |
 | `rbac.go` | `func RequireRole(allowedRoles ...string) gin.HandlerFunc` | Extracts roles from JWT `realm_access.roles` and `resource_access.*.roles` |
-| `error_handler.go` | `func ErrorHandler() gin.HandlerFunc` | Global error middleware registered via `r.Use(...)`. Renders errors recorded with `c.Error(err)` as `{ "error": { "code", "message" } }`, maps `*APIError` to its status code, masks unknown errors as generic 500 (logs detail server-side) |
+| `error_handler.go` | `func ErrorHandler() gin.HandlerFunc` | Global error middleware registered via `r.Use(...)`. Renders errors recorded with `c.Error(err)` as `{ "error": { "code", "message" } }`, maps `*APIError` to its status code, masks unknown errors as generic 500 (logs detail server-side via the request-scoped logger) |
+| `request_id.go` | `func RequestIDMiddleware() gin.HandlerFunc`, `func LoggerFromContext(c) *slog.Logger` | First middleware in the chain. Generates/reuses a request ID, sets gin `request_id`, attaches it to a request-scoped `slog` logger, and sets the `X-Request-ID` response header |
+| `metrics.go` | `func MetricsMiddleware() gin.HandlerFunc` | Records `http_requests_total{method,path,status}` and `http_request_duration_seconds{method,path}` for every request |
 
 ### 5.6 Logger (`internal/infrastructure/logger/`)
 
@@ -307,8 +294,9 @@ All four implemented domains receive the same `authMw` (JWT auth) parameter.
 
 | Method | Path | Auth | Role | Domain |
 |---|---|---|---|---|
-| GET | `/health` | Public | — | Global |
-| GET | `/readiness` | Public | — | Global |
+| GET | `/healthz` | Public | — | Global (liveness) |
+| GET | `/readyz` | Public | — | Global (readiness) |
+| GET | `/metrics` | Internal port | — | Global (Prometheus) |
 | GET | `/api/v1/orders/health` | Public | — | Order |
 | POST | `/api/v1/orders` | JWT | — | Order |
 | GET | `/api/v1/orders` | JWT | — | Order |
@@ -332,7 +320,7 @@ All four implemented domains receive the same `authMw` (JWT auth) parameter.
 | PUT | `/api/v1/tracking-logs/:id` | JWT | — | Tracking |
 | DELETE | `/api/v1/tracking-logs/:id` | JWT | admin | Tracking |
 
-**Notable**: All CRUD routes across all four domains require a valid JWT. DELETE routes for `orders`, `inventory`, and `tracking-logs` additionally require the `admin` role via `RequireRole("admin")`. Only health/readiness endpoints and `/api/v1/orders/health` are public.
+**Notable**: All CRUD routes across all four domains require a valid JWT. DELETE routes for `orders`, `inventory`, and `tracking-logs` additionally require the `admin` role via `RequireRole("admin")`. Only `/healthz`, `/readyz`, `/api/v1/orders/health` are public; `/metrics` is served on a separate internal port and is not part of the public API surface.
 
 ### 6.3 Inter-Service Communication
 
@@ -371,13 +359,22 @@ All four implemented domains receive the same `authMw` (JWT auth) parameter.
 
 **All tables**: InnoDB engine, utf8mb4 charset, timestamps with CURRENT_TIMESTAMP defaults.
 
-**Migration tool**: No migration tool configured in code (golang-migrate, atlas, etc. not in go.mod). SQL files exist but must be applied manually.
+**Migration tool**: **golang-migrate** (`github.com/golang-migrate/migrate/v4` with the mysql driver and file source). Migration files follow golang-migrate convention (`{version}_{description}.up.sql` / `.down.sql`, e.g. `000001_initial_schema.up.sql`). A dedicated CLI at `backend/cmd/migrate/main.go` supports `up`, `down`, and `version` subcommands, reading the same `MARIADB_*` env vars as the app.
+
+**Migration strategy — explicit CLI, not auto-run:**
+
+| Context | `AUTO_MIGRATE` | Who runs migration | Rationale |
+|---|---|---|---|
+| **docker-compose.yml** (default) | `false` | Manual: `docker compose exec backend /migrate up` | Production-like safety — no surprise schema changes on restart. The separate `cmd/migrate` CLI was chosen precisely to decouple migration from server startup. |
+| **docker-compose.override.yml** (dev convenience) | `true` (override) | `docker-entrypoint.sh` auto-runs on container start | Developer convenience — migration runs automatically so `docker compose up -d` just works. |
+| **CI workflow** (`.github/workflows/ci.yml`) | N/A | Explicit `go run ./cmd/migrate up` step before `go test` | CI always runs migrations explicitly via the CLI, independent of `AUTO_MIGRATE`. |
+| **`test/integration/setup_test.go`** | N/A | Applies raw SQL directly (down + up) as part of `TestMain` | Self-contained for hermetic tests — does not depend on golang-migrate versioning. |
+
+The `docker-entrypoint.sh` script gates behind `AUTO_MIGRATE={true|false}`. Because golang-migrate uses MySQL advisory locks (`GET_LOCK`), concurrent startup of multiple replicas with `AUTO_MIGRATE=true` would not race — but the explicit `false` default in compose ensures migration intent is always deliberate outside of dev/CI.
 
 ### 7.2 MongoDB (Removed)
 
-MongoDB is **no longer the primary database**. The `go.mongodb.org/mongo-driver/v2` remains in `go.mod` as an **indirect** dependency (transitive through another package). No Go code references MongoDB. All repositories use MariaDB.
-
-However, 6 domains still have entity structs with **`bson` struct tags** (ai, billing, inbound, product, trip, warehouse). These are **unused data structures** — no repository, service, or handler imports them.
+MongoDB is **no longer the primary database**. The `go.mongodb.org/mongo-driver/v2` remains in `go.mod` as an **indirect** dependency (transitive through another package). No Go code references MongoDB. All repositories use MariaDB. All entity structs in stub domains have been migrated to MariaDB-compatible `db` struct tags.
 
 ---
 
@@ -515,14 +512,19 @@ Verified by inspecting actual `import` statements:
 | Capability | Status |
 |---|---|
 | Structured logging | **Yes** — `log/slog` with JSON output, configurable levels |
-| Request ID | **No** — `logger.WithRequestID()` exists but not called |
-| Health check | **Yes** — `GET /health` pings DB, returns JSON status |
-| Readiness check | **Yes** — `GET /readiness` pings DB |
-| Liveness check | **No** |
+| Request ID | **Yes** — `RequestIDMiddleware()` (first in the chain) generates/reuses a request ID, stores it in gin context, attaches it to a request-scoped slog logger (`request_id` field), and echoes `X-Request-ID` in the response header |
+| Health check (liveness) | **Yes** — `GET /healthz` returns 200 while the process is alive; no DB dependency |
+| Readiness check | **Yes** — `GET /readyz` pings MariaDB, returns 503 when DB is unreachable |
 | Tracing | **No** |
-| Metrics | **No** |
-| Prometheus / Grafana | **No** |
+| Metrics | **Yes** — Prometheus (`prometheus/client_golang`), exposed on a **separate internal port** (`METRICS_PORT`, default 9090) via `promhttp.Handler()`, not on the public API port |
+| Prometheus / Grafana | Prometheus client library only; no Grafana setup |
 | Error monitoring | **No** |
+
+**HTTP metrics** (`internal/infrastructure/middleware/metrics.go`, applied globally):
+- `http_requests_total{method,path,status}` — request counter (5xx errors are derivable from the `status` label)
+- `http_request_duration_seconds{method,path}` — request latency histogram
+
+The metrics server is started alongside the API server in `cmd/api/main.go` and shuts down gracefully with it. `METRICS_ENABLED` (default `true`) controls whether it starts.
 
 ---
 
@@ -531,8 +533,9 @@ Verified by inspecting actual `import` statements:
 | Artifact | Status |
 |---|---|
 | Service unit tests | **Implemented** — `driver/service/service_test.go`, `order/service/service_test.go`, `inventory/service_test.go`, `tracking/service_test.go` |
-| Middleware tests | **Implemented** — `infrastructure/middleware/error_handler_test.go` |
+| Middleware tests | **Implemented** — `infrastructure/middleware/error_handler_test.go`, `infrastructure/middleware/request_id_test.go` |
 | Repository integration tests | **Implemented** — `test/integration/` (driver, order, inventory, tracking) |
+| Migration CLI | `cmd/migrate` — verified locally (`up`/`down`/`version` round-trip against real MariaDB) |
 | E2E tests | **None** |
 | Test database | **MariaDB** — real database via `MARIADB_*` env vars (CI provides a MariaDB service container) |
 
@@ -540,7 +543,7 @@ Verified by inspecting actual `import` statements:
 
 **Repository integration tests** in `test/integration/` run against a real MariaDB. `TestMain` connects using `MARIADB_HOST/PORT/USER/PASSWORD/DB_NAME` env vars (defaults: localhost/3306/root/root/smart_logistics), resets the schema via the down/up migration files, and each test truncates tables for isolation. They verify CRUD for all four repositories plus `sql.ErrNoRows` → `ErrNotFound` behavior.
 
-**CI**: `.github/workflows/ci.yml` runs `go test ./...` with a MariaDB 11 service container, so integration tests execute in CI.
+**CI**: `.github/workflows/ci.yml` runs `go run ./cmd/migrate up` (applying the schema) then `go test ./...` with a MariaDB 11 service container, so integration tests execute in CI against the migrated schema.
 
 ---
 
@@ -550,7 +553,8 @@ Verified by inspecting actual `import` statements:
 
 | Component | File | Status |
 |---|---|---|
-| Backend | `backend/Dockerfile` | **Implemented** — multi-stage, non-root, healthcheck |
+| Backend | `backend/Dockerfile` | **Implemented** — multi-stage (golang:1.26-alpine builder → alpine:3.20 runtime), builds `/server` (cmd/api) + `/migrate` (cmd/migrate), non-root user, `HEALTHCHECK` against `/healthz` |
+| Backend entrypoint | `backend/docker-entrypoint.sh` | Runs `/migrate up` before starting `/server` (skippable via `AUTO_MIGRATE=false`) |
 | AI Service | None | — |
 | Data Pipeline | None | — |
 
@@ -558,10 +562,10 @@ Verified by inspecting actual `import` statements:
 
 `docker-compose.yml` defines 4 services + 1 network:
 
-1. **mariadb** — MariaDB 11, port 3306, healthcheck enabled
-2. **backend** — Go app, builds from `./backend/Dockerfile`, depends on healthy mariadb
+1. **mariadb** — MariaDB 11, host port 3307 → container 3306, healthcheck enabled
+2. **backend** — Go app, builds from `./backend/Dockerfile`, ports 8000 (API) + 9090 (metrics), `AUTO_MIGRATE=true`, depends on healthy mariadb + started keycloak
 3. **postgres-keycloak** — PostgreSQL 16 for Keycloak
-4. **keycloak** — Keycloak latest (dev mode), port 8180
+4. **keycloak** — Keycloak latest (dev mode), host port 8180 → 8080
 
 ### 13.3 CI/CD (`.github/workflows/ci.yml`)
 
@@ -573,8 +577,9 @@ Verified by inspecting actual `import` statements:
   2. Set up Go 1.24
   3. `gofmt` format check
   4. `go vet ./...`
-  5. `go test ./...` (with MariaDB env vars)
-  6. `go build ./cmd/api/`
+  5. `go run ./cmd/migrate up` (applies migrations before tests)
+  6. `go test ./...` (with MariaDB env vars)
+  7. `go build ./cmd/api/`
 
 ### 13.4 Independent Deployability
 
@@ -590,11 +595,7 @@ Verified by inspecting actual `import` statements:
 
 ## 14. Orphaned / Dead Code
 
-| File | Issue |
-|---|---|
-| `pkg/utils/logger.go` | Never imported by any package. Legacy stdlib logger. |
-| `internal/infrastructure/keycloak/client.go` | `FetchJWKS()` exported but never called. `JWTVerifier` in `verifier.go` has its own internal JWKS fetching. |
-| `internal/auth/handler/auth_handler.go` | Only `package handlers` declaration — 1 line, no code. |
+**Cleared in Phase 3.** The previously orphaned files (`pkg/utils/logger.go`, `keycloak/client.go`, `auth/handler/auth_handler.go`) have been removed after confirming zero imports via grep across the entire codebase. The empty `pkg/` and `auth/` directories were also removed.
 
 ---
 
@@ -602,11 +603,11 @@ Verified by inspecting actual `import` statements:
 
 ### 15.1 Structural Inconsistencies
 
-1. **Dual file structure styles**: `driver`/`order` use subdirectory layout (entity/, dto/, handler/, service/, repository/); `inventory`/`tracking` use flat layout (all `.go` files at domain root). Both compile correctly but lack consistency.
+1. ~~**Dual file structure styles**~~ — **Resolved.** All four implemented domains now use the same subdirectory layout (entity/, dto/, handler/, service/, repository/ + routes.go at root).
 
-2. **Unused bson tags**: 6 domains (ai, billing, inbound, product, trip, warehouse) have entity structs with `bson` struct tags and `package models`. These are MongoDB-format leftovers.
+2. ~~**Unused bson tags**~~ — **Resolved.** All 6 stub domains (ai, billing, inbound, product, trip, warehouse) have been migrated from `bson` struct tags to MariaDB-compatible `db` struct tags matching the migration schema.
 
-3. **Orphaned packages**: `pkg/utils/` and `infrastructure/keycloak/client.go` exist but are unused.
+3. ~~**Orphaned packages**~~ — **Resolved.** `pkg/utils/`, `infrastructure/keycloak/client.go`, and `auth/` have been removed.
 
 4. **Service constructor asymmetry**: `driver`/`order` use `NewService(db)` + `NewServiceWithRepo(repo)`; `inventory`/`tracking` use `NewService(repo)` + `NewServiceWithRepo(repo)`. The `NewServiceWithRepo` variants exist to enable repository mocking in unit tests.
 
@@ -680,17 +681,17 @@ graph TB
 
 | Metric | Value |
 |---|---|
-| Total Go files | 76 (66 source + 10 test) |
-| Fully implemented domains | 4 (driver, order, inventory, tracking) |
-| Stub domains (entity/DTO only) | 6 (ai, billing, inbound, product, trip, warehouse) |
-| Broken stub (1 line) | 1 (auth) |
-| MariaDB tables | 13 (in migration) |
-| API endpoints | 23 |
+| Total Go files | 78 (67 source + 11 test) |
+| Fully implemented domains | 4 (driver, order, inventory, tracking) — all consistent subdirectory structure |
+| Stub domains (entity/DTO only) | 6 (ai, billing, inbound, product, trip, warehouse) — all migrated to SQL db tags |
+| Broken stub (1 line) | 0 (auth/ removed) |
+| MariaDB tables | 13 (in migration via golang-migrate) |
+| API endpoints | 23 (plus /healthz, /readyz; /metrics on internal port) |
 | External services used | Keycloak (active), Redis (optional), S3 (optional, disabled) |
-| Orphaned files | 2 (pkg/utils/logger.go, keycloak/client.go) |
+| Orphaned files | 0 (all confirmed dead code removed in Phase 3) |
 | Empty stubs (`ai_service/`) | 4 files |
 | Empty stubs (`data_pipeline/`) | 2 directories |
 | Build status | `go build`, `go vet`, `go fmt` — all **pass** |
-| Test status | **Implemented** — 4 service unit test suites (mocked repos), 1 middleware test suite, 12 repository integration tests (real MariaDB) |
+| Test status | **Implemented** — 4 service unit test suites (mocked repos), 2 middleware test suites (error handler + request ID), 12 repository integration tests (real MariaDB) |
 
 *Audit completed: 2026-08-08. Based exclusively on actual source code verification. No files modified.*

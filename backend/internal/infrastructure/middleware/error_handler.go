@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -39,7 +38,7 @@ func ErrorHandler() gin.HandlerFunc {
 		}
 
 		// Unknown/internal errors: never leak the underlying message to clients.
-		slog.Error("unhandled error",
+		LoggerFromContext(c).Error("unhandled error",
 			"path", c.Request.URL.Path,
 			"method", c.Request.Method,
 			"error", err.Error(),

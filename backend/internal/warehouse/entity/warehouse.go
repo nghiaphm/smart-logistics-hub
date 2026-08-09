@@ -1,16 +1,17 @@
-package models
+package entity
 
 import "time"
 
 type Warehouse struct {
-	ID            string                 `json:"_id,omitempty" bson:"_id,omitempty"`
-	WarehouseCode string                 `json:"warehouse_code" bson:"warehouse_code"`
-	Name          string                 `json:"name" bson:"name"`
-	Address       string                 `json:"address" bson:"address"`
-	Location      map[string]interface{} `json:"location,omitempty" bson:"location,omitempty"`
-	ContactPhone  *string                `json:"contact_phone,omitempty" bson:"contact_phone,omitempty"`
-	ManagerName   *string                `json:"manager_name,omitempty" bson:"manager_name,omitempty"`
-	CreatedAt     *time.Time             `json:"created_at" bson:"created_at"`
-	UpdatedAt     *time.Time             `json:"updated_at" bson:"updated_at"`
-	IsActive      bool                   `json:"is_active" bson:"is_active"`
+	ID            int64     `json:"id" db:"id"`
+	WarehouseCode string    `json:"warehouse_code" db:"warehouse_code"`
+	Name          string    `json:"name" db:"name"`
+	Address       string    `json:"address" db:"address"`
+	Lat           float64   `json:"lat" db:"lat"`
+	Lng           float64   `json:"lng" db:"lng"`
+	ContactPhone  string    `json:"contact_phone" db:"contact_phone"`
+	ManagerName   string    `json:"manager_name" db:"manager_name"`
+	IsActive      bool      `json:"is_active" db:"is_active"`
+	CreatedAt     time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 }

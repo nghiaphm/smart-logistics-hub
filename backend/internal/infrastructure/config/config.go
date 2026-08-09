@@ -13,6 +13,9 @@ type Config struct {
 	Environment       string
 	ServerHost        string
 	ServerPort        string
+	MetricsEnabled    bool
+	MetricsHost       string
+	MetricsPort       string
 	S3Enabled         bool
 	AWSRegion         string
 	S3Bucket          string
@@ -55,6 +58,9 @@ func LoadConfig() *Config {
 		Environment:       appEnv,
 		ServerHost:        getEnv("SERVER_HOST", "0.0.0.0"),
 		ServerPort:        getEnv("SERVER_PORT", "8000"),
+		MetricsEnabled:    getEnvBool("METRICS_ENABLED", true),
+		MetricsHost:       getEnv("METRICS_HOST", "0.0.0.0"),
+		MetricsPort:       getEnv("METRICS_PORT", "9090"),
 		S3Enabled:         getEnvBool("S3_ENABLED", false),
 		AWSRegion:         getEnv("AWS_REGION", "ap-southeast-1"),
 		S3Bucket:          getEnv("S3_BUCKET", ""),

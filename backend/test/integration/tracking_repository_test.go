@@ -7,15 +7,16 @@ import (
 	"time"
 
 	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
-	"my-web-app.com/smart-logistic-hub/internal/tracking"
+	"my-web-app.com/smart-logistic-hub/internal/tracking/entity"
+	trkrepo "my-web-app.com/smart-logistic-hub/internal/tracking/repository"
 )
 
 func TestTrackingRepositoryCRUD(t *testing.T) {
 	truncateTables(t)
 	ctx := context.Background()
-	repo := tracking.NewRepository(testDB)
+	repo := trkrepo.NewRepository(testDB)
 
-	event := &tracking.TrackingEvent{
+	event := &entity.TrackingEvent{
 		OrderCode:    "ORD-IT-001",
 		DriverCode:   "DRV-IT-001",
 		StatusUpdate: "PICKED_UP",
@@ -62,12 +63,12 @@ func TestTrackingRepositoryCRUD(t *testing.T) {
 func TestTrackingRepositoryNotFound(t *testing.T) {
 	truncateTables(t)
 	ctx := context.Background()
-	repo := tracking.NewRepository(testDB)
+	repo := trkrepo.NewRepository(testDB)
 
 	if _, err := repo.GetByID(ctx, 999999); !errors.Is(err, apierrors.ErrNotFound) {
 		t.Errorf("GetByID() error = %v, want ErrNotFound", err)
 	}
-	if err := repo.Update(ctx, 999999, &tracking.TrackingEvent{}); !errors.Is(err, apierrors.ErrNotFound) {
+	if err := repo.Update(ctx, 999999, &entity.TrackingEvent{}); !errors.Is(err, apierrors.ErrNotFound) {
 		t.Errorf("Update() error = %v, want ErrNotFound", err)
 	}
 	if err := repo.Delete(ctx, 999999); !errors.Is(err, apierrors.ErrNotFound) {
@@ -78,10 +79,10 @@ func TestTrackingRepositoryNotFound(t *testing.T) {
 func TestTrackingRepositoryListGetByOrder(t *testing.T) {
 	truncateTables(t)
 	ctx := context.Background()
-	repo := tracking.NewRepository(testDB)
+	repo := trkrepo.NewRepository(testDB)
 
 	for i := 1; i <= 3; i++ {
-		e := &tracking.TrackingEvent{
+		e := &entity.TrackingEvent{
 			OrderCode:    "ORD-IT-001",
 			DriverCode:   "DRV-IT-001",
 			StatusUpdate: "STATUS_" + string(rune('0'+i)),
