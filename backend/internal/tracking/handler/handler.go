@@ -1,4 +1,4 @@
-package inventory
+package handler
 
 import (
 	"fmt"
@@ -8,53 +8,64 @@ import (
 	"github.com/gin-gonic/gin"
 
 	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
+	"my-web-app.com/smart-logistic-hub/internal/tracking/dto"
+	"my-web-app.com/smart-logistic-hub/internal/tracking/service"
 )
 
 type Handler struct {
-	Service *Service
+	Service *service.Service
 }
 
-func NewHandler(svc *Service) *Handler {
+func NewHandler(svc *service.Service) *Handler {
 	return &Handler{Service: svc}
 }
 
 func (h *Handler) Create(c *gin.Context) {
-	var req CreateInventoryRequest
+	var req dto.CreateTrackingEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Error(fmt.Errorf("%w: %v", apierrors.ErrBadRequest, err))
 		return
 	}
-
-	inv, err := h.Service.Create(c.Request.Context(), &req)
+	event, err := h.Service.Create(c.Request.Context(), &req)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusCreated, ToResponse(inv))
+	c.JSON(http.StatusCreated, dto.ToResponse(event))
 }
 
 func (h *Handler) List(c *gin.Context) {
 	skip, _ := strconv.Atoi(c.DefaultQuery("skip", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	orderCode := c.Query("order_code")
+	driverCode := c.Query("driver_code")
 	if limit <= 0 {
 		limit = 20
 	}
 	if skip < 0 {
 		skip = 0
 	}
-
-	items, total, err := h.Service.List(c.Request.Context(), skip, limit)
+	events, total, err := h.Service.List(c.Request.Context(), orderCode, driverCode, skip, limit)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Items: ToResponseList(items),
+	c.JSON(http.StatusOK, dto.PaginatedResponse{
+		Items: dto.ToResponseList(events),
 		Total: total,
 		Skip:  skip,
 		Limit: limit,
 	})
+}
+
+func (h *Handler) GetByOrder(c *gin.Context) {
+	orderCode := c.Param("order_code")
+	events, err := h.Service.GetByOrder(c.Request.Context(), orderCode)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, dto.ToResponseList(events))
 }
 
 func (h *Handler) Get(c *gin.Context) {
@@ -63,13 +74,12 @@ func (h *Handler) Get(c *gin.Context) {
 		c.Error(fmt.Errorf("%w: invalid id", apierrors.ErrBadRequest))
 		return
 	}
-
-	inv, err := h.Service.Get(c.Request.Context(), id)
+	event, err := h.Service.Get(c.Request.Context(), id)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, ToResponse(inv))
+	c.JSON(http.StatusOK, dto.ToResponse(event))
 }
 
 func (h *Handler) Update(c *gin.Context) {
@@ -78,19 +88,17 @@ func (h *Handler) Update(c *gin.Context) {
 		c.Error(fmt.Errorf("%w: invalid id", apierrors.ErrBadRequest))
 		return
 	}
-
-	var req UpdateInventoryRequest
+	var req dto.UpdateTrackingEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Error(fmt.Errorf("%w: %v", apierrors.ErrBadRequest, err))
 		return
 	}
-
-	inv, err := h.Service.Update(c.Request.Context(), id, &req)
+	event, err := h.Service.Update(c.Request.Context(), id, &req)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, ToResponse(inv))
+	c.JSON(http.StatusOK, dto.ToResponse(event))
 }
 
 func (h *Handler) Delete(c *gin.Context) {
@@ -99,7 +107,6 @@ func (h *Handler) Delete(c *gin.Context) {
 		c.Error(fmt.Errorf("%w: invalid id", apierrors.ErrBadRequest))
 		return
 	}
-
 	if err := h.Service.Delete(c.Request.Context(), id); err != nil {
 		c.Error(err)
 		return

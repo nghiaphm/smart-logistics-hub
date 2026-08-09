@@ -1,6 +1,10 @@
-package tracking
+package dto
 
-import "time"
+import (
+	"time"
+
+	"my-web-app.com/smart-logistic-hub/internal/tracking/entity"
+)
 
 type TrackingEventResponse struct {
 	ID           int64     `json:"id"`
@@ -20,20 +24,15 @@ type PaginatedResponse struct {
 	Limit int                     `json:"limit"`
 }
 
-func ToResponse(event *TrackingEvent) TrackingEventResponse {
+func ToResponse(event *entity.TrackingEvent) TrackingEventResponse {
 	return TrackingEventResponse{
-		ID:           event.ID,
-		OrderCode:    event.OrderCode,
-		DriverCode:   event.DriverCode,
-		StatusUpdate: event.StatusUpdate,
-		Lat:          event.Lat,
-		Lng:          event.Lng,
-		Note:         event.Note,
-		Timestamp:    event.Timestamp,
+		ID: event.ID, OrderCode: event.OrderCode, DriverCode: event.DriverCode,
+		StatusUpdate: event.StatusUpdate, Lat: event.Lat, Lng: event.Lng,
+		Note: event.Note, Timestamp: event.Timestamp,
 	}
 }
 
-func ToResponseList(events []TrackingEvent) []TrackingEventResponse {
+func ToResponseList(events []entity.TrackingEvent) []TrackingEventResponse {
 	res := make([]TrackingEventResponse, len(events))
 	for i, e := range events {
 		res[i] = ToResponse(&e)

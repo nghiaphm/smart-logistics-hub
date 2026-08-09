@@ -1,4 +1,4 @@
-package tracking
+package entity
 
 import "time"
 

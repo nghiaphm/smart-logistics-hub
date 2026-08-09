@@ -1,4 +1,4 @@
-package tracking
+package dto
 
 type CreateTrackingEventRequest struct {
 	OrderCode    string  `json:"order_code" binding:"required"`

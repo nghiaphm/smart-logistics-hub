@@ -1,4 +1,4 @@
-package inventory
+package repository
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
+	"my-web-app.com/smart-logistic-hub/internal/inventory/entity"
 )
 
 type Repository struct {
@@ -16,7 +17,7 @@ func NewRepository(db *sql.DB) *Repository {
 	return &Repository{DB: db}
 }
 
-func (r *Repository) Create(ctx context.Context, inv *Inventory) error {
+func (r *Repository) Create(ctx context.Context, inv *entity.Inventory) error {
 	now := time.Now().UTC()
 	query := `INSERT INTO inventory (product_id, warehouse_id, available_qty, reserved_qty, damaged_qty, hold_qty, created_at, updated_at, updated_by)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -33,10 +34,10 @@ func (r *Repository) Create(ctx context.Context, inv *Inventory) error {
 	return nil
 }
 
-func (r *Repository) GetByID(ctx context.Context, id int64) (*Inventory, error) {
+func (r *Repository) GetByID(ctx context.Context, id int64) (*entity.Inventory, error) {
 	query := `SELECT id, product_id, warehouse_id, available_qty, reserved_qty, damaged_qty, hold_qty, created_at, updated_at, updated_by
 		FROM inventory WHERE id = ?`
-	inv := &Inventory{}
+	inv := &entity.Inventory{}
 	err := r.DB.QueryRowContext(ctx, query, id).Scan(
 		&inv.ID, &inv.ProductID, &inv.WarehouseID,
 		&inv.AvailableQty, &inv.ReservedQty, &inv.DamagedQty, &inv.HoldQty,
@@ -51,10 +52,10 @@ func (r *Repository) GetByID(ctx context.Context, id int64) (*Inventory, error) 
 	return inv, nil
 }
 
-func (r *Repository) GetByProductWarehouse(ctx context.Context, productID, warehouseID int64) (*Inventory, error) {
+func (r *Repository) GetByProductWarehouse(ctx context.Context, productID, warehouseID int64) (*entity.Inventory, error) {
 	query := `SELECT id, product_id, warehouse_id, available_qty, reserved_qty, damaged_qty, hold_qty, created_at, updated_at, updated_by
 		FROM inventory WHERE product_id = ? AND warehouse_id = ?`
-	inv := &Inventory{}
+	inv := &entity.Inventory{}
 	err := r.DB.QueryRowContext(ctx, query, productID, warehouseID).Scan(
 		&inv.ID, &inv.ProductID, &inv.WarehouseID,
 		&inv.AvailableQty, &inv.ReservedQty, &inv.DamagedQty, &inv.HoldQty,
@@ -69,7 +70,7 @@ func (r *Repository) GetByProductWarehouse(ctx context.Context, productID, wareh
 	return inv, nil
 }
 
-func (r *Repository) List(ctx context.Context, offset, limit int) ([]Inventory, error) {
+func (r *Repository) List(ctx context.Context, offset, limit int) ([]entity.Inventory, error) {
 	query := `SELECT id, product_id, warehouse_id, available_qty, reserved_qty, damaged_qty, hold_qty, created_at, updated_at, updated_by
 		FROM inventory ORDER BY id DESC LIMIT ? OFFSET ?`
 	rows, err := r.DB.QueryContext(ctx, query, limit, offset)
@@ -78,9 +79,9 @@ func (r *Repository) List(ctx context.Context, offset, limit int) ([]Inventory, 
 	}
 	defer rows.Close()
 
-	var inventories []Inventory
+	var inventories []entity.Inventory
 	for rows.Next() {
-		var inv Inventory
+		var inv entity.Inventory
 		if err := rows.Scan(
 			&inv.ID, &inv.ProductID, &inv.WarehouseID,
 			&inv.AvailableQty, &inv.ReservedQty, &inv.DamagedQty, &inv.HoldQty,
@@ -94,7 +95,7 @@ func (r *Repository) List(ctx context.Context, offset, limit int) ([]Inventory, 
 		return nil, err
 	}
 	if inventories == nil {
-		inventories = []Inventory{}
+		inventories = []entity.Inventory{}
 	}
 	return inventories, nil
 }
@@ -109,7 +110,7 @@ func (r *Repository) Count(ctx context.Context) (int, error) {
 	return count, nil
 }
 
-func (r *Repository) Update(ctx context.Context, id int64, inv *Inventory) error {
+func (r *Repository) Update(ctx context.Context, id int64, inv *entity.Inventory) error {
 	now := time.Now().UTC()
 	query := `UPDATE inventory SET available_qty = ?, reserved_qty = ?, damaged_qty = ?, hold_qty = ?, updated_at = ?, updated_by = ? WHERE id = ?`
 	result, err := r.DB.ExecContext(ctx, query,

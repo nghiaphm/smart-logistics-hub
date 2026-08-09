@@ -1,6 +1,10 @@
-package inventory
+package dto
 
-import "time"
+import (
+	"time"
+
+	"my-web-app.com/smart-logistic-hub/internal/inventory/entity"
+)
 
 type InventoryResponse struct {
 	ID           int64     `json:"id"`
@@ -22,7 +26,7 @@ type PaginatedResponse struct {
 	Limit int                 `json:"limit"`
 }
 
-func ToResponse(inv *Inventory) InventoryResponse {
+func ToResponse(inv *entity.Inventory) InventoryResponse {
 	return InventoryResponse{
 		ID:           inv.ID,
 		ProductID:    inv.ProductID,
@@ -37,7 +41,7 @@ func ToResponse(inv *Inventory) InventoryResponse {
 	}
 }
 
-func ToResponseList(invs []Inventory) []InventoryResponse {
+func ToResponseList(invs []entity.Inventory) []InventoryResponse {
 	res := make([]InventoryResponse, len(invs))
 	for i, inv := range invs {
 		res[i] = ToResponse(&inv)

@@ -1,4 +1,4 @@
-package tracking
+package handler
 
 import (
 	"fmt"
@@ -8,37 +8,36 @@ import (
 	"github.com/gin-gonic/gin"
 
 	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
+	"my-web-app.com/smart-logistic-hub/internal/inventory/dto"
+	"my-web-app.com/smart-logistic-hub/internal/inventory/service"
 )
 
 type Handler struct {
-	Service *Service
+	Service *service.Service
 }
 
-func NewHandler(svc *Service) *Handler {
+func NewHandler(svc *service.Service) *Handler {
 	return &Handler{Service: svc}
 }
 
 func (h *Handler) Create(c *gin.Context) {
-	var req CreateTrackingEventRequest
+	var req dto.CreateInventoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Error(fmt.Errorf("%w: %v", apierrors.ErrBadRequest, err))
 		return
 	}
 
-	event, err := h.Service.Create(c.Request.Context(), &req)
+	inv, err := h.Service.Create(c.Request.Context(), &req)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusCreated, ToResponse(event))
+	c.JSON(http.StatusCreated, dto.ToResponse(inv))
 }
 
 func (h *Handler) List(c *gin.Context) {
 	skip, _ := strconv.Atoi(c.DefaultQuery("skip", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-	orderCode := c.Query("order_code")
-	driverCode := c.Query("driver_code")
-
 	if limit <= 0 {
 		limit = 20
 	}
@@ -46,28 +45,18 @@ func (h *Handler) List(c *gin.Context) {
 		skip = 0
 	}
 
-	events, total, err := h.Service.List(c.Request.Context(), orderCode, driverCode, skip, limit)
+	items, total, err := h.Service.List(c.Request.Context(), skip, limit)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, PaginatedResponse{
-		Items: ToResponseList(events),
+	c.JSON(http.StatusOK, dto.PaginatedResponse{
+		Items: dto.ToResponseList(items),
 		Total: total,
 		Skip:  skip,
 		Limit: limit,
 	})
-}
-
-func (h *Handler) GetByOrder(c *gin.Context) {
-	orderCode := c.Param("order_code")
-	events, err := h.Service.GetByOrder(c.Request.Context(), orderCode)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	c.JSON(http.StatusOK, ToResponseList(events))
 }
 
 func (h *Handler) Get(c *gin.Context) {
@@ -77,12 +66,12 @@ func (h *Handler) Get(c *gin.Context) {
 		return
 	}
 
-	event, err := h.Service.Get(c.Request.Context(), id)
+	inv, err := h.Service.Get(c.Request.Context(), id)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, ToResponse(event))
+	c.JSON(http.StatusOK, dto.ToResponse(inv))
 }
 
 func (h *Handler) Update(c *gin.Context) {
@@ -92,18 +81,18 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	var req UpdateTrackingEventRequest
+	var req dto.UpdateInventoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Error(fmt.Errorf("%w: %v", apierrors.ErrBadRequest, err))
 		return
 	}
 
-	event, err := h.Service.Update(c.Request.Context(), id, &req)
+	inv, err := h.Service.Update(c.Request.Context(), id, &req)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, ToResponse(event))
+	c.JSON(http.StatusOK, dto.ToResponse(inv))
 }
 
 func (h *Handler) Delete(c *gin.Context) {

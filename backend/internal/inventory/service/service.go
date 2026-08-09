@@ -1,19 +1,22 @@
-package inventory
+package service
 
 import (
 	"context"
 	"fmt"
 
 	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
+	"my-web-app.com/smart-logistic-hub/internal/inventory/dto"
+	"my-web-app.com/smart-logistic-hub/internal/inventory/entity"
+	invrepo "my-web-app.com/smart-logistic-hub/internal/inventory/repository"
 )
 
 type InventoryRepository interface {
-	Create(ctx context.Context, inv *Inventory) error
-	GetByID(ctx context.Context, id int64) (*Inventory, error)
-	GetByProductWarehouse(ctx context.Context, productID, warehouseID int64) (*Inventory, error)
-	List(ctx context.Context, offset, limit int) ([]Inventory, error)
+	Create(ctx context.Context, inv *entity.Inventory) error
+	GetByID(ctx context.Context, id int64) (*entity.Inventory, error)
+	GetByProductWarehouse(ctx context.Context, productID, warehouseID int64) (*entity.Inventory, error)
+	List(ctx context.Context, offset, limit int) ([]entity.Inventory, error)
 	Count(ctx context.Context) (int, error)
-	Update(ctx context.Context, id int64, inv *Inventory) error
+	Update(ctx context.Context, id int64, inv *entity.Inventory) error
 	Delete(ctx context.Context, id int64) error
 }
 
@@ -21,7 +24,7 @@ type Service struct {
 	Repo InventoryRepository
 }
 
-func NewService(repo *Repository) *Service {
+func NewService(repo *invrepo.Repository) *Service {
 	return &Service{Repo: repo}
 }
 
@@ -29,7 +32,7 @@ func NewServiceWithRepo(repo InventoryRepository) *Service {
 	return &Service{Repo: repo}
 }
 
-func (s *Service) Create(ctx context.Context, req *CreateInventoryRequest) (*Inventory, error) {
+func (s *Service) Create(ctx context.Context, req *dto.CreateInventoryRequest) (*entity.Inventory, error) {
 	if req.ProductID <= 0 {
 		return nil, fmt.Errorf("%w: product_id is required", apierrors.ErrBadRequest)
 	}
@@ -48,7 +51,7 @@ func (s *Service) Create(ctx context.Context, req *CreateInventoryRequest) (*Inv
 		return nil, fmt.Errorf("%w: inventory already exists for product %d at warehouse %d", apierrors.ErrConflict, req.ProductID, req.WarehouseID)
 	}
 
-	inv := &Inventory{
+	inv := &entity.Inventory{
 		ProductID:    req.ProductID,
 		WarehouseID:  req.WarehouseID,
 		AvailableQty: req.AvailableQty,
@@ -63,7 +66,7 @@ func (s *Service) Create(ctx context.Context, req *CreateInventoryRequest) (*Inv
 	return inv, nil
 }
 
-func (s *Service) Get(ctx context.Context, id int64) (*Inventory, error) {
+func (s *Service) Get(ctx context.Context, id int64) (*entity.Inventory, error) {
 	inv, err := s.Repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -71,7 +74,7 @@ func (s *Service) Get(ctx context.Context, id int64) (*Inventory, error) {
 	return inv, nil
 }
 
-func (s *Service) List(ctx context.Context, offset, limit int) ([]Inventory, int, error) {
+func (s *Service) List(ctx context.Context, offset, limit int) ([]entity.Inventory, int, error) {
 	invList, err := s.Repo.List(ctx, offset, limit)
 	if err != nil {
 		return nil, 0, err
@@ -83,7 +86,7 @@ func (s *Service) List(ctx context.Context, offset, limit int) ([]Inventory, int
 	return invList, count, nil
 }
 
-func (s *Service) Update(ctx context.Context, id int64, req *UpdateInventoryRequest) (*Inventory, error) {
+func (s *Service) Update(ctx context.Context, id int64, req *dto.UpdateInventoryRequest) (*entity.Inventory, error) {
 	inv, err := s.Repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err

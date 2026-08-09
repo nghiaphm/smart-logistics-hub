@@ -61,7 +61,6 @@ smart-logistic-project/
     ├── migrations/
     │   ├── 000001_initial_schema.up.sql    # 13 tables (golang-migrate format)
     │   └── 000001_initial_schema.down.sql  # Drop all tables
-    ├── pkg/utils/logger.go       # ORPHANED — unused by any other package
     └── internal/
         ├── common/
         │   └── errors/errors.go  # APIError struct + 6 sentinel errors
@@ -70,7 +69,6 @@ smart-logistic-project/
         │   ├── database/mariadb.go       # MariaDB connection + pool
         │   ├── redis/client.go           # Redis client factory
         │   ├── keycloak/verifier.go      # JWTVerifier with JWKS + RSA
-        │   ├── keycloak/client.go        # ORPHANED — FetchJWKS never called
         │   ├── middleware/auth.go        # JWT auth middleware (accepts verifier interface)
         │   ├── middleware/cors.go        # CORS middleware
         │   ├── middleware/rbac.go        # RequireRole middleware
@@ -80,15 +78,14 @@ smart-logistic-project/
         │   └── logger/logger.go         # slog wrapper
         ├── driver/                       # FULLY IMPLEMENTED
         ├── order/                        # FULLY IMPLEMENTED
-        ├── inventory/                    # FULLY IMPLEMENTED (flat structure)
-        ├── tracking/                     # FULLY IMPLEMENTED (flat structure)
-        ├── auth/                         # STUB — 1-line file only
-        ├── ai/                           # Entity/DTO only (MongoDB-era bson tags)
-        ├── billing/                      # Entity/DTO only (MongoDB-era bson tags)
-        ├── inbound/                      # Entity/DTO only (MongoDB-era bson tags)
-        ├── product/                      # Entity/DTO only (MongoDB-era bson tags)
-        ├── trip/                         # Entity/DTO only (MongoDB-era bson tags)
-        └── warehouse/                    # Entity/DTO only (MongoDB-era bson tags)
+        ├── inventory/                    # FULLY IMPLEMENTED
+        ├── tracking/                     # FULLY IMPLEMENTED
+        ├── ai/                           # Entity/DTO only (SQL db tags, planned)
+        ├── billing/                      # Entity/DTO only (SQL db tags, planned)
+        ├── inbound/                      # Entity/DTO only (SQL db tags, planned)
+        ├── product/                      # Entity/DTO only (SQL db tags, planned)
+        ├── trip/                         # Entity/DTO only (SQL db tags, planned)
+        └── warehouse/                    # Entity/DTO only (SQL db tags, planned)
 ```
 
 ---
@@ -183,8 +180,19 @@ The entry point performs bootstrap in order:
 
 ### 4.3 Domain Architecture Patterns
 
-**Implemented domains** (driver, order, inventory, tracking) follow:
+**All implemented domains** (driver, order, inventory, tracking) follow the same subdirectory structure:
 
+```
+internal/{domain}/
+├── entity/{entity}.go
+├── dto/request.go, dto/response.go
+├── handler/handler.go
+├── service/service.go, service_test.go
+├── repository/mariadb.go
+└── routes.go
+```
+
+Pattern:
 ```
 Handler (Gin context → typed DTO binding → calls service)
   ↓
@@ -195,38 +203,9 @@ Repository (SQL queries via database/sql)
 MariaDB
 ```
 
-**Two structural styles coexist**:
-
-1. **Subdirectory style** (driver, order):
-   ```
-   internal/order/
-   ├── entity/order.go, entity/order_item.go
-   ├── dto/request.go, dto/response.go
-   ├── handler/handler.go
-   ├── service/service.go
-   ├── repository/mariadb.go
-   └── routes.go
-   ```
-
-2. **Flat style** (inventory, tracking):
-   ```
-   internal/inventory/
-   ├── entity.go, dto.go, response.go
-   ├── handler.go, service.go, repository.go
-   └── routes.go
-   ```
-
-Both are valid. Package names match subdirectories for style 1, and the domain name for style 2.
-
 ### 4.4 Stub Domains (Entity/DTO Only)
 
-The domains `ai`, `billing`, `inbound`, `product`, `trip`, `warehouse` contain only entity and DTO definitions. Notable issues:
-
-- Entity files use `package models` with **`bson` struct tags** (MongoDB-era, never migrated to SQL)
-- DTO files use domain-specific packages (`package ai_events`, `package billings`, etc.)
-- No MariaDB repository, service, handler, or routes exist
-- These structs are **not imported** by any runtime code
-- They represent **planned but unimplemented** business capabilities
+The domains `ai`, `billing`, `inbound`, `product`, `trip`, `warehouse` contain only entity and DTO definitions with MariaDB-compatible `db` struct tags matching the migration schema. No handler, service, or repository implementations exist yet. These represent **planned** business capabilities with corresponding tables already in the MariaDB schema.
 
 ---
 
@@ -395,9 +374,7 @@ The `docker-entrypoint.sh` script gates behind `AUTO_MIGRATE={true|false}`. Beca
 
 ### 7.2 MongoDB (Removed)
 
-MongoDB is **no longer the primary database**. The `go.mongodb.org/mongo-driver/v2` remains in `go.mod` as an **indirect** dependency (transitive through another package). No Go code references MongoDB. All repositories use MariaDB.
-
-However, 6 domains still have entity structs with **`bson` struct tags** (ai, billing, inbound, product, trip, warehouse). These are **unused data structures** — no repository, service, or handler imports them.
+MongoDB is **no longer the primary database**. The `go.mongodb.org/mongo-driver/v2` remains in `go.mod` as an **indirect** dependency (transitive through another package). No Go code references MongoDB. All repositories use MariaDB. All entity structs in stub domains have been migrated to MariaDB-compatible `db` struct tags.
 
 ---
 
@@ -618,11 +595,7 @@ The metrics server is started alongside the API server in `cmd/api/main.go` and 
 
 ## 14. Orphaned / Dead Code
 
-| File | Issue |
-|---|---|
-| `pkg/utils/logger.go` | Never imported by any package. Legacy stdlib logger. |
-| `internal/infrastructure/keycloak/client.go` | `FetchJWKS()` exported but never called. `JWTVerifier` in `verifier.go` has its own internal JWKS fetching. |
-| `internal/auth/handler/auth_handler.go` | Only `package handlers` declaration — 1 line, no code. |
+**Cleared in Phase 3.** The previously orphaned files (`pkg/utils/logger.go`, `keycloak/client.go`, `auth/handler/auth_handler.go`) have been removed after confirming zero imports via grep across the entire codebase. The empty `pkg/` and `auth/` directories were also removed.
 
 ---
 
@@ -630,11 +603,11 @@ The metrics server is started alongside the API server in `cmd/api/main.go` and 
 
 ### 15.1 Structural Inconsistencies
 
-1. **Dual file structure styles**: `driver`/`order` use subdirectory layout (entity/, dto/, handler/, service/, repository/); `inventory`/`tracking` use flat layout (all `.go` files at domain root). Both compile correctly but lack consistency.
+1. ~~**Dual file structure styles**~~ — **Resolved.** All four implemented domains now use the same subdirectory layout (entity/, dto/, handler/, service/, repository/ + routes.go at root).
 
-2. **Unused bson tags**: 6 domains (ai, billing, inbound, product, trip, warehouse) have entity structs with `bson` struct tags and `package models`. These are MongoDB-format leftovers.
+2. ~~**Unused bson tags**~~ — **Resolved.** All 6 stub domains (ai, billing, inbound, product, trip, warehouse) have been migrated from `bson` struct tags to MariaDB-compatible `db` struct tags matching the migration schema.
 
-3. **Orphaned packages**: `pkg/utils/` and `infrastructure/keycloak/client.go` exist but are unused.
+3. ~~**Orphaned packages**~~ — **Resolved.** `pkg/utils/`, `infrastructure/keycloak/client.go`, and `auth/` have been removed.
 
 4. **Service constructor asymmetry**: `driver`/`order` use `NewService(db)` + `NewServiceWithRepo(repo)`; `inventory`/`tracking` use `NewService(repo)` + `NewServiceWithRepo(repo)`. The `NewServiceWithRepo` variants exist to enable repository mocking in unit tests.
 
@@ -708,14 +681,14 @@ graph TB
 
 | Metric | Value |
 |---|---|
-| Total Go files | 81 (70 source + 11 test) |
-| Fully implemented domains | 4 (driver, order, inventory, tracking) |
-| Stub domains (entity/DTO only) | 6 (ai, billing, inbound, product, trip, warehouse) |
-| Broken stub (1 line) | 1 (auth) |
+| Total Go files | 78 (67 source + 11 test) |
+| Fully implemented domains | 4 (driver, order, inventory, tracking) — all consistent subdirectory structure |
+| Stub domains (entity/DTO only) | 6 (ai, billing, inbound, product, trip, warehouse) — all migrated to SQL db tags |
+| Broken stub (1 line) | 0 (auth/ removed) |
 | MariaDB tables | 13 (in migration via golang-migrate) |
 | API endpoints | 23 (plus /healthz, /readyz; /metrics on internal port) |
 | External services used | Keycloak (active), Redis (optional), S3 (optional, disabled) |
-| Orphaned files | 2 (pkg/utils/logger.go, keycloak/client.go) |
+| Orphaned files | 0 (all confirmed dead code removed in Phase 3) |
 | Empty stubs (`ai_service/`) | 4 files |
 | Empty stubs (`data_pipeline/`) | 2 directories |
 | Build status | `go build`, `go vet`, `go fmt` — all **pass** |

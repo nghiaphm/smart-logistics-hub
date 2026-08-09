@@ -16,3 +16,7 @@ backend/*.exe
 !.env.example
 backend/.env
 frontend/.env.local
+
+backend/.env.production
+*.log
+vendor/

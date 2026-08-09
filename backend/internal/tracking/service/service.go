@@ -1,4 +1,4 @@
-package tracking
+package service
 
 import (
 	"context"
@@ -6,15 +6,18 @@ import (
 	"time"
 
 	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
+	"my-web-app.com/smart-logistic-hub/internal/tracking/dto"
+	"my-web-app.com/smart-logistic-hub/internal/tracking/entity"
+	trkrepo "my-web-app.com/smart-logistic-hub/internal/tracking/repository"
 )
 
 type TrackingRepository interface {
-	Create(ctx context.Context, event *TrackingEvent) error
-	GetByID(ctx context.Context, id int64) (*TrackingEvent, error)
-	List(ctx context.Context, orderCode, driverCode string, offset, limit int) ([]TrackingEvent, error)
+	Create(ctx context.Context, event *entity.TrackingEvent) error
+	GetByID(ctx context.Context, id int64) (*entity.TrackingEvent, error)
+	List(ctx context.Context, orderCode, driverCode string, offset, limit int) ([]entity.TrackingEvent, error)
 	Count(ctx context.Context, orderCode, driverCode string) (int, error)
-	GetByOrder(ctx context.Context, orderCode string) ([]TrackingEvent, error)
-	Update(ctx context.Context, id int64, event *TrackingEvent) error
+	GetByOrder(ctx context.Context, orderCode string) ([]entity.TrackingEvent, error)
+	Update(ctx context.Context, id int64, event *entity.TrackingEvent) error
 	Delete(ctx context.Context, id int64) error
 }
 
@@ -22,7 +25,7 @@ type Service struct {
 	Repo TrackingRepository
 }
 
-func NewService(repo *Repository) *Service {
+func NewService(repo *trkrepo.Repository) *Service {
 	return &Service{Repo: repo}
 }
 
@@ -30,7 +33,7 @@ func NewServiceWithRepo(repo TrackingRepository) *Service {
 	return &Service{Repo: repo}
 }
 
-func (s *Service) Create(ctx context.Context, req *CreateTrackingEventRequest) (*TrackingEvent, error) {
+func (s *Service) Create(ctx context.Context, req *dto.CreateTrackingEventRequest) (*entity.TrackingEvent, error) {
 	if req.OrderCode == "" {
 		return nil, fmt.Errorf("%w: order_code is required", apierrors.ErrBadRequest)
 	}
@@ -40,8 +43,7 @@ func (s *Service) Create(ctx context.Context, req *CreateTrackingEventRequest) (
 	if req.StatusUpdate == "" {
 		return nil, fmt.Errorf("%w: status_update is required", apierrors.ErrBadRequest)
 	}
-
-	event := &TrackingEvent{
+	event := &entity.TrackingEvent{
 		OrderCode:    req.OrderCode,
 		DriverCode:   req.DriverCode,
 		StatusUpdate: req.StatusUpdate,
@@ -56,15 +58,11 @@ func (s *Service) Create(ctx context.Context, req *CreateTrackingEventRequest) (
 	return event, nil
 }
 
-func (s *Service) Get(ctx context.Context, id int64) (*TrackingEvent, error) {
-	event, err := s.Repo.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	return event, nil
+func (s *Service) Get(ctx context.Context, id int64) (*entity.TrackingEvent, error) {
+	return s.Repo.GetByID(ctx, id)
 }
 
-func (s *Service) List(ctx context.Context, orderCode, driverCode string, offset, limit int) ([]TrackingEvent, int, error) {
+func (s *Service) List(ctx context.Context, orderCode, driverCode string, offset, limit int) ([]entity.TrackingEvent, int, error) {
 	events, err := s.Repo.List(ctx, orderCode, driverCode, offset, limit)
 	if err != nil {
 		return nil, 0, err
@@ -76,20 +74,15 @@ func (s *Service) List(ctx context.Context, orderCode, driverCode string, offset
 	return events, count, nil
 }
 
-func (s *Service) GetByOrder(ctx context.Context, orderCode string) ([]TrackingEvent, error) {
-	events, err := s.Repo.GetByOrder(ctx, orderCode)
-	if err != nil {
-		return nil, err
-	}
-	return events, nil
+func (s *Service) GetByOrder(ctx context.Context, orderCode string) ([]entity.TrackingEvent, error) {
+	return s.Repo.GetByOrder(ctx, orderCode)
 }
 
-func (s *Service) Update(ctx context.Context, id int64, req *UpdateTrackingEventRequest) (*TrackingEvent, error) {
+func (s *Service) Update(ctx context.Context, id int64, req *dto.UpdateTrackingEventRequest) (*entity.TrackingEvent, error) {
 	event, err := s.Repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-
 	if req.OrderCode != nil {
 		if *req.OrderCode == "" {
 			return nil, fmt.Errorf("%w: order_code must not be empty", apierrors.ErrBadRequest)
@@ -117,9 +110,7 @@ func (s *Service) Update(ctx context.Context, id int64, req *UpdateTrackingEvent
 	if req.Note != nil {
 		event.Note = *req.Note
 	}
-
 	event.Timestamp = time.Now().UTC()
-
 	if err := s.Repo.Update(ctx, id, event); err != nil {
 		return nil, err
 	}
@@ -127,8 +118,5 @@ func (s *Service) Update(ctx context.Context, id int64, req *UpdateTrackingEvent
 }
 
 func (s *Service) Delete(ctx context.Context, id int64) error {
-	if err := s.Repo.Delete(ctx, id); err != nil {
-		return err
-	}
-	return nil
+	return s.Repo.Delete(ctx, id)
 }

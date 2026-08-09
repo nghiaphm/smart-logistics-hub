@@ -4,7 +4,7 @@ import "time"
 
 type BillingResponse struct {
 	BillingCreate `json:",inline"`
-	ID            string     `json:"_id" bson:"_id"`
+	ID            string     `json:"_id"`
 	TransactionID *string    `json:"transaction_id,omitempty"`
 	CreatedAt     *time.Time `json:"created_at"`
 	UpdatedAt     *time.Time `json:"updated_at"`
