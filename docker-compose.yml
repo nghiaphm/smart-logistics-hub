@@ -1,4 +1,52 @@
 services:
+  # --- MARIADB (Primary business database) ---
+  mariadb:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: smart_logistics
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - my-network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- BACKEND (Go API) ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: development
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: "8000"
+      MARIADB_HOST: mariadb
+      MARIADB_PORT: "3306"
+      MARIADB_USER: root
+      MARIADB_PASSWORD: root
+      MARIADB_DB_NAME: smart_logistics
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: web-app-project
+      KEYCLOAK_CLIENT_ID: fastapi_backend_client
+      DEV_SKIP_AUTH: "true"
+      REDIS_ENABLED: "false"
+      FRONTEND_URL: http://localhost:3000
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - my-network
+
   # --- CỤM KEYCLOAK (Auth) ---
   postgres-keycloak:
     image: postgres:16
@@ -62,4 +110,5 @@ networks:
 
 volumes:
   keycloak_db_data:
+  mariadb_data:
   mongodb_data:
