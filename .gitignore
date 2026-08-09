@@ -5,7 +5,8 @@ backend/__pycache__/
 # Bo qua thu vien Frontend
 frontend/node_modules
 frontend/.next/
-
+# Go build artifacts
+backend/*.exe
 
 # Bo qua file bao mat
 .env

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"my-web-app.com/smart-logistic-hub/internal/driver"
 	"my-web-app.com/smart-logistic-hub/internal/infrastructure/config"
@@ -56,7 +57,7 @@ func main() {
 	corsMw := middleware.CORSMiddleware(cfg.FrontendURL)
 
 	r := gin.New()
-	r.Use(gin.Recovery(), corsMw, middleware.ErrorHandler())
+	r.Use(middleware.RequestIDMiddleware(), gin.Recovery(), corsMw, middleware.MetricsMiddleware(), middleware.ErrorHandler())
 
 	api := r.Group("/api/v1")
 	{
@@ -66,17 +67,13 @@ func main() {
 		tracking.RegisterRoutes(api, db, authMw)
 	}
 
-	r.GET("/health", func(c *gin.Context) {
-		if err := db.Ping(); err != nil {
-			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "unhealthy", "database": "disconnected"})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
+	r.GET("/healthz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "alive"})
 	})
 
-	r.GET("/readiness", func(c *gin.Context) {
+	r.GET("/readyz", func(c *gin.Context) {
 		if err := db.Ping(); err != nil {
-			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "not ready"})
+			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "not ready", "database": "disconnected"})
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"status": "ready"})
@@ -95,6 +92,22 @@ func main() {
 		errCh <- srv.ListenAndServe()
 	}()
 
+	// Internal metrics server (Prometheus scraping), isolated from public traffic.
+	var metricsSrv *http.Server
+	if cfg.MetricsEnabled {
+		metricsSrv = &http.Server{
+			Addr:              fmt.Sprintf("%s:%s", cfg.MetricsHost, cfg.MetricsPort),
+			Handler:           promhttp.Handler(),
+			ReadHeaderTimeout: 5 * time.Second,
+		}
+		go func() {
+			log.Info("metrics server listening", "addr", metricsSrv.Addr)
+			if err := metricsSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Error("metrics server failed", "error", err)
+			}
+		}()
+	}
+
 	shutdownCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -112,6 +125,11 @@ func main() {
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Error("graceful shutdown failed", "error", err)
+	}
+	if metricsSrv != nil {
+		if err := metricsSrv.Shutdown(ctx); err != nil {
+			log.Error("metrics server shutdown failed", "error", err)
+		}
 	}
 	log.Info("server stopped")
 }
