@@ -2,12 +2,15 @@ package service
 
 import (
 	"context"
-	"database/sql"
+	"errors"
+	"fmt"
 	"time"
 
+	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
+	inventoryentity "my-web-app.com/smart-logistic-hub/internal/inventory/entity"
 	"my-web-app.com/smart-logistic-hub/internal/order/dto"
 	"my-web-app.com/smart-logistic-hub/internal/order/entity"
-	"my-web-app.com/smart-logistic-hub/internal/order/repository"
+	productentity "my-web-app.com/smart-logistic-hub/internal/product/entity"
 )
 
 type OrderRepository interface {
@@ -23,19 +26,67 @@ type OrderRepository interface {
 	DeleteItems(ctx context.Context, orderID int64) error
 }
 
+type ProductRepository interface {
+	GetByID(ctx context.Context, id int64) (*productentity.Product, error)
+}
+
+type InventoryRepository interface {
+	GetByProductWarehouse(ctx context.Context, productID, warehouseID int64) (*inventoryentity.Inventory, error)
+	Update(ctx context.Context, id int64, inv *inventoryentity.Inventory) error
+}
+
 type Service struct {
-	repo OrderRepository
+	repo      OrderRepository
+	products  ProductRepository
+	inventory InventoryRepository
 }
 
-func NewService(db *sql.DB) *Service {
-	return &Service{repo: repository.NewRepository(db)}
+func NewService(repo OrderRepository, products ProductRepository, inventory InventoryRepository) *Service {
+	return &Service{repo: repo, products: products, inventory: inventory}
 }
 
-func NewServiceWithRepo(repo OrderRepository) *Service {
-	return &Service{repo: repo}
+func NewServiceWithRepo(repo OrderRepository, products ProductRepository, inventory InventoryRepository) *Service {
+	return NewService(repo, products, inventory)
 }
 
 func (s *Service) Create(ctx context.Context, req *dto.CreateOrderRequest) (*entity.Order, error) {
+	if len(req.Items) == 0 {
+		return nil, fmt.Errorf("%w: at least one order item is required", apierrors.ErrBadRequest)
+	}
+	if req.WarehouseID <= 0 {
+		return nil, fmt.Errorf("%w: warehouse_id is required", apierrors.ErrBadRequest)
+	}
+
+	type stockRef struct {
+		productID int64
+		quantity  int
+	}
+	stock := make([]stockRef, 0, len(req.Items))
+
+	for _, it := range req.Items {
+		if it.ProductID == nil {
+			return nil, fmt.Errorf("%w: product_id is required for each order item", apierrors.ErrBadRequest)
+		}
+		if _, err := s.products.GetByID(ctx, *it.ProductID); err != nil {
+			if errors.Is(err, apierrors.ErrNotFound) {
+				return nil, fmt.Errorf("%w: product %d does not exist", apierrors.ErrBadRequest, *it.ProductID)
+			}
+			return nil, err
+		}
+		inv, err := s.inventory.GetByProductWarehouse(ctx, *it.ProductID, req.WarehouseID)
+		if err != nil {
+			if errors.Is(err, apierrors.ErrNotFound) {
+				return nil, fmt.Errorf("%w: insufficient inventory for product %d at warehouse %d", apierrors.ErrConflict, *it.ProductID, req.WarehouseID)
+			}
+			return nil, err
+		}
+		if inv.AvailableQty < it.Quantity {
+			return nil, fmt.Errorf("%w: insufficient inventory for product %d: available %d, required %d",
+				apierrors.ErrConflict, *it.ProductID, inv.AvailableQty, it.Quantity)
+		}
+		stock = append(stock, stockRef{productID: *it.ProductID, quantity: it.Quantity})
+	}
+
 	now := time.Now().UTC()
 	o := &entity.Order{
 		OrderCode:          req.OrderCode,
@@ -76,6 +127,19 @@ func (s *Service) Create(ctx context.Context, req *dto.CreateOrderRequest) (*ent
 			return nil, err
 		}
 	}
+
+	for _, st := range stock {
+		inv, err := s.inventory.GetByProductWarehouse(ctx, st.productID, req.WarehouseID)
+		if err != nil {
+			return nil, err
+		}
+		inv.AvailableQty -= st.quantity
+		inv.ReservedQty += st.quantity
+		if err := s.inventory.Update(ctx, inv.ID, inv); err != nil {
+			return nil, err
+		}
+	}
+
 	return o, nil
 }
 

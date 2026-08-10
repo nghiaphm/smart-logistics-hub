@@ -1,11 +1,11 @@
-package warehouses
+package dto
 
 type Location struct {
-	Lat float64 `json:"lat" binding:"required"`
-	Lng float64 `json:"lng" binding:"required"`
+	Lat *float64 `json:"lat,omitempty"`
+	Lng *float64 `json:"lng,omitempty"`
 }
 
-type WarehouseCreate struct {
+type CreateWarehouseRequest struct {
 	WarehouseCode string    `json:"warehouse_code" binding:"required"`
 	Name          string    `json:"name" binding:"required"`
 	Address       string    `json:"address" binding:"required"`
@@ -14,7 +14,7 @@ type WarehouseCreate struct {
 	ManagerName   *string   `json:"manager_name,omitempty"`
 }
 
-type WarehouseUpdate struct {
+type UpdateWarehouseRequest struct {
 	Name         *string   `json:"name,omitempty"`
 	Address      *string   `json:"address,omitempty"`
 	Location     *Location `json:"location,omitempty"`

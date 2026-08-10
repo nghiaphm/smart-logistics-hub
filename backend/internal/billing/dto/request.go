@@ -1,4 +1,4 @@
-package billings
+package dto
 
 import "time"
 
@@ -8,18 +8,19 @@ type PayerInfo struct {
 	Email *string `json:"email,omitempty"`
 }
 
-type BillingCreate struct {
+type CreateBillingRequest struct {
 	BillingCode   string    `json:"billing_code" binding:"required"`
 	OrderCode     string    `json:"order_code" binding:"required"`
-	AmountTotal   float64   `json:"amount_total" binding:"required"`
+	AmountTotal   float64   `json:"amount_total"`
 	Currency      string    `json:"currency"`
-	PaymentMethod string    `json:"payment_method" binding:"oneof=COD VNPAY BANK_TRANSFER"`
-	PaymentStatus string    `json:"payment_status" binding:"oneof=UNPAID PENDING PAID FAILED"`
+	PaymentMethod string    `json:"payment_method"`
+	PaymentStatus string    `json:"payment_status"`
 	PayerInfo     PayerInfo `json:"payer_info" binding:"required"`
+	CreatedBy     string    `json:"created_by"`
 }
 
-type BillingUpdate struct {
-	PaymentStatus *string    `json:"payment_status,omitempty" binding:"omitempty,oneof=UNPAID PENDING PAID FAILED"`
+type UpdateBillingRequest struct {
+	PaymentStatus *string    `json:"payment_status,omitempty"`
 	TransactionID *string    `json:"transaction_id,omitempty"`
 	PaidAt        *time.Time `json:"paid_at,omitempty"`
 }

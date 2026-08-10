@@ -6,6 +6,7 @@ type Inbound struct {
 	ID           int64      `json:"id" db:"id"`
 	ReceiptCode  string     `json:"receipt_code" db:"receipt_code"`
 	SupplierName string     `json:"supplier_name" db:"supplier_name"`
+	WarehouseID  int64      `json:"warehouse_id" db:"warehouse_id"`
 	Status       string     `json:"status" db:"status"`
 	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at" db:"updated_at"`
