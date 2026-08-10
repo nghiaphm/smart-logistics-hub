@@ -1,6 +1,6 @@
 # Smart Logistic Project — Architecture
 
-*Audit date: 2026-08-08. Based exclusively on actual source code, imports, and configuration. No source code was modified.*
+*Audit date: 2026-08-10. Based on actual source code, imports, and configuration. This audit includes a refactor that standardized dependency injection across all implemented domains, verified auth/RBAC coverage on every private endpoint, completed all 10 domains, and added inter-domain orchestration to the `order`, `trip`, `inbound`, and `billing` services.*
 
 ---
 
@@ -31,25 +31,26 @@
 ```
 smart-logistic-project/
 ├── .env.development              # Dev env vars (MariaDB, Keycloak, Redis disabled)
-├── .env.production               # Empty
-├── .github/workflows/ci.yml      # Go CI: gofmt, vet, test (with MariaDB), build
-├── .vscode/settings.json         # Python env manager (unrelated to backend)
+├── .env.production               # Production env template (CHANGE_ME placeholders, no secrets)
+├── .github/workflows/ci.yml      # Go CI: gofmt, vet, migrate, test (with MariaDB), build
+├── .gitattributes                # *.go text eol=lf normalization
+├── .kilo/                        # Kilo CLI local config (untracked)
+├── .vscode/settings.json         # Editor settings
 ├── docker-compose.yml            # MariaDB + Backend + Keycloak + Postgres
-├── README.md                     # Outdated — describes old Python/MongoDB architecture
+├── diff_output.txt               # Leftover diff artifact (tracked)
+├── README.md                     # Go + Gin + MariaDB + Keycloak architecture guide
 ├── ARCHITECTURE.md               # This document
-├── agents/                       # AI-assisted code migration tooling (NOT runtime)
-│   ├── core/                     # base_agent.py (empty), llm_client.py (empty)
-│   ├── skills/                   # skill_convert_fastapi_to_go.md (80-line spec), db_query_tool.py (empty), web_search_tool.py (empty)
-│   └── workflows/                # code_migration_flow.py (empty)
-├── ai_service/                   # Stub — ALL 4 files empty
-│   ├── .env, .env.example, main.py, requirements.txt
+├── docs/
+│   └── refactor-prompts/         # Historical refactor task prompts
+│       ├── architecture_audit.md
+│       ├── architecture-refactor.md
+│       └── refactor-prompt-phase1/2/3.md
+├── ai_service/                   # Stub — PLANNED (no implementation)
+│   ├── .env, .env.example, main.py, requirements.txt   # all 0 bytes
 │   └── model/                    # Empty directory
-├── data_pipeline/                # Stub — directories exist, no files
+├── data_pipeline/                # Stub — PLANNED (no implementation)
 │   ├── dags/                     # Empty
 │   └── spark_jobs/               # Empty
-├── prompts/                      # Task/prompt templates
-│   ├── architecture_audit.md
-│   └── architecture-refactor.md
 └── backend/
     ├── .env                      # Empty
     ├── .env.example              # Template: MariaDB, Redis, S3, Keycloak, server, metrics, AUTO_MIGRATE
@@ -61,6 +62,8 @@ smart-logistic-project/
     ├── migrations/
     │   ├── 000001_initial_schema.up.sql    # 13 tables (golang-migrate format)
     │   └── 000001_initial_schema.down.sql  # Drop all tables
+    ├── docs/                     # Empty
+    ├── test/integration/         # Repository integration tests (driver, order, inventory, tracking)
     └── internal/
         ├── common/
         │   └── errors/errors.go  # APIError struct + 6 sentinel errors
@@ -80,12 +83,12 @@ smart-logistic-project/
         ├── order/                        # FULLY IMPLEMENTED
         ├── inventory/                    # FULLY IMPLEMENTED
         ├── tracking/                     # FULLY IMPLEMENTED
-        ├── ai/                           # Entity/DTO only (SQL db tags, planned)
-        ├── billing/                      # Entity/DTO only (SQL db tags, planned)
-        ├── inbound/                      # Entity/DTO only (SQL db tags, planned)
-        ├── product/                      # Entity/DTO only (SQL db tags, planned)
-        ├── trip/                         # Entity/DTO only (SQL db tags, planned)
-        └── warehouse/                    # Entity/DTO only (SQL db tags, planned)
+        ├── product/                      # FULLY IMPLEMENTED
+        ├── warehouse/                    # FULLY IMPLEMENTED
+        ├── trip/                         # FULLY IMPLEMENTED
+        ├── inbound/                      # FULLY IMPLEMENTED
+        ├── billing/                      # FULLY IMPLEMENTED
+        └── ai/                           # FULLY IMPLEMENTED
 ```
 
 ---
@@ -111,24 +114,15 @@ smart-logistic-project/
 
 | Field | Detail |
 |---|---|
-| **Current State** | **EMPTY** — `main.py`, `requirements.txt`, `.env.example`, `model/` all 0 bytes |
-| **Status** | STUB — not implemented |
+| **Current State** | **EMPTY** — `main.py`, `requirements.txt`, `.env.example`, `.env` all 0 bytes |
+| **Status** | PLANNED — no implementation |
 
 ### 3.3 Data Pipeline (`data_pipeline/`)
 
 | Field | Detail |
 |---|---|
 | **Current State** | **EMPTY** — `dags/` and `spark_jobs/` contain no files |
-| **Status** | STUB — not implemented |
-
-### 3.4 Agents (`agents/`)
-
-| Field | Detail |
-|---|---|
-| **Responsibility** | AI-assisted code migration tooling (Python → Go) |
-| **Content** | 1 markdown spec (`skill_convert_fastapi_to_go.md`), 5 empty Python stubs |
-| **Runtime Component?** | **No** — development tooling only |
-| **Status** | STUB — incomplete tooling |
+| **Status** | PLANNED — no implementation |
 
 ---
 
@@ -157,6 +151,12 @@ The entry point performs bootstrap in order:
    - `/api/v1/drivers/*` — auth-protected CRUD
    - `/api/v1/inventory/*` — auth-protected CRUD (admin-only DELETE)
    - `/api/v1/tracking-logs/*` — auth-protected CRUD (admin-only DELETE)
+   - `/api/v1/products/*` — auth-protected CRUD (admin-only DELETE)
+   - `/api/v1/warehouses/*` — auth-protected CRUD (admin-only DELETE)
+   - `/api/v1/trips/*` — auth-protected CRUD + assign-driver (admin-only DELETE)
+   - `/api/v1/inbounds/*` — auth-protected CRUD (admin-only DELETE)
+   - `/api/v1/billing/*` — auth-protected CRUD + lookup by code/order (admin-only DELETE)
+   - `/api/v1/ai-events/*` — auth-protected CRUD (admin-only DELETE)
 9. Optional internal Prometheus metrics server on a separate port (`METRICS_PORT`, default 9090, controlled by `METRICS_ENABLED`) serving `/metrics`
 10. HTTP server with graceful shutdown (SIGINT/SIGTERM, 10s drain); both API and metrics servers are shut down cleanly
 
@@ -168,19 +168,18 @@ The entry point performs bootstrap in order:
 |---|---|---|---|---|---|---|---|---|---|
 | **driver** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw | MariaDB | **FULL** |
 | **order** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw + RBAC | MariaDB | **FULL** |
-| **inventory** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | None | MariaDB | **FULL** |
-| **tracking** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | None | MariaDB | **FULL** |
-| **ai** | ✓(bson) | ✓ | — | — | — | — | — | — | ENTITY/DTO |
-| **billing** | ✓(bson) | ✓ | — | — | — | — | — | — | ENTITY/DTO |
-| **inbound** | ✓(bson) | ✓ | — | — | — | — | — | — | ENTITY/DTO |
-| **product** | ✓(bson) | ✓ | — | — | — | — | — | — | ENTITY/DTO |
-| **trip** | ✓(bson) | ✓ | — | — | — | — | — | — | ENTITY/DTO |
-| **warehouse** | ✓(bson) | ✓ | — | — | — | — | — | — | ENTITY/DTO |
-| **auth** | — | — | stub(1 line) | — | — | — | — | — | STUB |
+| **inventory** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw + RBAC | MariaDB | **FULL** |
+| **tracking** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw + RBAC | MariaDB | **FULL** |
+| **product** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw + RBAC | MariaDB | **FULL** |
+| **warehouse** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw + RBAC | MariaDB | **FULL** |
+| **trip** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw + RBAC | MariaDB | **FULL** |
+| **inbound** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw + RBAC | MariaDB | **FULL** |
+| **billing** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw + RBAC | MariaDB | **FULL** |
+| **ai** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw + RBAC | MariaDB | **FULL** |
 
 ### 4.3 Domain Architecture Patterns
 
-**All implemented domains** (driver, order, inventory, tracking) follow the same subdirectory structure:
+**All implemented domains** (driver, order, inventory, tracking, product, warehouse, trip, inbound, billing, ai) follow the same subdirectory structure:
 
 ```
 internal/{domain}/
@@ -192,20 +191,31 @@ internal/{domain}/
 └── routes.go
 ```
 
-Pattern:
+Pattern (Interface Injection):
 ```
 Handler (Gin context → typed DTO binding → calls service)
   ↓
 Service (business logic, validation, use-case orchestration)
   ↓
-Repository (SQL queries via database/sql)
+Repository (interface) — SQL queries via database/sql
   ↓
 MariaDB
 ```
 
-### 4.4 Stub Domains (Entity/DTO Only)
+Wiring flow in each domain's `RegisterRoutes`:
+```
+db → repository.New(db) → service.New(repo) → handler.New(service)
+```
 
-The domains `ai`, `billing`, `inbound`, `product`, `trip`, `warehouse` contain only entity and DTO definitions with MariaDB-compatible `db` struct tags matching the migration schema. No handler, service, or repository implementations exist yet. These represent **planned** business capabilities with corresponding tables already in the MariaDB schema.
+The service layer never receives `*sql.DB` directly — it depends only on its consumer-side repository interface (`DriverRepository`, `OrderRepository`, `InventoryRepository`, `TrackingRepository`, `ProductRepository`, `WarehouseRepository`, `TripRepository`, `InboundRepository`, `BillingRepository`, `AIRepository`), enabling mocking in unit tests.
+
+**Inter-domain orchestration**: `order.Service` orchestrates across domains during order creation. It depends on two extra injected consumer-side interfaces — `ProductRepository` (validates each item's product exists via `GetByID`) and `InventoryRepository` (checks and reserves stock via `GetByProductWarehouse`/`Update`). `order/routes.go` wires `db → productRepository.New(db)` and `db → inventoryRepository.New(db)` and passes both into `service.NewService(orderRepo, productRepo, inventoryRepo)`. Cross-domain calls are strictly interface-based (no concrete repository types, no direct `*sql.DB`, no circular imports).
+
+`trip.Service` depends on a `DriverRepository` consumer interface to validate driver existence and `AVAILABLE` status before assignment (`Create` and `AssignDriver`). `inbound.Service` depends on an `InventoryRepository` consumer interface; completing an inbound (`status = COMPLETED`) adds `received_qty` to `available_qty` for each item at the inbound's warehouse. `billing.Service` depends on an `OrderRepository` consumer interface — it verifies the order exists before creating an invoice and rejects a second billing record for an already-`PAID` order. `ai.Service` is self-contained (single `AIRepository`); it records gate/ANPR events and flags low-confidence readings (`confidence_score < 0.7`).
+
+### 4.4 Stub Domains
+
+**None remain.** All 10 business domains are fully implemented.
 
 ---
 
@@ -286,9 +296,15 @@ order.RegisterRoutes(api, db, authMw)
 driver.RegisterRoutes(api, db, authMw)
 inventory.RegisterRoutes(api, db, authMw)
 tracking.RegisterRoutes(api, db, authMw)
+product.RegisterRoutes(api, db, authMw)
+warehouse.RegisterRoutes(api, db, authMw)
+trip.RegisterRoutes(api, db, authMw)
+inbound.RegisterRoutes(api, db, authMw)
+billing.RegisterRoutes(api, db, authMw)
+ai.RegisterRoutes(api, db, authMw)
 ```
 
-All four implemented domains receive the same `authMw` (JWT auth) parameter.
+All ten implemented domains receive the same `authMw` (JWT auth) parameter.
 
 ### 6.2 API Endpoints
 
@@ -319,8 +335,41 @@ All four implemented domains receive the same `authMw` (JWT auth) parameter.
 | GET | `/api/v1/tracking-logs/:id` | JWT | — | Tracking |
 | PUT | `/api/v1/tracking-logs/:id` | JWT | — | Tracking |
 | DELETE | `/api/v1/tracking-logs/:id` | JWT | admin | Tracking |
+| POST | `/api/v1/products` | JWT | — | Product |
+| GET | `/api/v1/products` | JWT | — | Product |
+| GET | `/api/v1/products/:id` | JWT | — | Product |
+| PATCH | `/api/v1/products/:id` | JWT | — | Product |
+| DELETE | `/api/v1/products/:id` | JWT | admin | Product |
+| POST | `/api/v1/warehouses` | JWT | — | Warehouse |
+| GET | `/api/v1/warehouses` | JWT | — | Warehouse |
+| GET | `/api/v1/warehouses/:id` | JWT | — | Warehouse |
+| PATCH | `/api/v1/warehouses/:id` | JWT | — | Warehouse |
+| DELETE | `/api/v1/warehouses/:id` | JWT | admin | Warehouse |
+| POST | `/api/v1/trips` | JWT | — | Trip |
+| GET | `/api/v1/trips` | JWT | — | Trip |
+| GET | `/api/v1/trips/:id` | JWT | — | Trip |
+| PATCH | `/api/v1/trips/:id` | JWT | — | Trip |
+| POST | `/api/v1/trips/:id/assign-driver` | JWT | — | Trip |
+| DELETE | `/api/v1/trips/:id` | JWT | admin | Trip |
+| POST | `/api/v1/inbounds` | JWT | — | Inbound |
+| GET | `/api/v1/inbounds` | JWT | — | Inbound |
+| GET | `/api/v1/inbounds/:id` | JWT | — | Inbound |
+| PATCH | `/api/v1/inbounds/:id` | JWT | — | Inbound |
+| DELETE | `/api/v1/inbounds/:id` | JWT | admin | Inbound |
+| POST | `/api/v1/billing` | JWT | — | Billing |
+| GET | `/api/v1/billing` | JWT | — | Billing |
+| GET | `/api/v1/billing/code/:billing_code` | JWT | — | Billing |
+| GET | `/api/v1/billing/order/:order_code` | JWT | — | Billing |
+| GET | `/api/v1/billing/:id` | JWT | — | Billing |
+| PATCH | `/api/v1/billing/:id` | JWT | — | Billing |
+| DELETE | `/api/v1/billing/:id` | JWT | admin | Billing |
+| POST | `/api/v1/ai-events` | JWT | — | AI |
+| GET | `/api/v1/ai-events` | JWT | — | AI |
+| GET | `/api/v1/ai-events/:id` | JWT | — | AI |
+| PATCH | `/api/v1/ai-events/:id` | JWT | — | AI |
+| DELETE | `/api/v1/ai-events/:id` | JWT | admin | AI |
 
-**Notable**: All CRUD routes across all four domains require a valid JWT. DELETE routes for `orders`, `inventory`, and `tracking-logs` additionally require the `admin` role via `RequireRole("admin")`. Only `/healthz`, `/readyz`, `/api/v1/orders/health` are public; `/metrics` is served on a separate internal port and is not part of the public API surface.
+**Notable**: All CRUD routes across all ten domains require a valid JWT. DELETE routes for `orders`, `inventory`, `tracking-logs`, `products`, `warehouses`, `trips`, `inbounds`, `billing`, and `ai-events` additionally require the `admin` role via `RequireRole("admin")`. `POST /api/v1/orders` requires a `warehouse_id`; on creation the order service validates each item's product and reserves stock (decreases `available_qty`, increases `reserved_qty`) in the inventory domain, rejecting insufficient stock with 409 Conflict. `POST /api/v1/inbounds` requires a `warehouse_id`; completing an inbound adds `received_qty` to inventory `available_qty`. `POST /api/v1/trips` requires a `driver_code` and rejects non-`AVAILABLE` drivers with 409 Conflict. `POST /api/v1/billing` validates the `order_code` exists and rejects duplicate `PAID` invoices with 409 Conflict. `POST /api/v1/ai-events` records ANPR gate events and flags low-confidence readings (`confidence_score < 0.7`). Only `/healthz`, `/readyz`, `/api/v1/orders/health` are public; `/metrics` is served on a separate internal port and is not part of the public API surface.
 
 ### 6.3 Inter-Service Communication
 
@@ -343,19 +392,19 @@ All four implemented domains receive the same `authMw` (JWT auth) parameter.
 
 | Table | Key Columns | Constraints | Used By |
 |---|---|---|---|
-| `warehouses` | id, warehouse_code, name, address, lat, lng, contact_phone, manager_name, is_active | UNIQUE(warehouse_code) | — |
-| `products` | id, sku, name, category, price, weight_gram, dimensions | UNIQUE(sku) | — |
+| `warehouses` | id, warehouse_code, name, address, lat, lng, contact_phone, manager_name, is_active | UNIQUE(warehouse_code) | warehouse domain |
+| `products` | id, sku, name, category, price, weight_gram, length_cm, width_cm, height_cm | UNIQUE(sku) | product domain |
 | `drivers` | id, driver_code, full_name, phone, vehicle_type, license_plate, status, current_lat/lng, warehouse_id | UNIQUE(driver_code), INDEX(status) | driver domain |
 | `orders` | id, order_code, sender_*, receiver_*, status, assigned_driver_id | UNIQUE(order_code), INDEX(status, driver_id) | order domain |
 | `order_items` | id, order_id, product_id, product_name, quantity, weight_gram | FK→orders ON DELETE CASCADE | order domain |
 | `inventory` | id, product_id, warehouse_id, available_qty, reserved_qty, damaged_qty, hold_qty | UNIQUE(product_id, warehouse_id), INDEXES | inventory domain |
-| `trips` | id, trip_code, driver_id, vehicle_license_plate, status, distance, duration | UNIQUE(trip_code), INDEX(driver_id) | — |
-| `trip_stops` | id, trip_id, order_code, stop_type, address, lat, lng, status, timestamps | FK→trips ON DELETE CASCADE | — |
+| `trips` | id, trip_code, driver_id, vehicle_license_plate, status, distance, duration | UNIQUE(trip_code), INDEX(driver_id) | trip domain |
+| `trip_stops` | id, trip_id, order_code, stop_type, address, lat, lng, status, timestamps | FK→trips ON DELETE CASCADE | trip domain |
 | `tracking_events` | id, order_code, driver_code, status_update, lat, lng, note, timestamp | INDEX(order_code, driver_code, timestamp) | tracking domain |
-| `billing` | id, billing_code, order_code, amount, currency, payment_method/status | UNIQUE(billing_code), INDEX(order_code) | — |
-| `inbounds` | id, receipt_code, supplier_name, status | UNIQUE(receipt_code) | — |
-| `inbound_items` | id, inbound_id, product_id, expected/received/rejected/qc_passed qty | FK→inbounds ON DELETE CASCADE | — |
-| `ai_events` | id, event_code, license_plate, confidence_score, event_type, gate_id | UNIQUE(event_code) | — |
+| `billing` | id, billing_code, order_code, amount, currency, payment_method/status | UNIQUE(billing_code), INDEX(order_code) | billing domain |
+| `inbounds` | id, receipt_code, supplier_name, warehouse_id, status, completed_at | UNIQUE(receipt_code), INDEX(warehouse_id) | inbound domain |
+| `inbound_items` | id, inbound_id, product_id, expected/received/rejected/qc_passed qty | FK→inbounds ON DELETE CASCADE | inbound domain |
+| `ai_events` | id, event_code, license_plate, confidence_score, event_type, gate_id | UNIQUE(event_code) | ai domain |
 
 **All tables**: InnoDB engine, utf8mb4 charset, timestamps with CURRENT_TIMESTAMP defaults.
 
@@ -394,13 +443,29 @@ main.go
 │   └── AuthMiddleware()     → JWTVerifier interface
 ├── domain routes
 │   ├── order.RegisterRoutes()
-│   │   └── handler → service → repository → MariaDB
+│   │   ├── handler → service → order repository (interface) → MariaDB
+│   │   └── order service → product repository (interface) & inventory repository (interface) — validation + stock reservation
 │   ├── driver.RegisterRoutes()
-│   │   └── handler → service → repository → MariaDB
+│   │   └── handler → service → repository (interface) → MariaDB
 │   ├── inventory.RegisterRoutes()
-│   │   └── handler → service → repository → MariaDB
-│   └── tracking.RegisterRoutes()
-│       └── handler → service → repository → MariaDB
+│   │   └── handler → service → repository (interface) → MariaDB
+│   ├── tracking.RegisterRoutes()
+│   │   └── handler → service → repository (interface) → MariaDB
+│   ├── product.RegisterRoutes()
+│   │   └── handler → service → repository (interface) → MariaDB
+│   ├── warehouse.RegisterRoutes()
+│   │   └── handler → service → repository (interface) → MariaDB
+│   ├── trip.RegisterRoutes()
+│   │   ├── handler → service → trip repository (interface) → MariaDB
+│   │   └── trip service → driver repository (interface) — driver availability check on assignment
+│   ├── inbound.RegisterRoutes()
+│   │   ├── handler → service → inbound repository (interface) → MariaDB
+│   │   └── inbound service → inventory repository (interface) — adds received_qty on completion
+│   ├── billing.RegisterRoutes()
+│   │   ├── handler → service → billing repository (interface) → MariaDB
+│   │   └── billing service → order repository (interface) — order existence + duplicate-PAID check
+│   └── ai.RegisterRoutes()
+│       └── handler → service → ai repository (interface) → MariaDB
 └── health/readiness         → MariaDB ping
 ```
 
@@ -421,10 +486,22 @@ graph TB
 
     subgraph "Implemented Domains"
         direction LR
-        ORD[order] --> MDB[(MariaDB)]
-        DRV[driver] --> MDB
-        INV[inventory] --> MDB
-        TRK[tracking] --> MDB
+        ORDH[order handler] --> ORDS[order service] --> ORDR[order repository<br/>(interface)] --> MDB[(MariaDB)]
+        DRVH[driver handler] --> DRVS[driver service] --> DRVR[driver repository<br/>(interface)] --> MDB
+        INVH[inventory handler] --> INVS[inventory service] --> INVR[inventory repository<br/>(interface)] --> MDB
+        TRKH[tracking handler] --> TRKS[tracking service] --> TRKR[tracking repository<br/>(interface)] --> MDB
+        PRDH[product handler] --> PRDS[product service] --> PRDR[product repository<br/>(interface)] --> MDB
+        WHH[warehouse handler] --> WHS[warehouse service] --> WHR[warehouse repository<br/>(interface)] --> MDB
+        TRPH[trip handler] --> TRPS[trip service] --> TRPR[trip repository<br/>(interface)] --> MDB
+        INBH[inbound handler] --> INBS[inbound service] --> INBR[inbound repository<br/>(interface)] --> MDB
+        BILH[billing handler] --> BILS[billing service] --> BILR[billing repository<br/>(interface)] --> MDB
+        AIH[ai handler] --> AIS[ai service] --> AIR[ai repository<br/>(interface)] --> MDB
+
+        ORDS -.-> PRDR
+        ORDS -.-> INVR
+        TRPS -.-> DRVR
+        INBS -.-> INVR
+        BILS -.-> ORDR
     end
 
     MAIN --> CFG
@@ -433,10 +510,16 @@ graph TB
     MAIN --> RDS
     MAIN --> KC
     MAIN --> MID
-    MAIN --> ORD
-    MAIN --> DRV
-    MAIN --> INV
-    MAIN --> TRK
+    MAIN --> ORDH
+    MAIN --> DRVH
+    MAIN --> INVH
+    MAIN --> TRKH
+    MAIN --> PRDH
+    MAIN --> WHH
+    MAIN --> TRPH
+    MAIN --> INBH
+    MAIN --> BILH
+    MAIN --> AIH
     KC --> KEYCLOAK[Keycloak Server]
 
     subgraph External
@@ -456,11 +539,26 @@ Verified by inspecting actual `import` statements:
 | `internal/infrastructure/keycloak` | main.go (verifier.go only; client.go is orphaned) |
 | `internal/infrastructure/middleware` | main.go, order/handler |
 | `internal/infrastructure/logger` | main.go |
-| `internal/common/errors` | driver/repository, order/repository, inventory/repository, tracking/repository |
+| `internal/common/errors` | driver/repository, order/repository, inventory/repository, tracking/repository, product/repository, warehouse/repository, trip/repository, inbound/repository, billing/repository, ai/repository |
 | `internal/driver/{handler,service,repository,dto,entity}` | driver/routes.go, handler, service, repository (internal to domain) |
 | `internal/order/{handler,service,repository,dto,entity}` | order/routes.go, handler, service, repository (internal to domain) |
+| `internal/product/{handler,service,repository,dto,entity}` | product/routes.go, handler, service, repository (internal to domain) |
+| `internal/warehouse/{handler,service,repository,dto,entity}` | warehouse/routes.go, handler, service, repository (internal to domain) |
+| `internal/trip/{handler,service,repository,dto,entity}` | trip/routes.go, handler, service, repository (internal to domain) |
+| `internal/inbound/{handler,service,repository,dto,entity}` | inbound/routes.go, handler, service, repository (internal to domain) |
+| `internal/billing/{handler,service,repository,dto,entity}` | billing/routes.go, handler, service, repository (internal to domain) |
+| `internal/ai/{handler,service,repository,dto,entity}` | ai/routes.go, handler, service, repository (internal to domain) |
+| `internal/inventory/entity`, `internal/product/entity` | order/service (consumer-side interface types for stock reservation) |
+| `internal/inventory/repository` | order/routes.go (injected into order service) |
+| `internal/product/repository` | order/routes.go (injected into order service) |
+| `internal/driver/entity` | trip/service (consumer-side interface type for driver assignment) |
+| `internal/driver/repository` | trip/routes.go (injected into trip service) |
+| `internal/inventory/entity` | inbound/service (consumer-side interface type for stock top-up) |
+| `internal/inventory/repository` | inbound/routes.go (injected into inbound service) |
+| `internal/order/entity` | billing/service (consumer-side interface type for order validation) |
+| `internal/order/repository` | billing/routes.go (injected into billing service) |
 
-**No circular dependencies detected.**
+**No circular dependencies detected.** `order` depends on `product`/`inventory`, `trip` depends on `driver`, `inbound` depends on `inventory`, and `billing` depends on `order` — always via consumer-side interfaces and leaf `entity` packages only; the reverse directions are absent.
 
 ---
 
@@ -503,7 +601,7 @@ Verified by inspecting actual `import` statements:
   - Extracts `*APIError` from the error chain via `errors.As` and renders `{ "error": { "code": <status>, "message": "<msg>" } }`
   - Falls back to HTTP 500 with a generic `"Internal server error"` message for unknown errors — the underlying error is only logged server-side via `slog`, never leaked to the client
   - Binding/validation errors are wrapped with `ErrBadRequest` by handlers before being passed to `c.Error`
-- **No per-handler `resolveError()` helper remains**: all four implemented domains (driver, order, inventory, tracking) use `c.Error(err)` + the global middleware
+- **No per-handler `resolveError()` helper remains**: all ten implemented domains (driver, order, inventory, tracking, product, warehouse, trip, inbound, billing, ai) use `c.Error(err)` + the global middleware
 
 ---
 
@@ -532,16 +630,16 @@ The metrics server is started alongside the API server in `cmd/api/main.go` and 
 
 | Artifact | Status |
 |---|---|
-| Service unit tests | **Implemented** — `driver/service/service_test.go`, `order/service/service_test.go`, `inventory/service_test.go`, `tracking/service_test.go` |
+| Service unit tests | **Implemented** — `driver/service/service_test.go`, `order/service/service_test.go`, `inventory/service_test.go`, `tracking/service_test.go`, `product/service/service_test.go`, `warehouse/service/service_test.go`, `trip/service/service_test.go`, `inbound/service/service_test.go`, `billing/service/service_test.go`, `ai/service/service_test.go` |
 | Middleware tests | **Implemented** — `infrastructure/middleware/error_handler_test.go`, `infrastructure/middleware/request_id_test.go` |
 | Repository integration tests | **Implemented** — `test/integration/` (driver, order, inventory, tracking) |
 | Migration CLI | `cmd/migrate` — verified locally (`up`/`down`/`version` round-trip against real MariaDB) |
 | E2E tests | **None** |
 | Test database | **MariaDB** — real database via `MARIADB_*` env vars (CI provides a MariaDB service container) |
 
-**Service unit tests** use mocked repositories (consumer-side interfaces `DriverRepository`, `OrderRepository`, `InventoryRepository`, `TrackingRepository` defined in each service package). Mock repositories implement these interfaces and are injected via `NewServiceWithRepo(...)` — no real DB is touched.
+**Service unit tests** use mocked repositories (consumer-side interfaces `DriverRepository`, `OrderRepository`, `InventoryRepository`, `TrackingRepository`, `ProductRepository`, `WarehouseRepository`, `TripRepository`, `InboundRepository`, `BillingRepository`, `AIRepository` defined in each service package). Mock repositories implement these interfaces and are injected via `NewServiceWithRepo(...)` — no real DB is touched. `order`, `trip`, `inbound`, and `billing` tests also mock the injected cross-domain interfaces (`ProductRepository`, `InventoryRepository`, `DriverRepository`, `OrderRepository`).
 
-**Repository integration tests** in `test/integration/` run against a real MariaDB. `TestMain` connects using `MARIADB_HOST/PORT/USER/PASSWORD/DB_NAME` env vars (defaults: localhost/3306/root/root/smart_logistics), resets the schema via the down/up migration files, and each test truncates tables for isolation. They verify CRUD for all four repositories plus `sql.ErrNoRows` → `ErrNotFound` behavior.
+**Repository integration tests** in `test/integration/` run against a real MariaDB. `TestMain` connects using `MARIADB_HOST/PORT/USER/PASSWORD/DB_NAME` env vars (defaults: localhost/3306/root/root/smart_logistics), resets the schema via the down/up migration files, and each test truncates tables for isolation. They verify CRUD for the driver, order, inventory, and tracking repositories plus `sql.ErrNoRows` → `ErrNotFound` behavior.
 
 **CI**: `.github/workflows/ci.yml` runs `go run ./cmd/migrate up` (applying the schema) then `go test ./...` with a MariaDB 11 service container, so integration tests execute in CI against the migrated schema.
 
@@ -603,19 +701,29 @@ The metrics server is started alongside the API server in `cmd/api/main.go` and 
 
 ### 15.1 Structural Inconsistencies
 
-1. ~~**Dual file structure styles**~~ — **Resolved.** All four implemented domains now use the same subdirectory layout (entity/, dto/, handler/, service/, repository/ + routes.go at root).
+1. ~~**Dual file structure styles**~~ — **Resolved.** All ten implemented domains now use the same subdirectory layout (entity/, dto/, handler/, service/, repository/ + routes.go at root).
 
-2. ~~**Unused bson tags**~~ — **Resolved.** All 6 stub domains (ai, billing, inbound, product, trip, warehouse) have been migrated from `bson` struct tags to MariaDB-compatible `db` struct tags matching the migration schema.
+2. ~~**Unused bson tags**~~ — **Resolved.** All stub domains have been migrated from `bson` struct tags to MariaDB-compatible `db` struct tags matching the migration schema. No stub domains remain — all 10 domains are fully implemented.
 
 3. ~~**Orphaned packages**~~ — **Resolved.** `pkg/utils/`, `infrastructure/keycloak/client.go`, and `auth/` have been removed.
 
-4. **Service constructor asymmetry**: `driver`/`order` use `NewService(db)` + `NewServiceWithRepo(repo)`; `inventory`/`tracking` use `NewService(repo)` + `NewServiceWithRepo(repo)`. The `NewServiceWithRepo` variants exist to enable repository mocking in unit tests.
+4. ~~**Service constructor asymmetry**~~ — **Resolved.** All ten implemented domains (`driver`, `order`, `inventory`, `tracking`, `product`, `warehouse`, `trip`, `inbound`, `billing`, `ai`) now strictly follow the `NewService(repo)` pattern via **Interface Injection**. Each domain's `RegisterRoutes` wires `db → repository.New(db) → service.New(repo) → handler.New(service)`, and no service package depends on `*sql.DB` directly. `NewServiceWithRepo` remains only as an alias used by unit tests for repository mocking.
+
+5. ~~**Inconsistent auth/RBAC coverage**~~ — **Resolved.** All CRUD endpoints in `inventory` and `tracking` are protected by the JWT `authMw` (previously documented as `None`), and their DELETE routes additionally require `RequireRole("admin")` — identical to `order` and `driver`. `cmd/api/main.go` passes the same `authMw` to all ten `RegisterRoutes` calls.
+
+6. ~~**No inter-domain communication**~~ — **Resolved.** Inter-domain orchestration is now implemented via injected consumer-side interfaces: `order.Service` validates each item's product and reserves stock (decrease `available_qty`, increase `reserved_qty`) on creation, rejecting insufficient stock with `apierrors.ErrConflict` and unknown products with `apierrors.ErrBadRequest`; `trip.Service` validates driver existence and `AVAILABLE` status before assignment (unknown → `ErrBadRequest`, unavailable → `ErrConflict`); `inbound.Service` adds `received_qty` to inventory `available_qty` when an inbound transitions to `COMPLETED`; `billing.Service` validates the order exists before invoicing and rejects a second billing record for an already-`PAID` order. All cross-domain dependencies are interface-based and wired in each domain's `routes.go` — no circular imports. **Known limitation**: repositories own separate `*sql.DB` connections, so cross-domain mutations (e.g., order creation + inventory reservation, inbound completion + stock top-up) are not wrapped in a single DB transaction; a shared transaction boundary would be needed for atomic rollback.
+
+7. ~~**Stub domains**~~ — **Resolved.** The final stub domains (`billing`, `ai`) are fully implemented. `billing.Service` provides invoicing with `PENDING`/`PAID`/`FAILED` status flow, order validation, and duplicate-`PAID` prevention. `ai.Service` records ANPR gate events and flags low-confidence readings (`confidence_score < 0.7`). All 10/10 domains are complete.
 
 ### 15.2 Dependency Direction
 
 Correct direction maintained:
 ```
-Handler → Service → Repository → MariaDB
+Handler → Service → Repository (Interface) → MariaDB
+order.Service → product Repository (Interface) & inventory Repository (Interface)
+trip.Service → driver Repository (Interface)
+inbound.Service → inventory Repository (Interface)
+billing.Service → order Repository (Interface)
 Infrastructure (config, database, redis, keycloak, middleware)
 ```
 No circular dependencies. Infrastructure packages do not import domain packages.
@@ -625,7 +733,7 @@ No circular dependencies. Infrastructure packages do not import domain packages.
 The modular monolith structure supports future extraction:
 - Each domain has clear boundaries (entity, service, repository)
 - No cross-domain database access in current code
-- No cross-domain service calls in current code
+- Cross-domain calls are interface-based (`order.Service` → `product`/`inventory`, `trip.Service` → `driver`, `inbound.Service` → `inventory`, `billing.Service` → `order` consumer interfaces), so domains can be extracted into separate services with database per service
 - Domains could be extracted into separate services with database per service
 
 ---
@@ -650,6 +758,12 @@ graph TB
             DRV[Driver<br/>auth]
             INV[Inventory<br/>auth+RBACon DELETE]
             TRK[Tracking<br/>auth+RBACon DELETE]
+            PRD[Product<br/>auth+RBACon DELETE]
+            WH[Warehouse<br/>auth+RBACon DELETE]
+            TRP[Trip<br/>auth+RBACon DELETE]
+            INB[Inbound<br/>auth+RBACon DELETE]
+            BIL[Billing<br/>auth+RBACon DELETE]
+            AIE[AI Events<br/>auth+RBACon DELETE]
         end
     end
 
@@ -668,10 +782,22 @@ graph TB
     GIN --> DRV
     GIN --> INV
     GIN --> TRK
+    GIN --> PRD
+    GIN --> WH
+    GIN --> TRP
+    GIN --> INB
+    GIN --> BIL
+    GIN --> AIE
     ORD --> MDB
     DRV --> MDB
     INV --> MDB
     TRK --> MDB
+    PRD --> MDB
+    WH --> MDB
+    TRP --> MDB
+    INB --> MDB
+    BIL --> MDB
+    AIE --> MDB
     KC --> PG
 ```
 
@@ -681,17 +807,17 @@ graph TB
 
 | Metric | Value |
 |---|---|
-| Total Go files | 78 (67 source + 11 test) |
-| Fully implemented domains | 4 (driver, order, inventory, tracking) — all consistent subdirectory structure |
-| Stub domains (entity/DTO only) | 6 (ai, billing, inbound, product, trip, warehouse) — all migrated to SQL db tags |
+| Total Go files | 103 (86 source + 17 test) |
+| Fully implemented domains | 10 (driver, order, inventory, tracking, product, warehouse, trip, inbound, billing, ai) — all consistent subdirectory structure |
+| Stub domains (entity/DTO only) | 0 |
 | Broken stub (1 line) | 0 (auth/ removed) |
 | MariaDB tables | 13 (in migration via golang-migrate) |
-| API endpoints | 23 (plus /healthz, /readyz; /metrics on internal port) |
+| API endpoints | 56 (plus /healthz, /readyz; /metrics on internal port) |
 | External services used | Keycloak (active), Redis (optional), S3 (optional, disabled) |
 | Orphaned files | 0 (all confirmed dead code removed in Phase 3) |
-| Empty stubs (`ai_service/`) | 4 files |
-| Empty stubs (`data_pipeline/`) | 2 directories |
+| Empty stubs (`ai_service/`) | 4 files (PLANNED) |
+| Empty stubs (`data_pipeline/`) | 2 directories (PLANNED) |
 | Build status | `go build`, `go vet`, `go fmt` — all **pass** |
-| Test status | **Implemented** — 4 service unit test suites (mocked repos), 2 middleware test suites (error handler + request ID), 12 repository integration tests (real MariaDB) |
+| Test status | **Implemented** — 10 service unit test suites (mocked repos), 2 middleware test suites (error handler + request ID), 12 repository integration tests (real MariaDB) |
 
-*Audit completed: 2026-08-08. Based exclusively on actual source code verification. No files modified.*
+*Audit completed: 2026-08-10. Based on actual source code verification. Source code was modified as part of this audit to standardize dependency injection across all implemented domains, verify auth/RBAC on all private routes, complete all 10 domains (including `product`, `warehouse`, `trip`, `inbound`, `billing`, and `ai`), and add inter-domain orchestration (`order` → `product`/`inventory`, `trip` → `driver`, `inbound` → `inventory`, `billing` → `order`).*
