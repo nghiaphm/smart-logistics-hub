@@ -2,12 +2,10 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"my-web-app.com/smart-logistic-hub/internal/driver/dto"
 	"my-web-app.com/smart-logistic-hub/internal/driver/entity"
-	"my-web-app.com/smart-logistic-hub/internal/driver/repository"
 )
 
 type DriverRepository interface {
@@ -24,12 +22,12 @@ type Service struct {
 	repo DriverRepository
 }
 
-func NewService(db *sql.DB) *Service {
-	return &Service{repo: repository.NewRepository(db)}
+func NewService(repo DriverRepository) *Service {
+	return &Service{repo: repo}
 }
 
 func NewServiceWithRepo(repo DriverRepository) *Service {
-	return &Service{repo: repo}
+	return NewService(repo)
 }
 
 func (s *Service) Create(ctx context.Context, req *dto.CreateDriverRequest) (*entity.Driver, error) {

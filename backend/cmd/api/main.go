@@ -13,7 +13,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"my-web-app.com/smart-logistic-hub/internal/ai"
+	"my-web-app.com/smart-logistic-hub/internal/billing"
 	"my-web-app.com/smart-logistic-hub/internal/driver"
+	"my-web-app.com/smart-logistic-hub/internal/inbound"
 	"my-web-app.com/smart-logistic-hub/internal/infrastructure/config"
 	"my-web-app.com/smart-logistic-hub/internal/infrastructure/database"
 	"my-web-app.com/smart-logistic-hub/internal/infrastructure/keycloak"
@@ -22,7 +25,10 @@ import (
 	infraredis "my-web-app.com/smart-logistic-hub/internal/infrastructure/redis"
 	"my-web-app.com/smart-logistic-hub/internal/inventory"
 	"my-web-app.com/smart-logistic-hub/internal/order"
+	"my-web-app.com/smart-logistic-hub/internal/product"
 	"my-web-app.com/smart-logistic-hub/internal/tracking"
+	"my-web-app.com/smart-logistic-hub/internal/trip"
+	"my-web-app.com/smart-logistic-hub/internal/warehouse"
 )
 
 func main() {
@@ -65,6 +71,12 @@ func main() {
 		driver.RegisterRoutes(api, db, authMw)
 		inventory.RegisterRoutes(api, db, authMw)
 		tracking.RegisterRoutes(api, db, authMw)
+		product.RegisterRoutes(api, db, authMw)
+		warehouse.RegisterRoutes(api, db, authMw)
+		trip.RegisterRoutes(api, db, authMw)
+		inbound.RegisterRoutes(api, db, authMw)
+		billing.RegisterRoutes(api, db, authMw)
+		ai.RegisterRoutes(api, db, authMw)
 	}
 
 	r.GET("/healthz", func(c *gin.Context) {

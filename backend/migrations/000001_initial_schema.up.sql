@@ -171,12 +171,14 @@ CREATE TABLE inbounds (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     receipt_code VARCHAR(50) NOT NULL,
     supplier_name VARCHAR(255) DEFAULT '',
+    warehouse_id BIGINT DEFAULT 0,
     status VARCHAR(30) DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     completed_at TIMESTAMP NULL,
     created_by VARCHAR(255) DEFAULT '',
-    UNIQUE KEY uq_receipt_code (receipt_code)
+    UNIQUE KEY uq_receipt_code (receipt_code),
+    INDEX idx_warehouse (warehouse_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE inbound_items (
