@@ -20,3 +20,4 @@ frontend/.env.local
 backend/.env.production
 *.log
 vendor/
+/.kilo
