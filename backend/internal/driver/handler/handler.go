@@ -20,18 +20,7 @@ func NewHandler(svc *service.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-func (h *Handler) RegisterRoutes(rg *gin.RouterGroup, authMw gin.HandlerFunc) {
-	g := rg.Group("/drivers")
-	g.Use(authMw)
-
-	g.POST("", h.create)
-	g.GET("", h.list)
-	g.GET("/:id", h.get)
-	g.PUT("/:id", h.update)
-	g.DELETE("/:id", h.delete)
-}
-
-func (h *Handler) create(c *gin.Context) {
+func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateDriverRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Error(fmt.Errorf("%w: %v", apierrors.ErrBadRequest, err))
@@ -45,7 +34,7 @@ func (h *Handler) create(c *gin.Context) {
 	c.JSON(http.StatusCreated, d)
 }
 
-func (h *Handler) get(c *gin.Context) {
+func (h *Handler) Get(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.Error(fmt.Errorf("%w: invalid driver ID", apierrors.ErrBadRequest))
@@ -59,7 +48,7 @@ func (h *Handler) get(c *gin.Context) {
 	c.JSON(http.StatusOK, d)
 }
 
-func (h *Handler) list(c *gin.Context) {
+func (h *Handler) List(c *gin.Context) {
 	status := c.Query("status")
 	offset, _ := strconv.Atoi(c.DefaultQuery("skip", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -80,7 +69,7 @@ func (h *Handler) list(c *gin.Context) {
 	})
 }
 
-func (h *Handler) update(c *gin.Context) {
+func (h *Handler) Update(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.Error(fmt.Errorf("%w: invalid driver ID", apierrors.ErrBadRequest))
@@ -99,7 +88,7 @@ func (h *Handler) update(c *gin.Context) {
 	c.JSON(http.StatusOK, d)
 }
 
-func (h *Handler) delete(c *gin.Context) {
+func (h *Handler) Delete(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.Error(fmt.Errorf("%w: invalid driver ID", apierrors.ErrBadRequest))

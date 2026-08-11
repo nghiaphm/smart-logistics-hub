@@ -16,6 +16,9 @@ import (
 	"my-web-app.com/smart-logistic-hub/internal/ai"
 	"my-web-app.com/smart-logistic-hub/internal/billing"
 	"my-web-app.com/smart-logistic-hub/internal/driver"
+	"my-web-app.com/smart-logistic-hub/internal/driver/handler"
+	driverrepo "my-web-app.com/smart-logistic-hub/internal/driver/repository"
+	driverservice "my-web-app.com/smart-logistic-hub/internal/driver/service"
 	"my-web-app.com/smart-logistic-hub/internal/inbound"
 	"my-web-app.com/smart-logistic-hub/internal/infrastructure/config"
 	"my-web-app.com/smart-logistic-hub/internal/infrastructure/database"
@@ -24,8 +27,13 @@ import (
 	"my-web-app.com/smart-logistic-hub/internal/infrastructure/middleware"
 	infraredis "my-web-app.com/smart-logistic-hub/internal/infrastructure/redis"
 	"my-web-app.com/smart-logistic-hub/internal/inventory"
+	invrepo "my-web-app.com/smart-logistic-hub/internal/inventory/repository"
 	"my-web-app.com/smart-logistic-hub/internal/order"
+	orderhandler "my-web-app.com/smart-logistic-hub/internal/order/handler"
+	orderrepo "my-web-app.com/smart-logistic-hub/internal/order/repository"
+	orderservice "my-web-app.com/smart-logistic-hub/internal/order/service"
 	"my-web-app.com/smart-logistic-hub/internal/product"
+	prodrepo "my-web-app.com/smart-logistic-hub/internal/product/repository"
 	"my-web-app.com/smart-logistic-hub/internal/tracking"
 	"my-web-app.com/smart-logistic-hub/internal/trip"
 	"my-web-app.com/smart-logistic-hub/internal/warehouse"
@@ -66,17 +74,30 @@ func main() {
 	r.Use(middleware.RequestIDMiddleware(), gin.Recovery(), corsMw, middleware.MetricsMiddleware(), middleware.ErrorHandler())
 
 	api := r.Group("/api/v1")
+
+	driverRepo := driverrepo.NewRepository(db)
+	driverSvc := driverservice.NewService(driverRepo)
+	driverHandler := handler.NewHandler(driverSvc)
+
+	orderRepo := orderrepo.NewRepository(db)
+	orderProductRepo := prodrepo.NewRepository(db)
+	orderInventoryRepo := invrepo.NewRepository(db)
+	orderSvc := orderservice.NewService(orderRepo, orderProductRepo, orderInventoryRepo)
+	orderHandler := orderhandler.NewHandler(orderSvc)
+
+	protected := api.Group("")
+	protected.Use(authMw)
 	{
-		order.RegisterRoutes(api, db, authMw)
-		driver.RegisterRoutes(api, db, authMw)
-		inventory.RegisterRoutes(api, db, authMw)
-		tracking.RegisterRoutes(api, db, authMw)
-		product.RegisterRoutes(api, db, authMw)
-		warehouse.RegisterRoutes(api, db, authMw)
-		trip.RegisterRoutes(api, db, authMw)
-		inbound.RegisterRoutes(api, db, authMw)
-		billing.RegisterRoutes(api, db, authMw)
-		ai.RegisterRoutes(api, db, authMw)
+		driver.RegisterRoutes(protected, driverHandler)
+		order.RegisterRoutes(protected, orderHandler)
+		inventory.RegisterRoutes(protected, db, authMw)
+		tracking.RegisterRoutes(protected, db, authMw)
+		product.RegisterRoutes(protected, db, authMw)
+		warehouse.RegisterRoutes(protected, db, authMw)
+		trip.RegisterRoutes(protected, db, authMw)
+		inbound.RegisterRoutes(protected, db, authMw)
+		billing.RegisterRoutes(protected, db, authMw)
+		ai.RegisterRoutes(protected, db, authMw)
 	}
 
 	r.GET("/healthz", func(c *gin.Context) {
