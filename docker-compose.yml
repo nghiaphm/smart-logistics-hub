@@ -44,7 +44,7 @@ services:
       KEYCLOAK_SERVER_URL: http://keycloak:8080
       KEYCLOAK_REALM: web-app-project
       KEYCLOAK_CLIENT_ID: fastapi_backend_client
-      DEV_SKIP_AUTH: "true"
+      DEV_SKIP_AUTH: "false"
       REDIS_ENABLED: "false"
       FRONTEND_URL: http://localhost:3000
       AUTO_MIGRATE: "false"
