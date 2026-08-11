@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
-	"my-web-app.com/smart-logistic-hub/internal/infrastructure/middleware"
 	"my-web-app.com/smart-logistic-hub/internal/order/dto"
 	"my-web-app.com/smart-logistic-hub/internal/order/service"
 )
@@ -21,29 +20,7 @@ func NewHandler(svc *service.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-func (h *Handler) RegisterRoutes(rg *gin.RouterGroup, authMw gin.HandlerFunc) {
-	g := rg.Group("/orders")
-
-	g.GET("/health", h.health)
-
-	protected := g.Group("")
-	protected.Use(authMw)
-
-	protected.POST("", h.create)
-	protected.GET("", h.list)
-	protected.GET("/:id", h.get)
-	protected.PUT("/:id", h.update)
-	protected.DELETE("/:id", middleware.RequireRole("admin"), h.delete)
-}
-
-func (h *Handler) health(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status": "ok",
-		"module": "orders",
-	})
-}
-
-func (h *Handler) create(c *gin.Context) {
+func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Error(fmt.Errorf("%w: %v", apierrors.ErrBadRequest, err))
@@ -57,7 +34,7 @@ func (h *Handler) create(c *gin.Context) {
 	c.JSON(http.StatusCreated, o)
 }
 
-func (h *Handler) get(c *gin.Context) {
+func (h *Handler) Get(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.Error(fmt.Errorf("%w: invalid order ID", apierrors.ErrBadRequest))
@@ -110,7 +87,7 @@ func (h *Handler) get(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func (h *Handler) list(c *gin.Context) {
+func (h *Handler) List(c *gin.Context) {
 	offset, _ := strconv.Atoi(c.DefaultQuery("skip", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if limit < 1 || limit > 200 {
@@ -130,7 +107,7 @@ func (h *Handler) list(c *gin.Context) {
 	})
 }
 
-func (h *Handler) update(c *gin.Context) {
+func (h *Handler) Update(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.Error(fmt.Errorf("%w: invalid order ID", apierrors.ErrBadRequest))
@@ -149,7 +126,7 @@ func (h *Handler) update(c *gin.Context) {
 	c.JSON(http.StatusOK, o)
 }
 
-func (h *Handler) delete(c *gin.Context) {
+func (h *Handler) Delete(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.Error(fmt.Errorf("%w: invalid order ID", apierrors.ErrBadRequest))
