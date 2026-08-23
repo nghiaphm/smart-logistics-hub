@@ -29,6 +29,8 @@ services:
     ports:
       - "8000:8000"
       - "9090:9090"
+    extra_hosts:
+      - "localhost:host-gateway" # Giúp container Backend gọi được Keycloak qua localhost:8180
     environment:
       APP_ENV: development
       SERVER_HOST: 0.0.0.0
@@ -41,9 +43,9 @@ services:
       MARIADB_USER: root
       MARIADB_PASSWORD: root
       MARIADB_DB_NAME: smart_logistics
-      KEYCLOAK_SERVER_URL: http://keycloak:8080
-      KEYCLOAK_REALM: web-app-project
-      KEYCLOAK_CLIENT_ID: fastapi_backend_client
+      KEYCLOAK_SERVER_URL: http://localhost:8180
+      KEYCLOAK_REALM: smart-logistics # Đã cập nhật đúng Realm
+      KEYCLOAK_CLIENT_ID: frontend-web # Đã cập nhật đúng Client ID
       DEV_SKIP_AUTH: "false"
       REDIS_ENABLED: "false"
       FRONTEND_URL: http://localhost:3000
