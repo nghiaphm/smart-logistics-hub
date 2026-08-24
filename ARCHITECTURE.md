@@ -15,7 +15,7 @@
 **Key technologies in actual use**:
 
 | Technology | Usage |
-|---|---|
+| --- | --- |
 | **Go 1.26.4** | Backend language |
 | **Gin v1.12** | HTTP framework |
 | **MariaDB 11** | Primary relational database (`database/sql` + `go-sql-driver/mysql`) |
@@ -98,7 +98,7 @@ smart-logistic-project/
 ### 3.1 Backend (`backend/`)
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | **Responsibility** | REST API for logistics operations |
 | **Language** | Go 1.26.4 |
 | **Module** | `my-web-app.com/smart-logistic-hub` |
@@ -113,14 +113,14 @@ smart-logistic-project/
 ### 3.2 AI Service (`ai_service/`)
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | **Current State** | **EMPTY** — `main.py`, `requirements.txt`, `.env.example`, `.env` all 0 bytes |
 | **Status** | PLANNED — no implementation |
 
 ### 3.3 Data Pipeline (`data_pipeline/`)
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | **Current State** | **EMPTY** — `dags/` and `spark_jobs/` contain no files |
 | **Status** | PLANNED — no implementation |
 
@@ -165,7 +165,7 @@ The entry point performs bootstrap in order:
 ### 4.2 Domain Implementation Status
 
 | Domain | Entity | DTO | Handler | Service | Repository | Routes | Auth | DB | Status |
-|---|---|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **driver** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw | MariaDB | **FULL** |
 | **order** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw + RBAC | MariaDB | **FULL** |
 | **inventory** | ✓ | ✓ | ✓ | ✓ | ✓ (MariaDB) | ✓ | AuthMw + RBAC | MariaDB | **FULL** |
@@ -251,7 +251,7 @@ The service layer never receives `*sql.DB` directly — it depends only on its c
 **Two files exist, one is orphaned:**
 
 | File | Package | Used? | Purpose |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `verifier.go` | `keycloak` | **Yes** (imported by main.go) | `JWTVerifier` struct with JWKS fetching, RSA key parsing, RS256 token verification with issuer validation |
 | `client.go` | `keycloak` | **No** (orphaned) | Package-level `FetchJWKS()` function — never called |
 
@@ -268,7 +268,7 @@ The service layer never receives `*sql.DB` directly — it depends only on its c
 ### 5.5 Middleware (`internal/infrastructure/middleware/`)
 
 | File | Exports | Description |
-|---|---|---|
+| --- | --- | --- |
 | `auth.go` | `type JWTVerifier interface`, `func AuthMiddleware(cfg, devSkipAuth, verifier) gin.HandlerFunc` | Bearer token extraction, dev mode mock user, JWT verification via interface |
 | `cors.go` | `func CORSMiddleware(frontendURL string) gin.HandlerFunc` | CORS for configured frontend origin, common methods/headers, credentials, 12h max age |
 | `rbac.go` | `func RequireRole(allowedRoles ...string) gin.HandlerFunc` | Extracts roles from JWT `realm_access.roles` and `resource_access.*.roles` |
@@ -309,7 +309,7 @@ All ten implemented domains receive the same `authMw` (JWT auth) parameter.
 ### 6.2 API Endpoints
 
 | Method | Path | Auth | Role | Domain |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | GET | `/healthz` | Public | — | Global (liveness) |
 | GET | `/readyz` | Public | — | Global (readiness) |
 | GET | `/metrics` | Internal port | — | Global (Prometheus) |
@@ -374,7 +374,7 @@ All ten implemented domains receive the same `authMw` (JWT auth) parameter.
 ### 6.3 Inter-Service Communication
 
 | Path | Status |
-|---|---|
+| --- | --- |
 | Backend → AI Service | **N/A** — config has `AI_SERVICE_URL` but no HTTP calls exist |
 | Backend → Data Pipeline | **N/A** — pipeline has no code |
 | Backend → Keycloak | **Implemented** — JWKS fetching for JWT verification |
@@ -391,7 +391,7 @@ All ten implemented domains receive the same `authMw` (JWT auth) parameter.
 **13 tables** defined in `migrations/000001_initial_schema.up.sql`:
 
 | Table | Key Columns | Constraints | Used By |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `warehouses` | id, warehouse_code, name, address, lat, lng, contact_phone, manager_name, is_active | UNIQUE(warehouse_code) | warehouse domain |
 | `products` | id, sku, name, category, price, weight_gram, length_cm, width_cm, height_cm | UNIQUE(sku) | product domain |
 | `drivers` | id, driver_code, full_name, phone, vehicle_type, license_plate, status, current_lat/lng, warehouse_id | UNIQUE(driver_code), INDEX(status) | driver domain |
@@ -413,7 +413,7 @@ All ten implemented domains receive the same `authMw` (JWT auth) parameter.
 **Migration strategy — explicit CLI, not auto-run:**
 
 | Context | `AUTO_MIGRATE` | Who runs migration | Rationale |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **docker-compose.yml** (default) | `false` | Manual: `docker compose exec backend /migrate up` | Production-like safety — no surprise schema changes on restart. The separate `cmd/migrate` CLI was chosen precisely to decouple migration from server startup. |
 | **docker-compose.override.yml** (dev convenience) | `true` (override) | `docker-entrypoint.sh` auto-runs on container start | Developer convenience — migration runs automatically so `docker compose up -d` just works. |
 | **CI workflow** (`.github/workflows/ci.yml`) | N/A | Explicit `go run ./cmd/migrate up` step before `go test` | CI always runs migrations explicitly via the CLI, independent of `AUTO_MIGRATE`. |
@@ -532,7 +532,7 @@ graph TB
 Verified by inspecting actual `import` statements:
 
 | Package | Imported By |
-|---|---|
+| --- | --- |
 | `internal/infrastructure/config` | main.go, database, redis, keycloak, middleware/auth |
 | `internal/infrastructure/database` | main.go |
 | `internal/infrastructure/redis` | main.go |
@@ -567,7 +567,7 @@ Verified by inspecting actual `import` statements:
 ### 9.1 Environment Files
 
 | File | Status | Contents |
-|---|---|---|
+| --- | --- | --- |
 | `backend/.env.example` | Template | MariaDB, Redis, S3, Keycloak, server settings. No real secrets. |
 | `backend/.env` | Empty | — |
 | `.env.development` (root) | In use | MariaDB localhost, Redis disabled, Keycloak, DEV_SKIP_AUTH=true |
@@ -608,7 +608,7 @@ Verified by inspecting actual `import` statements:
 ## 11. Observability
 
 | Capability | Status |
-|---|---|
+| --- | --- |
 | Structured logging | **Yes** — `log/slog` with JSON output, configurable levels |
 | Request ID | **Yes** — `RequestIDMiddleware()` (first in the chain) generates/reuses a request ID, stores it in gin context, attaches it to a request-scoped slog logger (`request_id` field), and echoes `X-Request-ID` in the response header |
 | Health check (liveness) | **Yes** — `GET /healthz` returns 200 while the process is alive; no DB dependency |
@@ -629,7 +629,7 @@ The metrics server is started alongside the API server in `cmd/api/main.go` and 
 ## 12. Testing
 
 | Artifact | Status |
-|---|---|
+| --- | --- |
 | Service unit tests | **Implemented** — `driver/service/service_test.go`, `order/service/service_test.go`, `inventory/service_test.go`, `tracking/service_test.go`, `product/service/service_test.go`, `warehouse/service/service_test.go`, `trip/service/service_test.go`, `inbound/service/service_test.go`, `billing/service/service_test.go`, `ai/service/service_test.go` |
 | Middleware tests | **Implemented** — `infrastructure/middleware/error_handler_test.go`, `infrastructure/middleware/request_id_test.go` |
 | Repository integration tests | **Implemented** — `test/integration/` (driver, order, inventory, tracking) |
@@ -650,7 +650,7 @@ The metrics server is started alongside the API server in `cmd/api/main.go` and 
 ### 13.1 Docker
 
 | Component | File | Status |
-|---|---|---|
+| --- | --- | --- |
 | Backend | `backend/Dockerfile` | **Implemented** — multi-stage (golang:1.26-alpine builder → alpine:3.20 runtime), builds `/server` (cmd/api) + `/migrate` (cmd/migrate), non-root user, `HEALTHCHECK` against `/healthz` |
 | Backend entrypoint | `backend/docker-entrypoint.sh` | Runs `/migrate up` before starting `/server` (skippable via `AUTO_MIGRATE=false`) |
 | AI Service | None | — |
@@ -682,7 +682,7 @@ The metrics server is started alongside the API server in `cmd/api/main.go` and 
 ### 13.4 Independent Deployability
 
 | Component | Independently Deployable? |
-|---|---|
+| --- | --- |
 | Backend | **Yes** — Dockerfile + docker-compose |
 | AI Service | **No** — no code |
 | Data Pipeline | **No** — no code |
@@ -806,7 +806,7 @@ graph TB
 ## 17. Summary
 
 | Metric | Value |
-|---|---|
+| --- | --- |
 | Total Go files | 103 (86 source + 17 test) |
 | Fully implemented domains | 10 (driver, order, inventory, tracking, product, warehouse, trip, inbound, billing, ai) — all consistent subdirectory structure |
 | Stub domains (entity/DTO only) | 0 |

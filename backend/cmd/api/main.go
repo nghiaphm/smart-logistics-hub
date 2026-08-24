@@ -34,6 +34,7 @@ import (
 	orderservice "my-web-app.com/smart-logistic-hub/internal/order/service"
 	"my-web-app.com/smart-logistic-hub/internal/product"
 	prodrepo "my-web-app.com/smart-logistic-hub/internal/product/repository"
+	"my-web-app.com/smart-logistic-hub/internal/profile"
 	"my-web-app.com/smart-logistic-hub/internal/tracking"
 	"my-web-app.com/smart-logistic-hub/internal/trip"
 	"my-web-app.com/smart-logistic-hub/internal/warehouse"
@@ -108,6 +109,7 @@ func main() {
 		billing.RegisterRoutes(protected, db, authMw)
 		ai.RegisterRoutes(protected, db, authMw)
 		workspace.RegisterRoutes(protected, db, authMw)
+		profile.RegisterRoutes(protected, db, authMw)
 	}
 
 	r.GET("/healthz", func(c *gin.Context) {

@@ -719,6 +719,30 @@ definitions:
       weight_gram:
         type: integer
     type: object
+  my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse:
+    properties:
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      display_name:
+        type: string
+      phone:
+        type: string
+      updated_at:
+        type: string
+      user_sub:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_profile_dto.UpdateProfileRequest:
+    properties:
+      avatar_url:
+        type: string
+      display_name:
+        type: string
+      phone:
+        type: string
+    type: object
   my-web-app_com_smart-logistic-hub_internal_tracking_dto.CreateTrackingEventRequest:
     properties:
       driver_code:
@@ -2208,6 +2232,67 @@ paths:
       summary: Update a product
       tags:
       - Products
+  /profile:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user profile
+      tags:
+      - Profile
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Profile update
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_profile_dto.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update current user profile
+      tags:
+      - Profile
   /tracking-logs:
     get:
       parameters:

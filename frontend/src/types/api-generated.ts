@@ -1878,6 +1878,122 @@ export interface paths {
         };
         trace?: never;
     };
+    "/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get current user profile */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        /** Update current user profile */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Profile update */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_profile_dto.UpdateProfileRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tracking-logs": {
         parameters: {
             query?: never;
@@ -3356,6 +3472,19 @@ export interface components {
             name?: string;
             price?: number;
             weight_gram?: number;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse": {
+            avatar_url?: string;
+            created_at?: string;
+            display_name?: string;
+            phone?: string;
+            updated_at?: string;
+            user_sub?: string;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_profile_dto.UpdateProfileRequest": {
+            avatar_url?: string;
+            display_name?: string;
+            phone?: string;
         };
         "my-web-app_com_smart-logistic-hub_internal_tracking_dto.CreateTrackingEventRequest": {
             driver_code: string;
