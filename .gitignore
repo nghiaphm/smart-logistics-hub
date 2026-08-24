@@ -21,3 +21,4 @@ backend/.env.production
 *.log
 vendor/
 /.kilo
+frontend/.ua

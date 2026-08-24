@@ -34,11 +34,21 @@ import (
 	orderservice "my-web-app.com/smart-logistic-hub/internal/order/service"
 	"my-web-app.com/smart-logistic-hub/internal/product"
 	prodrepo "my-web-app.com/smart-logistic-hub/internal/product/repository"
+	"my-web-app.com/smart-logistic-hub/internal/profile"
 	"my-web-app.com/smart-logistic-hub/internal/tracking"
 	"my-web-app.com/smart-logistic-hub/internal/trip"
 	"my-web-app.com/smart-logistic-hub/internal/warehouse"
+	"my-web-app.com/smart-logistic-hub/internal/workspace"
 )
 
+// @title Smart Logistics Hub API
+// @version 1.0.0
+// @description Smart Logistics Hub backend API. Authentication uses the "Authorization" header with format "Bearer &lt;token&gt;" (JWT issued by Keycloak).
+// @host localhost:8000
+// @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg := config.LoadConfig()
 	log := logger.New(cfg.Environment)
@@ -98,6 +108,8 @@ func main() {
 		inbound.RegisterRoutes(protected, db, authMw)
 		billing.RegisterRoutes(protected, db, authMw)
 		ai.RegisterRoutes(protected, db, authMw)
+		workspace.RegisterRoutes(protected, db, authMw)
+		profile.RegisterRoutes(protected, db, authMw)
 	}
 
 	r.GET("/healthz", func(c *gin.Context) {

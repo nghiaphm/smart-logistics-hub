@@ -1,0 +1,11 @@
+CREATE TABLE workspaces (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    workspace_code VARCHAR(50) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(255) DEFAULT '',
+    UNIQUE KEY uq_workspace_code (workspace_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
