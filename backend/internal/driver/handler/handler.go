@@ -20,6 +20,16 @@ func NewHandler(svc *service.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
+// @Summary Create a driver
+// @Tags Drivers
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param driver body dto.CreateDriverRequest true "Driver payload"
+// @Success 201 {object} dto.DriverResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /drivers [post]
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateDriverRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -31,9 +41,18 @@ func (h *Handler) Create(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusCreated, d)
+	c.JSON(http.StatusCreated, dto.ToResponse(d))
 }
 
+// @Summary Get a driver by ID
+// @Tags Drivers
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Driver ID"
+// @Success 200 {object} dto.DriverResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /drivers/{id} [get]
 func (h *Handler) Get(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -45,9 +64,19 @@ func (h *Handler) Get(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, d)
+	c.JSON(http.StatusOK, dto.ToResponse(d))
 }
 
+// @Summary List drivers
+// @Tags Drivers
+// @Produce json
+// @Security BearerAuth
+// @Param status query string false "Filter by driver status"
+// @Param skip query int false "Number of items to skip" default(0)
+// @Param limit query int false "Max items per page" default(20)
+// @Success 200 {object} dto.PaginatedResponse
+// @Failure 500 {object} map[string]interface{}
+// @Router /drivers [get]
 func (h *Handler) List(c *gin.Context) {
 	status := c.Query("status")
 	offset, _ := strconv.Atoi(c.DefaultQuery("skip", "0"))
@@ -61,14 +90,25 @@ func (h *Handler) List(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"items": drivers,
-		"total": total,
-		"skip":  offset,
-		"limit": limit,
+	c.JSON(http.StatusOK, dto.PaginatedResponse{
+		Items: dto.ToResponseList(drivers),
+		Total: total,
+		Skip:  offset,
+		Limit: limit,
 	})
 }
 
+// @Summary Update a driver
+// @Tags Drivers
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Driver ID"
+// @Param driver body dto.UpdateDriverRequest true "Driver update"
+// @Success 200 {object} dto.DriverResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /drivers/{id} [patch]
 func (h *Handler) Update(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -85,9 +125,17 @@ func (h *Handler) Update(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, d)
+	c.JSON(http.StatusOK, dto.ToResponse(d))
 }
 
+// @Summary Delete a driver
+// @Tags Drivers
+// @Security BearerAuth
+// @Param id path int true "Driver ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /drivers/{id} [delete]
 func (h *Handler) Delete(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

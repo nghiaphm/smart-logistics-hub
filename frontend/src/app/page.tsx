@@ -74,6 +74,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+import { SSOLoginButton } from "@/components/auth/SSOLoginButton";
+
 import { HugeiconsIcon } from "@hugeicons/react";
 import { 
   DeliveryTruck01Icon, 
@@ -95,10 +97,13 @@ export default function HomePage() {
               Hệ thống điều hành và giám sát kho vận tập trung
             </p>
           </div>
-          <Badge variant="outline" className="gap-1.5 py-1 px-3">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            Hệ thống: Sẵn sàng
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="gap-1.5 py-1 px-3">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              Hệ thống: Sẵn sàng
+            </Badge>
+            <SSOLoginButton />
+          </div>
         </div>
 
         {/* Dashboard Quick Cards */}

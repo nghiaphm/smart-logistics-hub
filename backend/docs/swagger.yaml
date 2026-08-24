@@ -1,0 +1,2995 @@
+basePath: /api/v1
+definitions:
+  my-web-app_com_smart-logistic-hub_internal_ai_dto.AIEventResponse:
+    properties:
+      confidence_score:
+        type: number
+      created_at:
+        type: string
+      event_code:
+        type: string
+      event_type:
+        type: string
+      gate_id:
+        type: string
+      id:
+        type: integer
+      license_plate:
+        type: string
+      low_confidence:
+        type: boolean
+      matched_driver_id:
+        type: integer
+      matched_trip_id:
+        type: integer
+      timestamp:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_ai_dto.CreateAIEventRequest:
+    properties:
+      confidence_score:
+        maximum: 1
+        minimum: 0
+        type: number
+      event_code:
+        type: string
+      event_type:
+        enum:
+        - INBOUND
+        - OUTBOUND
+        type: string
+      gate_id:
+        type: string
+      license_plate:
+        type: string
+      timestamp:
+        type: string
+    required:
+    - event_type
+    - gate_id
+    - license_plate
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_ai_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_ai_dto.AIEventResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_ai_dto.UpdateAIEventRequest:
+    properties:
+      confidence_score:
+        type: number
+      event_type:
+        type: string
+      gate_id:
+        type: string
+      license_plate:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_billing_dto.BillingResponse:
+    properties:
+      amount_total:
+        type: number
+      billing_code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      currency:
+        type: string
+      id:
+        type: integer
+      order_code:
+        type: string
+      paid_at:
+        type: string
+      payer_email:
+        type: string
+      payer_name:
+        type: string
+      payer_phone:
+        type: string
+      payment_method:
+        type: string
+      payment_status:
+        type: string
+      transaction_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_billing_dto.CreateBillingRequest:
+    properties:
+      amount_total:
+        type: number
+      billing_code:
+        type: string
+      created_by:
+        type: string
+      currency:
+        type: string
+      order_code:
+        type: string
+      payer_info:
+        $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_billing_dto.PayerInfo'
+      payment_method:
+        type: string
+      payment_status:
+        type: string
+    required:
+    - billing_code
+    - order_code
+    - payer_info
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_billing_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_billing_dto.BillingResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_billing_dto.PayerInfo:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    required:
+    - name
+    - phone
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_billing_dto.UpdateBillingRequest:
+    properties:
+      paid_at:
+        type: string
+      payment_status:
+        type: string
+      transaction_id:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_driver_dto.CreateDriverRequest:
+    properties:
+      current_lat:
+        type: number
+      current_lng:
+        type: number
+      driver_code:
+        type: string
+      full_name:
+        type: string
+      license_plate:
+        type: string
+      phone:
+        type: string
+      status:
+        enum:
+        - AVAILABLE
+        - BUSY
+        - OFFLINE
+        type: string
+      vehicle_type:
+        type: string
+      warehouse_id:
+        type: integer
+    required:
+    - driver_code
+    - full_name
+    - license_plate
+    - phone
+    - vehicle_type
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_driver_dto.DriverResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      current_lat:
+        type: number
+      current_lng:
+        type: number
+      driver_code:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: integer
+      license_plate:
+        type: string
+      phone:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+      vehicle_type:
+        type: string
+      warehouse_id:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_driver_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_driver_dto.DriverResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_driver_dto.UpdateDriverRequest:
+    properties:
+      current_lat:
+        type: number
+      current_lng:
+        type: number
+      driver_code:
+        type: string
+      full_name:
+        type: string
+      license_plate:
+        type: string
+      phone:
+        type: string
+      status:
+        enum:
+        - AVAILABLE
+        - BUSY
+        - OFFLINE
+        type: string
+      vehicle_type:
+        type: string
+      warehouse_id:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_inbound_dto.CreateInboundRequest:
+    properties:
+      created_by:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundItemRequest'
+        type: array
+      receipt_code:
+        type: string
+      status:
+        type: string
+      supplier_name:
+        type: string
+      warehouse_id:
+        minimum: 1
+        type: integer
+    required:
+    - items
+    - receipt_code
+    - supplier_name
+    - warehouse_id
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundItemRequest:
+    properties:
+      expected_qty:
+        type: integer
+      product_id:
+        type: integer
+      qc_passed:
+        type: integer
+      received_qty:
+        type: integer
+      rejected_qty:
+        type: integer
+    required:
+    - product_id
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundItemResponse:
+    properties:
+      expected_qty:
+        type: integer
+      id:
+        type: integer
+      inbound_id:
+        type: integer
+      product_id:
+        type: integer
+      qc_passed:
+        type: integer
+      received_qty:
+        type: integer
+      rejected_qty:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundResponse:
+    properties:
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundItemResponse'
+        type: array
+      receipt_code:
+        type: string
+      status:
+        type: string
+      supplier_name:
+        type: string
+      updated_at:
+        type: string
+      warehouse_id:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_inbound_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_inbound_dto.UpdateInboundRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundItemRequest'
+        type: array
+      status:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_inventory_dto.CreateInventoryRequest:
+    properties:
+      available_qty:
+        type: integer
+      damaged_qty:
+        type: integer
+      hold_qty:
+        type: integer
+      product_id:
+        type: integer
+      reserved_qty:
+        type: integer
+      updated_by:
+        type: string
+      warehouse_id:
+        type: integer
+    required:
+    - product_id
+    - warehouse_id
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_inventory_dto.InventoryResponse:
+    properties:
+      available_qty:
+        type: integer
+      created_at:
+        type: string
+      damaged_qty:
+        type: integer
+      hold_qty:
+        type: integer
+      id:
+        type: integer
+      product_id:
+        type: integer
+      reserved_qty:
+        type: integer
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      warehouse_id:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_inventory_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inventory_dto.InventoryResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_inventory_dto.UpdateInventoryRequest:
+    properties:
+      available_qty:
+        type: integer
+      damaged_qty:
+        type: integer
+      hold_qty:
+        type: integer
+      reason:
+        type: string
+      reserved_qty:
+        type: integer
+      updated_by:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_order_dto.CreateOrderRequest:
+    properties:
+      assigned_driver_id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_order_dto.OrderItemRequest'
+        type: array
+      order_code:
+        type: string
+      receiver_address:
+        type: string
+      receiver_district:
+        type: string
+      receiver_name:
+        type: string
+      receiver_phone:
+        type: string
+      receiver_postal_code:
+        type: string
+      receiver_province:
+        type: string
+      receiver_ward:
+        type: string
+      sender_address:
+        type: string
+      sender_district:
+        type: string
+      sender_name:
+        type: string
+      sender_phone:
+        type: string
+      sender_postal_code:
+        type: string
+      sender_province:
+        type: string
+      sender_ward:
+        type: string
+      status:
+        enum:
+        - PENDING
+        - RESERVED
+        - PICKING
+        - PACKING
+        - SORTING
+        - SHIPPING
+        - COMPLETED
+        - PICKING_UP
+        type: string
+      warehouse_id:
+        minimum: 1
+        type: integer
+    required:
+    - order_code
+    - receiver_address
+    - receiver_name
+    - receiver_phone
+    - sender_address
+    - sender_name
+    - sender_phone
+    - warehouse_id
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_order_dto.OrderItemRequest:
+    properties:
+      product_id:
+        type: integer
+      product_name:
+        type: string
+      quantity:
+        minimum: 1
+        type: integer
+      weight_gram:
+        type: integer
+    required:
+    - quantity
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_order_dto.OrderItemResponse:
+    properties:
+      id:
+        type: integer
+      order_id:
+        type: integer
+      product_id:
+        type: integer
+      product_name:
+        type: string
+      quantity:
+        type: integer
+      weight_gram:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_order_dto.OrderResponse:
+    properties:
+      assigned_driver_id:
+        type: integer
+      created_at:
+        type: string
+      created_by:
+        type: string
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_order_dto.OrderItemResponse'
+        type: array
+      order_code:
+        type: string
+      receiver_address:
+        type: string
+      receiver_district:
+        type: string
+      receiver_name:
+        type: string
+      receiver_phone:
+        type: string
+      receiver_postal_code:
+        type: string
+      receiver_province:
+        type: string
+      receiver_ward:
+        type: string
+      sender_address:
+        type: string
+      sender_district:
+        type: string
+      sender_name:
+        type: string
+      sender_phone:
+        type: string
+      sender_postal_code:
+        type: string
+      sender_province:
+        type: string
+      sender_ward:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_order_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_order_dto.OrderResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_order_dto.UpdateOrderRequest:
+    properties:
+      assigned_driver_id:
+        type: integer
+      order_code:
+        type: string
+      receiver_address:
+        type: string
+      receiver_district:
+        type: string
+      receiver_name:
+        type: string
+      receiver_phone:
+        type: string
+      receiver_postal_code:
+        type: string
+      receiver_province:
+        type: string
+      receiver_ward:
+        type: string
+      sender_address:
+        type: string
+      sender_district:
+        type: string
+      sender_name:
+        type: string
+      sender_phone:
+        type: string
+      sender_postal_code:
+        type: string
+      sender_province:
+        type: string
+      sender_ward:
+        type: string
+      status:
+        enum:
+        - PENDING
+        - RESERVED
+        - PICKING
+        - PACKING
+        - SORTING
+        - SHIPPING
+        - COMPLETED
+        - PICKING_UP
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_product_dto.CreateProductRequest:
+    properties:
+      category:
+        type: string
+      created_by:
+        type: string
+      dimensions:
+        $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_product_dto.Dimensions'
+      name:
+        type: string
+      price:
+        type: number
+      sku:
+        type: string
+      weight_gram:
+        type: integer
+    required:
+    - name
+    - sku
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_product_dto.Dimensions:
+    properties:
+      height:
+        type: number
+      length:
+        type: number
+      width:
+        type: number
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_product_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_product_dto.ProductResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_product_dto.ProductResponse:
+    properties:
+      category:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      height_cm:
+        type: number
+      id:
+        type: integer
+      length_cm:
+        type: number
+      name:
+        type: string
+      price:
+        type: number
+      sku:
+        type: string
+      updated_at:
+        type: string
+      weight_gram:
+        type: integer
+      width_cm:
+        type: number
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_product_dto.UpdateProductRequest:
+    properties:
+      category:
+        type: string
+      created_by:
+        type: string
+      dimensions:
+        $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_product_dto.Dimensions'
+      name:
+        type: string
+      price:
+        type: number
+      weight_gram:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse:
+    properties:
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      display_name:
+        type: string
+      phone:
+        type: string
+      updated_at:
+        type: string
+      user_sub:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_profile_dto.UpdateProfileRequest:
+    properties:
+      avatar_url:
+        type: string
+      display_name:
+        type: string
+      phone:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_tracking_dto.CreateTrackingEventRequest:
+    properties:
+      driver_code:
+        type: string
+      lat:
+        type: number
+      lng:
+        type: number
+      note:
+        type: string
+      order_code:
+        type: string
+      status_update:
+        type: string
+    required:
+    - driver_code
+    - order_code
+    - status_update
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_tracking_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_tracking_dto.TrackingEventResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_tracking_dto.TrackingEventResponse:
+    properties:
+      driver_code:
+        type: string
+      id:
+        type: integer
+      lat:
+        type: number
+      lng:
+        type: number
+      note:
+        type: string
+      order_code:
+        type: string
+      status_update:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_tracking_dto.UpdateTrackingEventRequest:
+    properties:
+      driver_code:
+        type: string
+      lat:
+        type: number
+      lng:
+        type: number
+      note:
+        type: string
+      order_code:
+        type: string
+      status_update:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_trip_dto.AssignDriverRequest:
+    properties:
+      driver_code:
+        type: string
+    required:
+    - driver_code
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_trip_dto.CreateTripRequest:
+    properties:
+      driver_code:
+        type: string
+      status:
+        type: string
+      stops:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.TripStopRequest'
+        type: array
+      total_distance_km:
+        type: number
+      trip_code:
+        type: string
+      vehicle_license_plate:
+        type: string
+    required:
+    - driver_code
+    - stops
+    - trip_code
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_trip_dto.Location:
+    properties:
+      lat:
+        type: number
+      lng:
+        type: number
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_trip_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.TripResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_trip_dto.TripResponse:
+    properties:
+      actual_end_at:
+        type: string
+      actual_start_at:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      driver_id:
+        type: integer
+      estimated_duration_min:
+        type: integer
+      id:
+        type: integer
+      status:
+        type: string
+      stops:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.TripStopResponse'
+        type: array
+      total_distance_km:
+        type: number
+      trip_code:
+        type: string
+      updated_at:
+        type: string
+      vehicle_license_plate:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_trip_dto.TripStopRequest:
+    properties:
+      address:
+        type: string
+      arrived_at:
+        type: string
+      departure_at:
+        type: string
+      location:
+        $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.Location'
+      order_code:
+        type: string
+      planned_at:
+        type: string
+      status:
+        type: string
+      stop_type:
+        type: string
+    required:
+    - address
+    - order_code
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_trip_dto.TripStopResponse:
+    properties:
+      address:
+        type: string
+      arrived_at:
+        type: string
+      departure_at:
+        type: string
+      id:
+        type: integer
+      lat:
+        type: number
+      lng:
+        type: number
+      order_code:
+        type: string
+      planned_at:
+        type: string
+      status:
+        type: string
+      stop_type:
+        type: string
+      trip_id:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_trip_dto.UpdateTripRequest:
+    properties:
+      completed_at:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: string
+      stops:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.TripStopRequest'
+        type: array
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_warehouse_dto.CreateWarehouseRequest:
+    properties:
+      address:
+        type: string
+      contact_phone:
+        type: string
+      location:
+        $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_warehouse_dto.Location'
+      manager_name:
+        type: string
+      name:
+        type: string
+      warehouse_code:
+        type: string
+    required:
+    - address
+    - name
+    - warehouse_code
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_warehouse_dto.Location:
+    properties:
+      lat:
+        type: number
+      lng:
+        type: number
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_warehouse_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_warehouse_dto.WarehouseResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_warehouse_dto.UpdateWarehouseRequest:
+    properties:
+      address:
+        type: string
+      contact_phone:
+        type: string
+      is_active:
+        type: boolean
+      location:
+        $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_warehouse_dto.Location'
+      manager_name:
+        type: string
+      name:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_warehouse_dto.WarehouseResponse:
+    properties:
+      address:
+        type: string
+      contact_phone:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      lat:
+        type: number
+      lng:
+        type: number
+      manager_name:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+      warehouse_code:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_workspace_dto.CreateWorkspaceRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      workspace_code:
+        type: string
+    required:
+    - name
+    - workspace_code
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_workspace_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_workspace_dto.UpdateWorkspaceRequest:
+    properties:
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+      workspace_code:
+        type: string
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  description: Smart Logistics Hub backend API. Authentication uses the "Authorization"
+    header with format "Bearer &lt;token&gt;" (JWT issued by Keycloak).
+  title: Smart Logistics Hub API
+  version: 1.0.0
+paths:
+  /ai-events:
+    get:
+      parameters:
+      - description: Filter by license plate
+        in: query
+        name: license_plate
+        type: string
+      - description: Filter by gate ID
+        in: query
+        name: gate_id
+        type: string
+      - description: Filter by event type
+        in: query
+        name: event_type
+        type: string
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_ai_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List AI events
+      tags:
+      - AI Events
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: AI event payload
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_ai_dto.CreateAIEventRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_ai_dto.AIEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create an AI event
+      tags:
+      - AI Events
+  /ai-events/{id}:
+    delete:
+      parameters:
+      - description: AI event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an AI event
+      tags:
+      - AI Events
+    get:
+      parameters:
+      - description: AI event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_ai_dto.AIEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get an AI event by ID
+      tags:
+      - AI Events
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: AI event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: AI event update
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_ai_dto.UpdateAIEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_ai_dto.AIEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an AI event
+      tags:
+      - AI Events
+  /billing:
+    get:
+      parameters:
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_billing_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List billing records
+      tags:
+      - Billing
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Billing payload
+        in: body
+        name: billing
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_billing_dto.CreateBillingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_billing_dto.BillingResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a billing record
+      tags:
+      - Billing
+  /billing/{id}:
+    delete:
+      parameters:
+      - description: Billing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a billing record
+      tags:
+      - Billing
+    get:
+      parameters:
+      - description: Billing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_billing_dto.BillingResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a billing record by ID
+      tags:
+      - Billing
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Billing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Billing update
+        in: body
+        name: billing
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_billing_dto.UpdateBillingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_billing_dto.BillingResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a billing record
+      tags:
+      - Billing
+  /billing/code/{billing_code}:
+    get:
+      parameters:
+      - description: Billing code
+        in: path
+        name: billing_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_billing_dto.BillingResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a billing record by billing code
+      tags:
+      - Billing
+  /billing/order/{order_code}:
+    get:
+      parameters:
+      - description: Order code
+        in: path
+        name: order_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_billing_dto.BillingResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a billing record by order code
+      tags:
+      - Billing
+  /drivers:
+    get:
+      parameters:
+      - description: Filter by driver status
+        in: query
+        name: status
+        type: string
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_driver_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List drivers
+      tags:
+      - Drivers
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Driver payload
+        in: body
+        name: driver
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_driver_dto.CreateDriverRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_driver_dto.DriverResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a driver
+      tags:
+      - Drivers
+  /drivers/{id}:
+    delete:
+      parameters:
+      - description: Driver ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a driver
+      tags:
+      - Drivers
+    get:
+      parameters:
+      - description: Driver ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_driver_dto.DriverResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a driver by ID
+      tags:
+      - Drivers
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Driver ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Driver update
+        in: body
+        name: driver
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_driver_dto.UpdateDriverRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_driver_dto.DriverResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a driver
+      tags:
+      - Drivers
+  /inbounds:
+    get:
+      parameters:
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inbound_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List inbound receipts
+      tags:
+      - Inbounds
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Inbound payload
+        in: body
+        name: inbound
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inbound_dto.CreateInboundRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create an inbound receipt
+      tags:
+      - Inbounds
+  /inbounds/{id}:
+    delete:
+      parameters:
+      - description: Inbound ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an inbound receipt
+      tags:
+      - Inbounds
+    get:
+      parameters:
+      - description: Inbound ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get an inbound receipt by ID
+      tags:
+      - Inbounds
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Inbound ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Inbound update
+        in: body
+        name: inbound
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inbound_dto.UpdateInboundRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an inbound receipt
+      tags:
+      - Inbounds
+  /inventory:
+    get:
+      parameters:
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inventory_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List inventory records
+      tags:
+      - Inventory
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Inventory payload
+        in: body
+        name: inventory
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inventory_dto.CreateInventoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inventory_dto.InventoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create an inventory record
+      tags:
+      - Inventory
+  /inventory/{id}:
+    delete:
+      parameters:
+      - description: Inventory ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an inventory record
+      tags:
+      - Inventory
+    get:
+      parameters:
+      - description: Inventory ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inventory_dto.InventoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get an inventory record by ID
+      tags:
+      - Inventory
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Inventory ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Inventory update
+        in: body
+        name: inventory
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inventory_dto.UpdateInventoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_inventory_dto.InventoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an inventory record
+      tags:
+      - Inventory
+  /orders:
+    get:
+      parameters:
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 10
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_order_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List orders
+      tags:
+      - Orders
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order payload
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_order_dto.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_order_dto.OrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create an order
+      tags:
+      - Orders
+  /orders/{id}:
+    delete:
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an order
+      tags:
+      - Orders
+    get:
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_order_dto.OrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get an order by ID
+      tags:
+      - Orders
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Order update
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_order_dto.UpdateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_order_dto.OrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an order
+      tags:
+      - Orders
+  /products:
+    get:
+      parameters:
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_product_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List products
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product payload
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_product_dto.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_product_dto.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a product
+      tags:
+      - Products
+  /products/{id}:
+    delete:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a product
+      tags:
+      - Products
+    get:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_product_dto.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a product by ID
+      tags:
+      - Products
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Product update
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_product_dto.UpdateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_product_dto.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a product
+      tags:
+      - Products
+  /profile:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user profile
+      tags:
+      - Profile
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Profile update
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_profile_dto.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update current user profile
+      tags:
+      - Profile
+  /tracking-logs:
+    get:
+      parameters:
+      - description: Filter by order code
+        in: query
+        name: order_code
+        type: string
+      - description: Filter by driver code
+        in: query
+        name: driver_code
+        type: string
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_tracking_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List tracking events
+      tags:
+      - Tracking
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tracking event payload
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_tracking_dto.CreateTrackingEventRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_tracking_dto.TrackingEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a tracking event
+      tags:
+      - Tracking
+  /tracking-logs/{id}:
+    delete:
+      parameters:
+      - description: Tracking event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a tracking event
+      tags:
+      - Tracking
+    get:
+      parameters:
+      - description: Tracking event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_tracking_dto.TrackingEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a tracking event by ID
+      tags:
+      - Tracking
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tracking event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Tracking event update
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_tracking_dto.UpdateTrackingEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_tracking_dto.TrackingEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a tracking event
+      tags:
+      - Tracking
+  /tracking-logs/order/{order_code}:
+    get:
+      parameters:
+      - description: Order code
+        in: path
+        name: order_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_tracking_dto.TrackingEventResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List tracking events for an order
+      tags:
+      - Tracking
+  /trips:
+    get:
+      parameters:
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List trips
+      tags:
+      - Trips
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Trip payload
+        in: body
+        name: trip
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.CreateTripRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.TripResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a trip
+      tags:
+      - Trips
+  /trips/{id}:
+    delete:
+      parameters:
+      - description: Trip ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a trip
+      tags:
+      - Trips
+    get:
+      parameters:
+      - description: Trip ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.TripResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a trip by ID
+      tags:
+      - Trips
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Trip ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Trip update
+        in: body
+        name: trip
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.UpdateTripRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.TripResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a trip
+      tags:
+      - Trips
+  /trips/{id}/assign-driver:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Trip ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Driver code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.AssignDriverRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.TripResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Assign a driver to a trip
+      tags:
+      - Trips
+  /warehouses:
+    get:
+      parameters:
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_warehouse_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List warehouses
+      tags:
+      - Warehouses
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Warehouse payload
+        in: body
+        name: warehouse
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_warehouse_dto.CreateWarehouseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_warehouse_dto.WarehouseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a warehouse
+      tags:
+      - Warehouses
+  /warehouses/{id}:
+    delete:
+      parameters:
+      - description: Warehouse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a warehouse
+      tags:
+      - Warehouses
+    get:
+      parameters:
+      - description: Warehouse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_warehouse_dto.WarehouseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a warehouse by ID
+      tags:
+      - Warehouses
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Warehouse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Warehouse update
+        in: body
+        name: warehouse
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_warehouse_dto.UpdateWarehouseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_warehouse_dto.WarehouseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a warehouse
+      tags:
+      - Warehouses
+  /workspaces:
+    get:
+      parameters:
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List workspaces
+      tags:
+      - Workspaces
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Workspace payload
+        in: body
+        name: workspace
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.CreateWorkspaceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a workspace
+      tags:
+      - Workspaces
+  /workspaces/{id}:
+    delete:
+      parameters:
+      - description: Workspace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a workspace
+      tags:
+      - Workspaces
+    get:
+      parameters:
+      - description: Workspace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a workspace by ID
+      tags:
+      - Workspaces
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Workspace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Workspace update
+        in: body
+        name: workspace
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.UpdateWorkspaceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a workspace
+      tags:
+      - Workspaces
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

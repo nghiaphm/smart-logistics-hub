@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"context"
-	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
+	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
 	"my-web-app.com/smart-logistic-hub/internal/infrastructure/config"
 )
 
@@ -29,20 +29,23 @@ func AuthMiddleware(cfg *config.Config, devSkipAuth bool, verifier JWTVerifier) 
 
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
+			c.Error(apierrors.ErrUnauthorized)
+			c.Abort()
 			return
 		}
 
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header format must be Bearer {token}"})
+			c.Error(apierrors.ErrUnauthorized)
+			c.Abort()
 			return
 		}
 
 		tokenStr := parts[1]
 		claims, err := verifier.VerifyToken(c.Request.Context(), tokenStr)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Error(apierrors.ErrUnauthorized)
+			c.Abort()
 			return
 		}
 
