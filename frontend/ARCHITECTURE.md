@@ -69,7 +69,7 @@ Tham chiếu backend (cấu hình tại gốc repo, `.env.development` / `docker
 
 ```
 frontend/
-├── package.json            # Scripts: dev, build, start, lint; packageManager: yarn@1.22.22
+├── package.json            # Scripts: dev, build, start, lint, generate:api; packageManager: yarn@1.22.22
 ├── yarn.lock               # Khóa dependencies (yarn)
 ├── next.config.ts          # Rỗng — dùng cấu hình Next.js mặc định
 ├── tsconfig.json           # Strict mode; alias "@/*" → "./src/*"
@@ -83,30 +83,31 @@ frontend/
     ├── app/                        # App Router
     │   ├── layout.tsx              # Root layout (Server Component): globals.css, font Inter,
     │   │                           #   chỉ render <AppProviders>
-    │   ├── page.tsx                # Trang chủ (Server Component) — UI tĩnh, dữ liệu hardcode
+    │   ├── page.tsx                # Trang chủ (Server Component) — UI tĩnh, có nút đăng nhập SSOLoginButton
     │   ├── globals.css             # Tailwind v4 CSS-first + shadcn/tailwind.css + dark mode tokens
-    │   ├── (app)/                  # Route group "app đã đăng nhập" — TOÀN BỘ FILE RỖNG
-    │   │   ├── [workspace_id]/     #   Layout + logistics/{inbounds,inventory,products,tracking,trips}...
+    │   ├── (app)/                  # Route group "app đã đăng nhập" — layout [workspace_id] ĐÃ TRIỂN KHAI
+    │   │   ├── [workspace_id]/     #   Layout shell (sidebar + header); logistics/page.tsx demo shared components
     │   │   ├── profile/            #   Hồ sơ người dùng (Shell, sections...) — rỗng
     │   │   └── workspaces/         #   Danh sách workspace — rỗng
     │   ├── (system-admin)/         # Route group "admin hệ thống" — TOÀN BỘ FILE RỖNG
     │   │   └── admin/              #   Dashboard, logistics, users, warehouses — rỗng
-    │   ├── auth/                   # callback, signup, unauthorized, impersonation — rỗng
+    │   ├── auth/                   # callback ĐÃ TRIỂN KHAI (nhận redirect + lưu token); signup, unauthorized, impersonation — rỗng
     │   ├── api/
     │   │   └── vnpay/route.ts      # Route Handler — RỖNG
     │   └── privacy|terms/page.tsx  # Trang tĩnh (rỗng)
     ├── components/
     │   ├── ui/                     # 14 component UI đã triển khai (xem mục 5)
     │   ├── account/                # Workspace shell, sidebar, header — file rỗng
-    │   ├── auth/                   # SSOLoginButton, SignUpButton — rỗng
+    │   ├── auth/                   # SSOLoginButton ĐÃ TRIỂN KHAI (redirect Keycloak); SignUpButton — rỗng
     │   ├── navigation/             # PageRestoreGuard — rỗng
-    │   ├── providers/              # app-providers.tsx — ĐÃ TRIỂN KHAI (QueryClient + Toaster)
-    │   ├── shared/                 # Shell, form, modal, table... — rỗng
+    │   ├── providers/              # app-providers.tsx — ĐÃ TRIỂN KHAI (QueryClient + AuthProvider + Toaster)
+    │   ├── shared/                 # ĐÃ TRIỂN KHAI: AppShell, form/Form, modal/AppModalShell+Actions, DataTable; còn stub khác rỗng
     │   ├── system-admin/           # Dashboard, tables, layout, packages... — rỗng
-    │   ├── app-sidebar.tsx, nav-main.tsx, ... — rỗng
+    │   ├── app-sidebar.tsx, nav-main.tsx, app-header.tsx — ĐÃ TRIỂN KHAI (shell layout)
     │   └── data-table.tsx, chart-area-interactive.tsx — rỗng
     ├── config/                     # roles.ts, roles.test.ts — toàn bộ RỖNG (stub)
-    ├── contexts/                   # user, workspace, warehouse, warehouse-mode, lang, toast,
+    ├── contexts/                   # auth.context.tsx ĐÃ TRIỂN KHAI (AuthProvider + useAuth);
+    │                               #   user, workspace, warehouse, warehouse-mode, lang, toast,
     │                               #   finance-*, query-provider... — toàn bộ RỖNG (stub)
     ├── hooks/
     │   ├── useTheme.ts, usePermission.ts, use-mobile.ts, use-is-breakpoint.ts,
@@ -115,9 +116,12 @@ frontend/
     │   ├── admin/                  # useAdminViewMode.ts — RỖNG
     │   └── logistic/               # useInboundProcess, useInventoryStock, useOutboundDispatch,
     │                               #   useTripTracking, useYoloCameraStream — RỖNG
-    └── lib/
-        ├── utils.ts                # cn() — hợp nhất className (clsx + tailwind-merge)
-        └── auth.ts                 # RỖNG — chưa có logic xác thực phía client
+    ├── lib/
+    │   ├── utils.ts                # cn() — hợp nhất className (clsx + tailwind-merge)
+    │   ├── auth.ts                 # ĐÃ TRIỂN KHAI — token JWT Keycloak (lưu/đọc/refresh/exchange, OIDC state)
+    │   └── api-client.ts           # ĐÃ TRIỂN KHAI — apiClient<T>(fetch, base URL, Authorization header, ApiError)
+    ├── proxy.ts                    # ĐÃ TRIỂN KHAI — Next.js 16 proxy bảo vệ route (app)/ + (system-admin)/
+    └── types/                      # api.ts (re-export ApiError + type sinh) + api-generated.ts (codegen OpenAPI)
 ```
 
 ### Thành phần đã triển khai (`src/components/ui/`)

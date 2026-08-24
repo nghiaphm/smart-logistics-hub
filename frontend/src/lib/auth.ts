@@ -78,6 +78,7 @@ export function setTokens(tokens: KeycloakTokens): void {
     window.localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
   }
   setAccessTokenCookie(tokens.access_token);
+  notifyTokenChanged();
 }
 
 export function clearTokens(): void {
@@ -87,6 +88,22 @@ export function clearTokens(): void {
   window.localStorage.removeItem(ACCESS_TOKEN_KEY);
   window.localStorage.removeItem(REFRESH_TOKEN_KEY);
   clearAccessTokenCookie();
+  notifyTokenChanged();
+}
+
+type TokenChangeListener = () => void;
+
+const tokenChangeListeners = new Set<TokenChangeListener>();
+
+export function subscribeTokenChanges(listener: TokenChangeListener): () => void {
+  tokenChangeListeners.add(listener);
+  return () => {
+    tokenChangeListeners.delete(listener);
+  };
+}
+
+function notifyTokenChanged() {
+  tokenChangeListeners.forEach((listener) => listener());
 }
 
 function setAccessTokenCookie(token: string): void {
