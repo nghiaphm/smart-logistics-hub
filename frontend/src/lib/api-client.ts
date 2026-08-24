@@ -1,8 +1,7 @@
 import { ApiError } from "@/types/api";
+import { ensureFreshAccessToken } from "@/lib/auth";
 
 export { ApiError };
-
-const TOKEN_STORAGE_KEY = "access_token";
 
 type BackendErrorBody = {
   error?: {
@@ -10,13 +9,6 @@ type BackendErrorBody = {
     message?: string;
   };
 };
-
-function getAccessToken(): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  return window.localStorage.getItem(TOKEN_STORAGE_KEY);
-}
 
 function isBackendErrorBody(value: unknown): value is BackendErrorBody {
   if (typeof value !== "object" || value === null) {
@@ -50,7 +42,7 @@ export async function apiClient<T>(path: string, options: RequestInit = {}): Pro
   }
 
   const headers = new Headers(options.headers);
-  const token = getAccessToken();
+  const token = await ensureFreshAccessToken();
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }

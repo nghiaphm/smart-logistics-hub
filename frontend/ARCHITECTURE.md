@@ -25,7 +25,7 @@ Hệ thống đầy đủ (backend) gồm:
 Nên bắt đầu đọc từ đâu để hiểu từng luồng cụ thể (dựa theo cấu trúc thực tế hiện tại):
 
 - **Routing tổng thể:** `src/app/` — cây route của App Router. Bắt đầu từ `src/app/layout.tsx` (root layout) và `src/app/page.tsx` (trang chủ). Các route nghiệp vụ nằm trong route group `(app)` (workspace/logistics), `(system-admin)`, `auth` — hiện là file rỗng.
-- **Auth:** `src/lib/auth.ts` (rỗng), `src/app/auth/*` và `src/components/auth/*` (rỗng), `src/contexts/user.context.tsx` (rỗng) — chưa có xác thực nào được triển khai.
+- **Auth (đã triển khai Giai đoạn 2):** bắt đầu từ `src/components/auth/SSOLoginButton.tsx` (nút "Đăng nhập", mount trên `src/app/page.tsx`) → `src/lib/auth.ts` (`createAuthorizationUrl` build URL login Keycloak — realm `smart-logistics`, client `frontend-web`) → Keycloak redirect về `src/app/auth/callback/` (`exchangeCodeForTokens` đổi code lấy token, `setTokens` lưu localStorage + cookie) → redirect vào (app)/. `src/proxy.ts` (Next.js 16 proxy) chặn (app)/ + (system-admin)/ khi chưa có cookie hợp lệ. `src/contexts/user.context.tsx` vẫn rỗng.
 - **Data fetching:** `src/components/providers/app-providers.tsx` (client provider: tạo `QueryClient` + mount `Toaster`) — điểm nối dữ liệu; `src/contexts/query-provider.tsx` (rỗng); `src/hooks/**` — toàn bộ hook là stub rỗng, chưa có hook/fetch thật.
 - **Cấu hình & trạng thái toàn cục:** `src/config/` (roles.ts — rỗng), `src/contexts/` (user, workspace, warehouse, warehouse-mode, lang, toast, finance... — toàn bộ rỗng), `src/hooks/` (useTheme, usePermission, use-mobile, finance, admin, logistic... — toàn bộ rỗng).
 - **UI kit setup:** `src/components/ui/*` (14 component đã triển khai), `src/lib/utils.ts` (`cn`), `src/app/globals.css` (design tokens), `components.json` (cấu hình shadcn/Base UI), dependencies trong `package.json`.
@@ -61,7 +61,7 @@ Thư viện UI (src/components/ui) → Toaster (thông báo lỗi/thành công)
 - **Toaster** (`src/components/ui/toast.tsx`) được mount bên trong `AppProviders`, sẵn sàng cho việc hiển thị trạng thái khi có mutation/hook.
 - **Contexts & hooks:** `src/contexts/*` (user, workspace, warehouse, lang, toast, finance, query-provider...) và `src/hooks/**` (useTheme, usePermission, finance, admin, logistic...) đều là stub rỗng — chưa có hook/context nào đưa dữ liệu API vào UI.
 
-Tham chiếu backend (cấu hình tại gốc repo, `.env.development` / `docker-compose.yml`): API `http://localhost:8000`, frontend `http://localhost:3000`, auth Keycloak realm `my_custom_realm` (development). Frontend chưa dùng các giá trị này.
+Tham chiếu backend (cấu hình tại gốc repo, `.env.development` / `docker-compose.yml`): API `http://localhost:8000`, frontend `http://localhost:3000`, auth Keycloak realm `smart-logistics` (development). Frontend chưa dùng các giá trị này.
 
 ---
 
@@ -181,6 +181,14 @@ frontend/
 - **Testing:** chưa có. `vitest.config.ts` rỗng, `package.json` không có script `test`. File `src/config/roles.test.ts` tồn tại nhưng là stub rỗng.
 - **Env/config:** `next.config.ts` rỗng (không có proxy, image config, env config). Không có biến `NEXT_PUBLIC_*` nào trong frontend.
 - **AGENTS.md** (frontend) cảnh báo: bản Next.js 16 trong repo có API/convention khác tài liệu cũ, phải đọc `node_modules/next/dist/docs/` trước khi viết code.
+
+### 5.6. Xác thực: Keycloak OIDC, token ở client, proxy bảo vệ route
+
+- **Keycloak OIDC authorization code flow**, **public client** `frontend-web` (không cần client secret); realm `smart-logistics`, server `http://localhost:8180` (cấu hình qua `NEXT_PUBLIC_KEYCLOAK_URL/REALM/CLIENT_ID` trong `.env.development`).
+- Token JWT lưu **localStorage** (`access_token`, `refresh_token`) — client SPA không có secret. `lib/auth.ts` quản lý lưu/đọc/refresh; `ensureFreshAccessToken()` tự refresh qua token endpoint Keycloak khi token sắp hết hạn (buffer 60s) — `api-client.ts` gọi trước mỗi request để tự đính `Authorization: Bearer <token>`.
+- Proxy/server không đọc được localStorage → `setTokens`/`clearTokens` đồng thời set/xoá cookie `slh_access_token` (không HttpOnly — chỉ phục vụ chặn route UX, xác thực thật vẫn qua Authorization header ở backend). Cookie được cập nhật mỗi lần refresh.
+- **Chống CSRF (OIDC state):** `SSOLoginButton` tạo `state` (`crypto.randomUUID`) lưu `sessionStorage`; callback validate qua `consumeOAuthState` (dùng 1 lần).
+- **Bảo vệ route:** Next.js 16 đổi tên `middleware` → **`proxy.ts`** (Node runtime). Matcher bảo vệ (app)/, (system-admin)/ và `[workspace_id]`; giữ public `/`, `/auth/*`, `/terms`, `/privacy`, `/api/*`; kiểm tra cookie `slh_access_token` + `exp` của JWT — thiếu/hết hạn → redirect `/`.
 
 ---
 
