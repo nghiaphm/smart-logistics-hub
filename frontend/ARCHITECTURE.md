@@ -11,7 +11,7 @@ Frontend là một ứng dụng **Next.js 16 (App Router)** + **React 19** + **T
 Hệ thống đầy đủ (backend) gồm:
 
 | Phần | Công nghệ | Vị trí |
-|---|---|---|
+| --- | --- | --- |
 | Frontend | Next.js 16, React 19 | `frontend/` |
 | Backend API | Go + Gin, JWT qua Keycloak | `backend/`, `/api/v1`, port `8000` |
 | Cơ sở dữ liệu | MariaDB | `docker-compose.yml` |
@@ -25,8 +25,9 @@ Hệ thống đầy đủ (backend) gồm:
 Nên bắt đầu đọc từ đâu để hiểu từng luồng cụ thể (dựa theo cấu trúc thực tế hiện tại):
 
 - **Routing tổng thể:** `src/app/` — cây route của App Router. Bắt đầu từ `src/app/layout.tsx` (root layout) và `src/app/page.tsx` (trang chủ). Các route nghiệp vụ nằm trong route group `(app)` (workspace/logistics), `(system-admin)`, `auth` — hiện là file rỗng.
-- **Auth:** `src/lib/auth.ts` (rỗng), `src/app/auth/*` và `src/components/auth/*` (rỗng) — chưa có xác thực nào được triển khai.
-- **Data fetching:** `src/app/layout.tsx` — cấu hình `QueryClientProvider` + `staleTime` (điểm nối dữ liệu); `src/components/providers/app-providers.tsx` (rỗng, dành cho việc gom providers). Chưa có hook/fetch thật.
+- **Auth:** `src/lib/auth.ts` (rỗng), `src/app/auth/*` và `src/components/auth/*` (rỗng), `src/contexts/user.context.tsx` (rỗng) — chưa có xác thực nào được triển khai.
+- **Data fetching:** `src/components/providers/app-providers.tsx` (client provider: tạo `QueryClient` + mount `Toaster`) — điểm nối dữ liệu; `src/contexts/query-provider.tsx` (rỗng); `src/hooks/**` — toàn bộ hook là stub rỗng, chưa có hook/fetch thật.
+- **Cấu hình & trạng thái toàn cục:** `src/config/` (roles.ts — rỗng), `src/contexts/` (user, workspace, warehouse, warehouse-mode, lang, toast, finance... — toàn bộ rỗng), `src/hooks/` (useTheme, usePermission, use-mobile, finance, admin, logistic... — toàn bộ rỗng).
 - **UI kit setup:** `src/components/ui/*` (14 component đã triển khai), `src/lib/utils.ts` (`cn`), `src/app/globals.css` (design tokens), `components.json` (cấu hình shadcn/Base UI), dependencies trong `package.json`.
 - **Cấu hình dự án:** `tsconfig.json` (path alias `@/*`), `next.config.ts` (rỗng), `postcss.config.mjs`, `eslint.config.mjs`.
 
@@ -49,15 +50,16 @@ Các điểm nối hạ tầng đã được dựng sẵn, là nơi luồng API�
 Backend Go (localhost:8000 /api/v1)
         │  (chưa được gọi từ frontend)
         ▼
-QueryClientProvider (root layout, React Query)   ← dùng để đặt fetch/hooks
+AppProviders (client provider — QueryClient + Toaster)   ← dùng để đặt fetch/hooks
         ▼
 [page.tsx — Server Component] → [Client Component (có "use client")]
         ▼
 Thư viện UI (src/components/ui) → Toaster (thông báo lỗi/thành công)
 ```
 
-- **QueryClientProvider** trong `src/app/layout.tsx` cấp `QueryClient` toàn cục: `staleTime = 5 phút`, `refetchOnWindowFocus = false`.
-- **Toaster** (`src/components/ui/toast.tsx`) đã được mount ở root layout, sẵn sàng cho việc hiển thị trạng thái khi có mutation/hook.
+- **AppProviders** (`src/components/providers/app-providers.tsx`, client component) tạo `QueryClient` toàn cục qua `useState`: `staleTime = 5 phút`, `refetchOnWindowFocus = false`, và mount `Toaster`. Root layout (`src/app/layout.tsx`, Server Component) chỉ render `<AppProviders>{children}</AppProviders>`.
+- **Toaster** (`src/components/ui/toast.tsx`) được mount bên trong `AppProviders`, sẵn sàng cho việc hiển thị trạng thái khi có mutation/hook.
+- **Contexts & hooks:** `src/contexts/*` (user, workspace, warehouse, lang, toast, finance, query-provider...) và `src/hooks/**` (useTheme, usePermission, finance, admin, logistic...) đều là stub rỗng — chưa có hook/context nào đưa dữ liệu API vào UI.
 
 Tham chiếu backend (cấu hình tại gốc repo, `.env.development` / `docker-compose.yml`): API `http://localhost:8000`, frontend `http://localhost:3000`, auth Keycloak realm `my_custom_realm` (development). Frontend chưa dùng các giá trị này.
 
@@ -80,7 +82,7 @@ frontend/
 └── src/
     ├── app/                        # App Router
     │   ├── layout.tsx              # Root layout (Server Component): globals.css, font Inter,
-    │   │                           #   QueryClientProvider + Toaster toàn app
+    │   │                           #   chỉ render <AppProviders>
     │   ├── page.tsx                # Trang chủ (Server Component) — UI tĩnh, dữ liệu hardcode
     │   ├── globals.css             # Tailwind v4 CSS-first + shadcn/tailwind.css + dark mode tokens
     │   ├── (app)/                  # Route group "app đã đăng nhập" — TOÀN BỘ FILE RỖNG
@@ -98,11 +100,21 @@ frontend/
     │   ├── account/                # Workspace shell, sidebar, header — file rỗng
     │   ├── auth/                   # SSOLoginButton, SignUpButton — rỗng
     │   ├── navigation/             # PageRestoreGuard — rỗng
-    │   ├── providers/              # app-providers.tsx — RỖNG
+    │   ├── providers/              # app-providers.tsx — ĐÃ TRIỂN KHAI (QueryClient + Toaster)
     │   ├── shared/                 # Shell, form, modal, table... — rỗng
     │   ├── system-admin/           # Dashboard, tables, layout, packages... — rỗng
     │   ├── app-sidebar.tsx, nav-main.tsx, ... — rỗng
     │   └── data-table.tsx, chart-area-interactive.tsx — rỗng
+    ├── config/                     # roles.ts, roles.test.ts — toàn bộ RỖNG (stub)
+    ├── contexts/                   # user, workspace, warehouse, warehouse-mode, lang, toast,
+    │                               #   finance-*, query-provider... — toàn bộ RỖNG (stub)
+    ├── hooks/
+    │   ├── useTheme.ts, usePermission.ts, use-mobile.ts, use-is-breakpoint.ts,
+    │   │   useTableRowSelection.ts, useFinance*, useClientListPageShell,
+    │   │   useWarehouseToast, useVisibilityAwareInterval... — RỖNG (stub)
+    │   ├── admin/                  # useAdminViewMode.ts — RỖNG
+    │   └── logistic/               # useInboundProcess, useInventoryStock, useOutboundDispatch,
+    │                               #   useTripTracking, useYoloCameraStream — RỖNG
     └── lib/
         ├── utils.ts                # cn() — hợp nhất className (clsx + tailwind-merge)
         └── auth.ts                 # RỖNG — chưa có logic xác thực phía client
@@ -111,7 +123,7 @@ frontend/
 ### Thành phần đã triển khai (`src/components/ui/`)
 
 | File | Nền tảng | Loại |
-|---|---|---|
+| --- | --- | --- |
 | `button.tsx` | `@base-ui/react/button` + CVA | Server-compatible (không có `"use client"`) |
 | `badge.tsx` | `@base-ui/react/use-render` + CVA | Server-compatible |
 | `card.tsx` | HTML thuần + Tailwind | Server-compatible |
@@ -140,11 +152,12 @@ frontend/
 ### 4.2. Quản lý state: React Query, một QueryClient toàn cục
 
 - **TanStack Query (`@tanstack/react-query`)** là thư viện quản lý state dữ liệu duy nhất được cài.
-- `QueryClient` được tạo **inline ngay trong root layout** (`src/app/layout.tsx:8-15`) với:
+- `QueryClient` được tạo **bên trong client provider** `src/components/providers/app-providers.tsx` (dùng `useState(() => new QueryClient(...))`) với:
   - `staleTime: 5 phút` — dữ liệu coi là "mới" trong 5 phút, tránh refetch lại khi điều hướng.
   - `refetchOnWindowFocus: false` — không tự refetch khi quay lại tab.
+- Root layout (`src/app/layout.tsx`) là Server Component, chỉ render `<AppProviders>`. QueryClient không được tạo ở server để tránh vượt ranh giới Server→Client.
 - Một instance duy nhất phủ toàn app (không tách client theo route). Chưa có cache persistence, chưa có mutation nào.
-- Không dùng Redux/Zustand/Context khác (ngoài toast manager của Base UI). File `src/components/providers/app-providers.tsx` (nơi thường gom providers) **đang rỗng** — hiện root layout tự bọc `QueryClientProvider`.
+- Không dùng Redux/Zustand. Thư mục `src/contexts/` có sẵn các file context stub (user, workspace, warehouse, lang, toast, finance, query-provider...) nhưng **toàn bộ rỗng** — chưa có Context nào được triển khai ngoài provider ở `app-providers.tsx`.
 
 ### 4.3. UI kit: shadcn-style nhưng dựa trên Base UI
 
@@ -158,14 +171,14 @@ frontend/
 - `globals.css` dùng cú pháp **Tailwind v4**: `@import "tailwindcss"`, `@theme inline` để map token → CSS variables.
 - Dark mode bằng class: `@custom-variant dark (&:is(.dark *))` — chuyển bằng thêm class `.dark` vào `<html>`.
 - Toàn bộ bảng màu dùng **oklch**, định nghĩa qua CSS variables (`--background`, `--foreground`, `--sidebar-*`, `--chart-*`, ...) cho cả `:root` và `.dark`.
-- `components.json` khai báo shadcn base color `neutral`, `cssVariables: true`, `iconLibrary: hugeicons`, alias `@/components`, `@/ui`, `@/lib`, `@/hooks` (thư mục `hooks/` chưa tồn tại).
+- `components.json` khai báo shadcn base color `neutral`, `cssVariables: true`, `iconLibrary: hugeicons`, alias `@/components`, `@/ui`, `@/lib`, `@/hooks` (thư mục `hooks/` tồn tại nhưng toàn bộ file rỗng).
 
 ### 4.5. Tiêu chuẩn dự án và công cụ
 
 - **TypeScript strict** (`tsconfig.json`) + path alias **`@/*` → `./src/*`** (component import bằng `@/components/...`).
 - **Lint:** `eslint` (next/core-web-vitals + typescript). Script: `yarn lint`.
 - **Package manager:** `yarn@1.22.22` (khai báo trong `package.json` `packageManager`, có `yarn.lock`).
-- **Testing:** chưa có. `vitest.config.ts` rỗng, `package.json` không có script `test`, không có file test nào.
+- **Testing:** chưa có. `vitest.config.ts` rỗng, `package.json` không có script `test`. File `src/config/roles.test.ts` tồn tại nhưng là stub rỗng.
 - **Env/config:** `next.config.ts` rỗng (không có proxy, image config, env config). Không có biến `NEXT_PUBLIC_*` nào trong frontend.
 - **AGENTS.md** (frontend) cảnh báo: bản Next.js 16 trong repo có API/convention khác tài liệu cũ, phải đọc `node_modules/next/dist/docs/` trước khi viết code.
 
@@ -173,7 +186,7 @@ frontend/
 
 ## 6. Kết nối backend
 
-- **Base URL API:** **chưa có.** Không có biến môi trường `NEXT_PUBLIC_*` nào được định nghĩa hay sử dụng trong frontend (`next.config.ts` cũng rỗng). Backend thực tế chạy tại `http://localhost:8000` (`/api/v1`, theo `.env.development` / `docker-compose.yml` ở gốc repo) nhưng frontend chưa đọc cấu hình nào.
+- **Base URL API:** **chưa có.** Không có biến môi trường `NEXT_PUBLIC_*` nào được định nghĩa hay sử dụng trong frontend (`next.config.ts` cũng rỗng). Thư mục `src/config/` hiện chỉ có `roles.ts` (stub rỗng) — không có file cấu hình API/base URL nào. Backend thực tế chạy tại `http://localhost:8000` (`/api/v1`, theo `.env.development` / `docker-compose.yml` ở gốc repo) nhưng frontend chưa đọc cấu hình nào.
 - **Format lỗi backend:** chưa có quy ước xử lý lỗi phía frontend. `.kilo/AGENTS.md` hiện **không có** mục "API convention" về định dạng lỗi. Backend có sentinel lỗi chung `internal/common/errors` (theo `README.md`) nhưng chưa có tài liệu quy ước nào dành cho frontend.
 - **OpenAPI/Swagger codegen:** **chưa triển khai.** Không có file OpenAPI/Swagger, không có script codegen trong `package.json`.
 
@@ -181,6 +194,6 @@ frontend/
 
 ## 7. Điểm cần lưu ý về hiện trạng
 
-- Phần lớn cấu trúc route và component nghiệp vụ là **file rỗng** — chưa nên coi là "đã triển khai" khi đọc cây thư mục.
+- Phần lớn cấu trúc route, component, cũng như các thư mục mới `config/`, `contexts/`, `hooks/` (gồm `hooks/admin`, `hooks/logistic`) và `lib/auth.ts` là **file rỗng (stub)** — chưa nên coi là "đã triển khai" khi đọc cây thư mục.
 - Chưa có giao tiếp frontend ↔ backend Go, chưa có xác thực (login/callback/impersonation đều rỗng), chưa có bất kỳ quy ước data fetching nào thực thi.
 - `Dockerfile` rỗng nên frontend chưa thể đóng gói container từ repo này.
