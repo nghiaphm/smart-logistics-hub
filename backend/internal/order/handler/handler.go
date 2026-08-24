@@ -20,6 +20,16 @@ func NewHandler(svc *service.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
+// @Summary Create an order
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param order body dto.CreateOrderRequest true "Order payload"
+// @Success 201 {object} dto.OrderResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /orders [post]
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -31,9 +41,18 @@ func (h *Handler) Create(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusCreated, o)
+	c.JSON(http.StatusCreated, dto.ToResponse(o))
 }
 
+// @Summary Get an order by ID
+// @Tags Orders
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Success 200 {object} dto.OrderResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /orders/{id} [get]
 func (h *Handler) Get(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -51,29 +70,7 @@ func (h *Handler) Get(c *gin.Context) {
 		return
 	}
 
-	resp := dto.OrderResponse{
-		ID:                 o.ID,
-		OrderCode:          o.OrderCode,
-		SenderName:         o.SenderName,
-		SenderPhone:        o.SenderPhone,
-		SenderAddress:      o.SenderAddress,
-		SenderProvince:     o.SenderProvince,
-		SenderDistrict:     o.SenderDistrict,
-		SenderWard:         o.SenderWard,
-		SenderPostalCode:   o.SenderPostalCode,
-		ReceiverName:       o.ReceiverName,
-		ReceiverPhone:      o.ReceiverPhone,
-		ReceiverAddress:    o.ReceiverAddress,
-		ReceiverProvince:   o.ReceiverProvince,
-		ReceiverDistrict:   o.ReceiverDistrict,
-		ReceiverWard:       o.ReceiverWard,
-		ReceiverPostalCode: o.ReceiverPostalCode,
-		Status:             o.Status,
-		AssignedDriverID:   o.AssignedDriverID,
-		CreatedAt:          o.CreatedAt,
-		UpdatedAt:          o.UpdatedAt,
-		CreatedBy:          o.CreatedBy,
-	}
+	resp := dto.ToResponse(o)
 	for _, item := range items {
 		resp.Items = append(resp.Items, dto.OrderItemResponse{
 			ID:          item.ID,
@@ -87,6 +84,15 @@ func (h *Handler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// @Summary List orders
+// @Tags Orders
+// @Produce json
+// @Security BearerAuth
+// @Param skip query int false "Number of items to skip" default(0)
+// @Param limit query int false "Max items per page" default(10)
+// @Success 200 {object} dto.PaginatedResponse
+// @Failure 500 {object} map[string]interface{}
+// @Router /orders [get]
 func (h *Handler) List(c *gin.Context) {
 	offset, _ := strconv.Atoi(c.DefaultQuery("skip", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
@@ -99,14 +105,25 @@ func (h *Handler) List(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"items": orders,
-		"total": total,
-		"skip":  offset,
-		"limit": limit,
+	c.JSON(http.StatusOK, dto.PaginatedResponse{
+		Items: dto.ToResponseList(orders),
+		Total: total,
+		Skip:  offset,
+		Limit: limit,
 	})
 }
 
+// @Summary Update an order
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Param order body dto.UpdateOrderRequest true "Order update"
+// @Success 200 {object} dto.OrderResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /orders/{id} [patch]
 func (h *Handler) Update(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -123,9 +140,17 @@ func (h *Handler) Update(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, o)
+	c.JSON(http.StatusOK, dto.ToResponse(o))
 }
 
+// @Summary Delete an order
+// @Tags Orders
+// @Security BearerAuth
+// @Param id path int true "Order ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /orders/{id} [delete]
 func (h *Handler) Delete(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

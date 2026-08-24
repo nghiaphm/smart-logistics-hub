@@ -143,13 +143,13 @@ frontend/
 
 ## 5. Quyết định kiến trúc quan trọng
 
-### 4.1. Server Component là mặc định; Client Component chỉ khi cần tương tác
+### 5.1. Server Component là mặc định; Client Component chỉ khi cần tương tác
 
 - **Server Component:** root layout (`layout.tsx`) và trang chủ (`page.tsx`) đều là Server Component (không có chỉ thị `"use client"`).
 - **Client Component:** các component UI có tương tác/trạng thái (checkbox, dialog, dropdown-menu, select, separator, table, toast, tooltip) được đánh dấu `"use client"`. Các component trình bày thuần (button, badge, card, input, textarea, skeleton) không có chỉ thị này — chúng chỉ bọc primitives (Base UI/HTML) và được Server Component render trực tiếp.
 - Mô hình: **trang/layout ở server → render cây component → các phần tương tác là Client Component riêng biệt.**
 
-### 4.2. Quản lý state: React Query, một QueryClient toàn cục
+### 5.2. Quản lý state: React Query, một QueryClient toàn cục
 
 - **TanStack Query (`@tanstack/react-query`)** là thư viện quản lý state dữ liệu duy nhất được cài.
 - `QueryClient` được tạo **bên trong client provider** `src/components/providers/app-providers.tsx` (dùng `useState(() => new QueryClient(...))`) với:
@@ -159,21 +159,21 @@ frontend/
 - Một instance duy nhất phủ toàn app (không tách client theo route). Chưa có cache persistence, chưa có mutation nào.
 - Không dùng Redux/Zustand. Thư mục `src/contexts/` có sẵn các file context stub (user, workspace, warehouse, lang, toast, finance, query-provider...) nhưng **toàn bộ rỗng** — chưa có Context nào được triển khai ngoài provider ở `app-providers.tsx`.
 
-### 4.3. UI kit: shadcn-style nhưng dựa trên Base UI
+### 5.3. UI kit: shadcn-style nhưng dựa trên Base UI
 
 - Các component `ui/*` được sinh theo cấu hình shadcn (`components.json`: style `"base-maia"`, `rsc: true`), nhưng **nền tảng primitive là Base UI (`@base-ui/react`) thay vì Radix** — mỗi file nhập `{ X as XPrimitive } from "@base-ui/react/x"` rồi thêm `data-slot` + className.
 - Variant được quản lý bằng **CVA** (`class-variance-authority`) + gộp className bằng `cn()` (`clsx` + `tailwind-merge`).
 - Icon: **Hugeicons** (`@hugeicons/core-free-icons` + `@hugeicons/react`).
 - Điểm khác biệt so với shadcn "kinh điển": style `base-maia`, borderRadius bo tròn lớn (`rounded-4xl`, `rounded-2xl`), toast tự dựng theo Base UI toast manager thay vì sonner/radix.
 
-### 4.4. Styling: Tailwind CSS v4 (CSS-first), dark mode, oklch
+### 5.4. Styling: Tailwind CSS v4 (CSS-first), dark mode, oklch
 
 - `globals.css` dùng cú pháp **Tailwind v4**: `@import "tailwindcss"`, `@theme inline` để map token → CSS variables.
 - Dark mode bằng class: `@custom-variant dark (&:is(.dark *))` — chuyển bằng thêm class `.dark` vào `<html>`.
 - Toàn bộ bảng màu dùng **oklch**, định nghĩa qua CSS variables (`--background`, `--foreground`, `--sidebar-*`, `--chart-*`, ...) cho cả `:root` và `.dark`.
 - `components.json` khai báo shadcn base color `neutral`, `cssVariables: true`, `iconLibrary: hugeicons`, alias `@/components`, `@/ui`, `@/lib`, `@/hooks` (thư mục `hooks/` tồn tại nhưng toàn bộ file rỗng).
 
-### 4.5. Tiêu chuẩn dự án và công cụ
+### 5.5. Tiêu chuẩn dự án và công cụ
 
 - **TypeScript strict** (`tsconfig.json`) + path alias **`@/*` → `./src/*`** (component import bằng `@/components/...`).
 - **Lint:** `eslint` (next/core-web-vitals + typescript). Script: `yarn lint`.
@@ -186,9 +186,18 @@ frontend/
 
 ## 6. Kết nối backend
 
-- **Base URL API:** **chưa có.** Không có biến môi trường `NEXT_PUBLIC_*` nào được định nghĩa hay sử dụng trong frontend (`next.config.ts` cũng rỗng). Thư mục `src/config/` hiện chỉ có `roles.ts` (stub rỗng) — không có file cấu hình API/base URL nào. Backend thực tế chạy tại `http://localhost:8000` (`/api/v1`, theo `.env.development` / `docker-compose.yml` ở gốc repo) nhưng frontend chưa đọc cấu hình nào.
-- **Format lỗi backend:** chưa có quy ước xử lý lỗi phía frontend. `.kilo/AGENTS.md` hiện **không có** mục "API convention" về định dạng lỗi. Backend có sentinel lỗi chung `internal/common/errors` (theo `README.md`) nhưng chưa có tài liệu quy ước nào dành cho frontend.
-- **OpenAPI/Swagger codegen:** **chưa triển khai.** Không có file OpenAPI/Swagger, không có script codegen trong `package.json`.
+- **Base URL API:** đã cấu hình qua biến `NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1` trong `frontend/.env.development` (Next.js tự load file này khi chạy `next dev`). Chưa có `.env.production` — khi build production cần cung cấp `NEXT_PUBLIC_API_URL` tại thời điểm build, nếu không client bundle sẽ inline giá trị `undefined`.
+- **API client:** `frontend/src/lib/api-client.ts` cung cấp `apiClient<T>(path, options)` dùng `fetch`, base URL lấy từ `NEXT_PUBLIC_API_URL`, tự đính header `Authorization: Bearer <token>` nếu có token (đọc từ `localStorage` key `access_token`), ném `ApiError` khi response không ok, và ném lỗi rõ ràng nếu thiếu `NEXT_PUBLIC_API_URL`. Hàm trả về body JSON đã parse (không bọc trong `{ data: ... }`).
+- **Type dùng chung:** `frontend/src/types/api.ts` re-export toàn bộ type sinh tự động
+  (`src/types/api-generated.ts` — `components`, `paths`) và giữ class runtime `ApiError`
+  (`status`, `code`, `message`). Không còn `ApiResponse<T>` viết tay — dùng schema
+  `PaginatedResponse` generate theo từng module.
+- **Format lỗi backend:** backend trả lỗi theo `{ error: { code, message } }` với `code` là HTTP status (nguồn: ErrorHandler trong `backend/internal/infrastructure/middleware/error_handler.go`; auth middleware cũng đã chuẩn hoá về format này). `apiClient` parse đúng format này, fallback `code` = HTTP status nếu body lỗi không đúng format.
+- **Đã kiểm chứng:** pipeline `env → api-client → hiển thị` đã test thành công trong dev (gọi `GET /api/v1/warehouses`, render dữ liệu thật từ backend). Luồng đăng nhập lấy token chưa implement — chờ Giai đoạn 2 (auth Keycloak).
+- **OpenAPI/Swagger codegen:** đã triển khai. Backend sinh spec `backend/docs/swagger.json`
+  (swagger 2.0, từ annotation swag). Frontend cài dev deps `openapi-typescript` +
+  `swagger2openapi`, script `yarn generate:api` (`frontend/scripts/generate-api.mjs`) đọc spec,
+  convert sang OpenAPI 3.0 rồi generate ra `src/types/api-generated.ts` (24 paths / 53 schemas).
 
 ---
 

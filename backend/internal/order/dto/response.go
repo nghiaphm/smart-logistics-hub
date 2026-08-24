@@ -1,6 +1,10 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	"my-web-app.com/smart-logistic-hub/internal/order/entity"
+)
 
 type OrderResponse struct {
 	ID                 int64               `json:"id"`
@@ -34,4 +38,45 @@ type OrderItemResponse struct {
 	ProductName string `json:"product_name"`
 	Quantity    int    `json:"quantity"`
 	WeightGram  int    `json:"weight_gram"`
+}
+
+type PaginatedResponse struct {
+	Items []OrderResponse `json:"items"`
+	Total int             `json:"total"`
+	Skip  int             `json:"skip"`
+	Limit int             `json:"limit"`
+}
+
+func ToResponse(o *entity.Order) OrderResponse {
+	return OrderResponse{
+		ID:                 o.ID,
+		OrderCode:          o.OrderCode,
+		SenderName:         o.SenderName,
+		SenderPhone:        o.SenderPhone,
+		SenderAddress:      o.SenderAddress,
+		SenderProvince:     o.SenderProvince,
+		SenderDistrict:     o.SenderDistrict,
+		SenderWard:         o.SenderWard,
+		SenderPostalCode:   o.SenderPostalCode,
+		ReceiverName:       o.ReceiverName,
+		ReceiverPhone:      o.ReceiverPhone,
+		ReceiverAddress:    o.ReceiverAddress,
+		ReceiverProvince:   o.ReceiverProvince,
+		ReceiverDistrict:   o.ReceiverDistrict,
+		ReceiverWard:       o.ReceiverWard,
+		ReceiverPostalCode: o.ReceiverPostalCode,
+		Status:             o.Status,
+		AssignedDriverID:   o.AssignedDriverID,
+		CreatedAt:          o.CreatedAt,
+		UpdatedAt:          o.UpdatedAt,
+		CreatedBy:          o.CreatedBy,
+	}
+}
+
+func ToResponseList(orders []entity.Order) []OrderResponse {
+	res := make([]OrderResponse, len(orders))
+	for i, o := range orders {
+		res[i] = ToResponse(&o)
+	}
+	return res
 }

@@ -1,3 +1,5 @@
+export * from "./api-generated";
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string | number;
@@ -9,10 +11,3 @@ export class ApiError extends Error {
     this.code = code;
   }
 }
-
-export type ApiResponse<T> = {
-  items: T[];
-  total: number;
-  skip: number;
-  limit: number;
-};

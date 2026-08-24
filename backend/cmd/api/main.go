@@ -39,6 +39,14 @@ import (
 	"my-web-app.com/smart-logistic-hub/internal/warehouse"
 )
 
+// @title Smart Logistics Hub API
+// @version 1.0.0
+// @description Smart Logistics Hub backend API. Authentication uses the "Authorization" header with format "Bearer &lt;token&gt;" (JWT issued by Keycloak).
+// @host localhost:8000
+// @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg := config.LoadConfig()
 	log := logger.New(cfg.Environment)
