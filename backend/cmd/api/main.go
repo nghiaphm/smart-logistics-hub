@@ -37,6 +37,7 @@ import (
 	"my-web-app.com/smart-logistic-hub/internal/tracking"
 	"my-web-app.com/smart-logistic-hub/internal/trip"
 	"my-web-app.com/smart-logistic-hub/internal/warehouse"
+	"my-web-app.com/smart-logistic-hub/internal/workspace"
 )
 
 // @title Smart Logistics Hub API
@@ -106,6 +107,7 @@ func main() {
 		inbound.RegisterRoutes(protected, db, authMw)
 		billing.RegisterRoutes(protected, db, authMw)
 		ai.RegisterRoutes(protected, db, authMw)
+		workspace.RegisterRoutes(protected, db, authMw)
 	}
 
 	r.GET("/healthz", func(c *gin.Context) {

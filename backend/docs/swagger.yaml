@@ -1003,6 +1003,59 @@ definitions:
       warehouse_code:
         type: string
     type: object
+  my-web-app_com_smart-logistic-hub_internal_workspace_dto.CreateWorkspaceRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      workspace_code:
+        type: string
+    required:
+    - name
+    - workspace_code
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_workspace_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_workspace_dto.UpdateWorkspaceRequest:
+    properties:
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+      workspace_code:
+        type: string
+    type: object
 host: localhost:8000
 info:
   contact: {}
@@ -2695,6 +2748,160 @@ paths:
       summary: Update a warehouse
       tags:
       - Warehouses
+  /workspaces:
+    get:
+      parameters:
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List workspaces
+      tags:
+      - Workspaces
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Workspace payload
+        in: body
+        name: workspace
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.CreateWorkspaceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a workspace
+      tags:
+      - Workspaces
+  /workspaces/{id}:
+    delete:
+      parameters:
+      - description: Workspace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a workspace
+      tags:
+      - Workspaces
+    get:
+      parameters:
+      - description: Workspace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a workspace by ID
+      tags:
+      - Workspaces
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Workspace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Workspace update
+        in: body
+        name: workspace
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.UpdateWorkspaceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a workspace
+      tags:
+      - Workspaces
 securityDefinitions:
   BearerAuth:
     in: header

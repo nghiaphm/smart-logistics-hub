@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Tool data of the "understand" agent — not project source.
+    "**/.ua/**",
   ]),
 ]);
 

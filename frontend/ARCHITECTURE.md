@@ -35,33 +35,33 @@ Nên bắt đầu đọc từ đâu để hiểu từng luồng cụ thể (dự
 
 ## 3. Luồng dữ liệu chính (API → UI)
 
-**Hiện tại chưa có luồng dữ liệu thật từ API tới UI.** Không tồn tại trong code:
-
-- Không có lệnh `fetch`/`axios` gọi backend nào.
-- Không có hook dữ liệu (`useQuery`, `useMutation`, ...) nào.
-- Không có Route Handler hoạt động (`src/app/api/vnpay/route.ts` rỗng).
-- Không có `middleware`, Server Action, hay đọc biến môi trường (`NEXT_PUBLIC_*`).
-
-Dữ liệu duy nhất đang hiển thị là **hardcode** trong `src/app/page.tsx` (ví dụ số liệu "12 Kho", "1,420 SKU", "48 Tài xế") — không đi qua server hay API nào.
-
-Các điểm nối hạ tầng đã được dựng sẵn, là nơi luồng API→UI sẽ đi qua khi có triển khai:
+**Pattern chính thức (đã xác nhận qua vertical slice Giai đoạn 4 — trang `(app)/workspaces/page.tsx`):**
 
 ```
-Backend Go (localhost:8000 /api/v1)
-        │  (chưa được gọi từ frontend)
+Client page ("use client", ví dụ (app)/workspaces/page.tsx)
+        │  useQuery({ queryKey, queryFn })  ← TanStack Query (QueryClient toàn cục từ AppProviders)
         ▼
-AppProviders (client provider — QueryClient + Toaster)   ← dùng để đặt fetch/hooks
+apiClient<T>(path)  ← src/lib/api-client.ts — fetch; base URL từ NEXT_PUBLIC_API_URL; tự đính
+        │              "Authorization: Bearer <token>" qua ensureFreshAccessToken();
+        │              ném ApiError khi response không ok (parse { error: { code, message } })
         ▼
-[page.tsx — Server Component] → [Client Component (có "use client")]
+Backend Go (localhost:8000 /api/v1/...) — có auth JWT (Keycloak), lỗi chuẩn { error: { code, message } }
         ▼
-Thư viện UI (src/components/ui) → Toaster (thông báo lỗi/thành công)
+4 trạng thái (mọi trang dữ liệu PHẢI xử lý đủ):
+  - Loading → ui/skeleton
+  - Error → ui/toast (toast.add) + panel inline + nút Thử lại (refetch)
+  - Empty → panel thông báo rõ ràng (không màn hình trắng)
+  - Success → ui/table (hoặc components/shared/DataTable<T>)
 ```
 
-- **AppProviders** (`src/components/providers/app-providers.tsx`, client component) tạo `QueryClient` toàn cục qua `useState`: `staleTime = 5 phút`, `refetchOnWindowFocus = false`, và mount `Toaster`. Root layout (`src/app/layout.tsx`, Server Component) chỉ render `<AppProviders>{children}</AppProviders>`.
-- **Toaster** (`src/components/ui/toast.tsx`) được mount bên trong `AppProviders`, sẵn sàng cho việc hiển thị trạng thái khi có mutation/hook.
-- **Contexts & hooks:** `src/contexts/*` (user, workspace, warehouse, lang, toast, finance, query-provider...) và `src/hooks/**` (useTheme, usePermission, finance, admin, logistic...) đều là stub rỗng — chưa có hook/context nào đưa dữ liệu API vào UI.
+Chi tiết:
 
-Tham chiếu backend (cấu hình tại gốc repo, `.env.development` / `docker-compose.yml`): API `http://localhost:8000`, frontend `http://localhost:3000`, auth Keycloak realm `smart-logistics` (development). Frontend chưa dùng các giá trị này.
+- **Query**: dùng `useQuery` từ `@tanstack/react-query`. `QueryClient` toàn cục được tạo trong `AppProviders` (`src/components/providers/app-providers.tsx`, client component): `staleTime = 5 phút`, `refetchOnWindowFocus = false`; `Toaster` (`src/components/ui/toast.tsx`) cũng mount tại đây — mọi trang có thể gọi `toast.add(...)` trực tiếp. Root layout chỉ render `<AppProviders>{children}</AppProviders>`.
+- **apiClient** (`src/lib/api-client.ts`): `apiClient<T>(path, options)` — base URL từ `NEXT_PUBLIC_API_URL`; tự đính `Authorization: Bearer <token>` (đọc/refresh qua `src/lib/auth.ts` — `ensureFreshAccessToken()` refresh khi token sắp hết hạn); ném `ApiError` (status/code/message) khi response không ok theo format lỗi backend `{ error: { code, message } }`. Lưu ý: backend tắt hẳn → fetch fail kiểu **network TypeError** (không có response để parse) — xử lý chung bằng `error instanceof Error`.
+- **Type dữ liệu**: dùng type **sinh tự động** từ OpenAPI spec (`yarn generate:api` → `src/types/api-generated.ts`), truy cập qua `components["schemas"]["..._dto.XxxResponse"]` và truyền làm generic `T` cho `apiClient<T>` (import qua alias `@/types/api`).
+- **Ví dụ tham chiếu**: `(app)/workspaces/page.tsx` — `useQuery({ queryKey: ["workspaces"], queryFn: () => apiClient<PaginatedWorkspaces>("/workspaces") })` với đủ 4 trạng thái; endpoint `GET /api/v1/workspaces` (module backend đã có từ Giai đoạn 4).
+
+Tham chiếu backend (cấu hình tại gốc repo, `.env.development` / `docker-compose.yml`): API `http://localhost:8000`, frontend `http://localhost:3000`, auth Keycloak realm `smart-logistics` (development).
 
 ---
 
