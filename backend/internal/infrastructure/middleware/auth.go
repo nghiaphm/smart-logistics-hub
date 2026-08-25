@@ -21,7 +21,7 @@ func AuthMiddleware(cfg *config.Config, devSkipAuth bool, verifier JWTVerifier) 
 			c.Set("user", jwt.MapClaims{
 				"sub":                "dev-user",
 				"preferred_username": "dev",
-				"realm_access":       map[string]interface{}{"roles": []interface{}{"admin"}},
+				"realm_access":       map[string]interface{}{"roles": []interface{}{"system_admin"}},
 			})
 			c.Next()
 			return
