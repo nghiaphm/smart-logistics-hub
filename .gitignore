@@ -22,3 +22,5 @@ backend/.env.production
 vendor/
 /.kilo
 frontend/.ua
+tasks
+docs

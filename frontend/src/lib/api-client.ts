@@ -56,5 +56,9 @@ export async function apiClient<T>(path: string, options: RequestInit = {}): Pro
     throw await parseError(response);
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return (await response.json()) as T;
 }
