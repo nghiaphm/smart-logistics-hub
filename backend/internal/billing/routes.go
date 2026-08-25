@@ -27,6 +27,6 @@ func RegisterRoutes(router *gin.RouterGroup, db *sql.DB, authMw gin.HandlerFunc)
 		group.GET("/order/:order_code", h.GetByOrderCode)
 		group.GET("/:id", h.Get)
 		group.PATCH("/:id", h.Update)
-		group.DELETE("/:id", middleware.RequireRole("admin"), h.Delete)
+		group.DELETE("/:id", middleware.RequireRole("system_admin"), h.Delete)
 	}
 }
