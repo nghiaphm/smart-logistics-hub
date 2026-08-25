@@ -2631,6 +2631,270 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List users */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Number of items to skip */
+                    skip?: number;
+                    /** @description Max items per page */
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_user_dto.PaginatedResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a user */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description User payload */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_user_dto.CreateUserRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_user_dto.UserResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a user by ID */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description User ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_user_dto.UserResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Delete a user */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description User ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "*/*": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "*/*": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update a user */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description User ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description User update */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_user_dto.UpdateUserRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_user_dto.UserResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/warehouses": {
         parameters: {
             query?: never;
@@ -3582,6 +3846,42 @@ export interface components {
             started_at?: string;
             status?: string;
             stops?: components["schemas"]["my-web-app_com_smart-logistic-hub_internal_trip_dto.TripStopRequest"][];
+        };
+        "my-web-app_com_smart-logistic-hub_internal_user_dto.CreateUserRequest": {
+            email?: string;
+            full_name?: string;
+            is_active?: boolean;
+            keycloak_sub?: string;
+            phone?: string;
+            role?: string;
+            username: string;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_user_dto.PaginatedResponse": {
+            items?: components["schemas"]["my-web-app_com_smart-logistic-hub_internal_user_dto.UserResponse"][];
+            limit?: number;
+            skip?: number;
+            total?: number;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_user_dto.UpdateUserRequest": {
+            email?: string;
+            full_name?: string;
+            is_active?: boolean;
+            keycloak_sub?: string;
+            phone?: string;
+            role?: string;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_user_dto.UserResponse": {
+            created_at?: string;
+            created_by?: string;
+            email?: string;
+            full_name?: string;
+            id?: number;
+            is_active?: boolean;
+            keycloak_sub?: string;
+            phone?: string;
+            role?: string;
+            updated_at?: string;
+            username?: string;
         };
         "my-web-app_com_smart-logistic-hub_internal_warehouse_dto.CreateWarehouseRequest": {
             address: string;

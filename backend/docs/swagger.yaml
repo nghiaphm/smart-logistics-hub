@@ -948,6 +948,78 @@ definitions:
           $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_trip_dto.TripStopRequest'
         type: array
     type: object
+  my-web-app_com_smart-logistic-hub_internal_user_dto.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      is_active:
+        type: boolean
+      keycloak_sub:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    required:
+    - username
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_user_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_user_dto.UserResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_user_dto.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      is_active:
+        type: boolean
+      keycloak_sub:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_user_dto.UserResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      keycloak_sub:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
   my-web-app_com_smart-logistic-hub_internal_warehouse_dto.CreateWarehouseRequest:
     properties:
       address:
@@ -2679,6 +2751,165 @@ paths:
       summary: Assign a driver to a trip
       tags:
       - Trips
+  /users:
+    get:
+      parameters:
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_user_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List users
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_user_dto.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_user_dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a user
+      tags:
+      - Users
+  /users/{id}:
+    delete:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - Users
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_user_dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a user by ID
+      tags:
+      - Users
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User update
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_user_dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_user_dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a user
+      tags:
+      - Users
   /warehouses:
     get:
       parameters:
