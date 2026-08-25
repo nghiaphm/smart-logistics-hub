@@ -76,7 +76,7 @@ frontend/
 ├── components.json         # Cấu hình shadcn: style "base-maia", icon hugeicons, rsc: true
 ├── eslint.config.mjs       # eslint-config-next core-web-vitals + typescript
 ├── postcss.config.mjs      # @tailwindcss/postcss
-├── vitest.config.ts        # Rỗng — chưa có test setup
+├── vitest.config.mts        # Vitest: environment jsdom, setup src/test/setup.ts (jest-dom), alias @, passWithNoTests
 ├── Dockerfile              # Rỗng — chưa có image build
 ├── AGENTS.md / CLAUDE.md   # Hướng dẫn agent (Next.js 16 khác biệt so với tài liệu cũ)
 └── src/
@@ -182,7 +182,7 @@ frontend/
 - **TypeScript strict** (`tsconfig.json`) + path alias **`@/*` → `./src/*`** (component import bằng `@/components/...`).
 - **Lint:** `eslint` (next/core-web-vitals + typescript). Script: `yarn lint`.
 - **Package manager:** `yarn@1.22.22` (khai báo trong `package.json` `packageManager`, có `yarn.lock`).
-- **Testing:** chưa có. `vitest.config.ts` rỗng, `package.json` không có script `test`. File `src/config/roles.test.ts` tồn tại nhưng là stub rỗng.
+- **Testing:** đã triển khai (Giai đoạn 7). **Vitest** (`vitest.config.mts`: environment `jsdom`, setup `src/test/setup.ts` import jest-dom, `passWithNoTests`, alias `@`). Scripts `yarn test` (`vitest run`) + `yarn test:watch`. DevDeps pin cho Node 20: `vitest@4`, `jsdom@^24`, `@testing-library/react`, `@testing-library/jest-dom@6.9.1`, `@testing-library/dom`. Test hiện có: `src/lib/api-client.test.ts` (7 case), `src/lib/auth.test.ts` (17 case), `src/app/(app)/workspaces/page.test.tsx` (5 case — 4 trạng thái: loading/error/empty/success của pattern chuẩn). Mock thuần `vi.fn()` (apiClient/fetch/global) — KHÔNG dùng MSW; test import tường minh từ `vitest` (không bật globals). `src/config/roles.test.ts` vẫn là stub rỗng.
 - **Env/config:** `next.config.ts` rỗng (không có proxy, image config, env config). Không có biến `NEXT_PUBLIC_*` nào trong frontend.
 - **AGENTS.md** (frontend) cảnh báo: bản Next.js 16 trong repo có API/convention khác tài liệu cũ, phải đọc `node_modules/next/dist/docs/` trước khi viết code.
 

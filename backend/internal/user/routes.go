@@ -17,7 +17,7 @@ func RegisterRoutes(router *gin.RouterGroup, db *sql.DB, authMw gin.HandlerFunc)
 	h := handler.NewHandler(svc)
 
 	group := router.Group("/users")
-	group.Use(authMw, middleware.RequireRole("admin"))
+	group.Use(authMw, middleware.RequireRole("system_admin"))
 	{
 		group.POST("", h.Create)
 		group.GET("", h.List)

@@ -2,17 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { decodeJwt } from "@/lib/auth";
+import { isSystemAdmin, type JwtUser } from "@/lib/permissions";
 
 const AUTH_COOKIE_NAME = "slh_access_token";
-const ADMIN_ROLE = "admin";
 const ADMIN_PREFIX = "/admin";
 const ADMIN_ROUTES = ["/admin", "/admin/users", "/admin/warehouses"];
-
-type JwtClaims = {
-  exp?: number;
-  realm_access?: { roles?: string[] };
-  resource_access?: Record<string, { roles?: string[] }>;
-};
 
 function getToken(request: NextRequest): string | null {
   return request.cookies.get(AUTH_COOKIE_NAME)?.value ?? null;
@@ -23,7 +17,7 @@ function isAuthenticated(request: NextRequest): boolean {
   if (!token) {
     return false;
   }
-  const payload = decodeJwt<JwtClaims>(token);
+  const payload = decodeJwt<JwtUser>(token);
   if (!payload || typeof payload.exp !== "number") {
     return false;
   }
@@ -35,24 +29,7 @@ function hasAdminRole(request: NextRequest): boolean {
   if (!token) {
     return false;
   }
-  const payload = decodeJwt<JwtClaims>(token);
-  if (!payload) {
-    return false;
-  }
-  const roles = new Set<string>();
-  if (payload.realm_access?.roles) {
-    for (const role of payload.realm_access.roles) {
-      roles.add(role);
-    }
-  }
-  if (payload.resource_access) {
-    for (const client of Object.values(payload.resource_access)) {
-      for (const role of client?.roles ?? []) {
-        roles.add(role);
-      }
-    }
-  }
-  return roles.has(ADMIN_ROLE);
+  return isSystemAdmin(decodeJwt<JwtUser>(token));
 }
 
 function isAdminRoute(pathname: string): boolean {

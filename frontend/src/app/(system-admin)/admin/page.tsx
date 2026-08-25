@@ -78,7 +78,7 @@ export default function AdminDashboardPage() {
                 <HugeiconsIcon icon={metric.icon} className="size-4.5" />
               </span>
               <p className="mt-4 text-[13px] font-medium text-muted-foreground">{metric.label}</p>
-              <p className="mt-0.5 font-mono text-3xl font-semibold tabular-nums tracking-tight text-foreground">
+              <div className="mt-0.5 font-mono text-3xl font-semibold tabular-nums tracking-tight text-foreground">
                 {result.isLoading ? (
                   <Skeleton className="h-8 w-14 rounded-lg" />
                 ) : result.isError ? (
@@ -86,7 +86,7 @@ export default function AdminDashboardPage() {
                 ) : (
                   (result.data?.total ?? 0).toLocaleString("vi-VN")
                 )}
-              </p>
+              </div>
             </div>
           )
         })}
