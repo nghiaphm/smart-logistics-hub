@@ -183,7 +183,12 @@ frontend/
 - **Lint:** `eslint` (next/core-web-vitals + typescript). Script: `yarn lint`.
 - **Package manager:** `yarn@1.22.22` (khai báo trong `package.json` `packageManager`, có `yarn.lock`).
 - **Testing:** đã triển khai (Giai đoạn 7). **Vitest** (`vitest.config.mts`: environment `jsdom`, setup `src/test/setup.ts` import jest-dom, `passWithNoTests`, alias `@`). Scripts `yarn test` (`vitest run`) + `yarn test:watch`. DevDeps pin cho Node 20: `vitest@4`, `jsdom@^24`, `@testing-library/react`, `@testing-library/jest-dom@6.9.1`, `@testing-library/dom`. Test hiện có: `src/lib/api-client.test.ts` (7 case), `src/lib/auth.test.ts` (17 case), `src/app/(app)/workspaces/page.test.tsx` (5 case — 4 trạng thái: loading/error/empty/success của pattern chuẩn). Mock thuần `vi.fn()` (apiClient/fetch/global) — KHÔNG dùng MSW; test import tường minh từ `vitest` (không bật globals). `src/config/roles.test.ts` vẫn là stub rỗng.
-- **Env/config:** `next.config.ts` rỗng (không có proxy, image config, env config). Không có biến `NEXT_PUBLIC_*` nào trong frontend.
+- **Env/config:** `next.config.ts` chỉ có `output: "standalone"` (TASK-042). Biến môi trường dùng trong code (rà qua grep `process.env` toàn bộ `src/`):
+  `NEXT_PUBLIC_API_URL` (api-client.ts), `NEXT_PUBLIC_KEYCLOAK_URL`, `NEXT_PUBLIC_KEYCLOAK_REALM`,
+  `NEXT_PUBLIC_KEYCLOAK_CLIENT_ID` (auth.ts). Bản mẫu production: `frontend/.env.example`
+  (tên biến + mô tả, không giá trị thật); `.env.development` chứa giá trị dev
+  (gitignore). `NEXT_PUBLIC_*` inline vào client bundle tại `next build` — phải có
+  lúc build (Dockerfile dùng `--build-arg`, xem TASK-042).
 - **AGENTS.md** (frontend) cảnh báo: bản Next.js 16 trong repo có API/convention khác tài liệu cũ, phải đọc `node_modules/next/dist/docs/` trước khi viết code.
 
 ### 5.6. Xác thực: Keycloak OIDC, token ở client, proxy bảo vệ route
@@ -198,7 +203,7 @@ frontend/
 
 ## 6. Kết nối backend
 
-- **Base URL API:** đã cấu hình qua biến `NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1` trong `frontend/.env.development` (Next.js tự load file này khi chạy `next dev`). Chưa có `.env.production` — khi build production cần cung cấp `NEXT_PUBLIC_API_URL` tại thời điểm build, nếu không client bundle sẽ inline giá trị `undefined`.
+- **Base URL API:** đã cấu hình qua biến `NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1` trong `frontend/.env.development` (Next.js tự load file này khi chạy `next dev`). Cho production: copy `frontend/.env.example` thành `.env.production` (đã gitignore) và điền giá trị thật — danh sách đầy đủ 4 biến: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_KEYCLOAK_URL`, `NEXT_PUBLIC_KEYCLOAK_REALM`, `NEXT_PUBLIC_KEYCLOAK_CLIENT_ID`. Bắt buộc có đúng lúc `next build` (client bundle inline), nếu không sẽ inline `undefined`.
 - **API client:** `frontend/src/lib/api-client.ts` cung cấp `apiClient<T>(path, options)` dùng `fetch`, base URL lấy từ `NEXT_PUBLIC_API_URL`, tự đính header `Authorization: Bearer <token>` nếu có token (đọc từ `localStorage` key `access_token`), ném `ApiError` khi response không ok, và ném lỗi rõ ràng nếu thiếu `NEXT_PUBLIC_API_URL`. Hàm trả về body JSON đã parse (không bọc trong `{ data: ... }`).
 - **Type dùng chung:** `frontend/src/types/api.ts` re-export toàn bộ type sinh tự động
   (`src/types/api-generated.ts` — `components`, `paths`) và giữ class runtime `ApiError`
