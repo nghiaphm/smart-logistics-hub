@@ -1987,7 +1987,65 @@ export interface paths {
                 };
             };
         };
-        post?: never;
+        /** Create user profile */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Create user profile */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_profile_dto.CreateProfileRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -3737,17 +3795,23 @@ export interface components {
             price?: number;
             weight_gram?: number;
         };
+        "my-web-app_com_smart-logistic-hub_internal_profile_dto.CreateProfileRequest": {
+            name: string;
+            phone: string;
+        };
         "my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse": {
-            avatar_url?: string;
             created_at?: string;
+            /** @description For frontend compatibility */
             display_name?: string;
+            id?: number;
+            keycloak_user_id?: string;
+            name?: string;
             phone?: string;
-            updated_at?: string;
+            /** @description For frontend compatibility */
             user_sub?: string;
         };
         "my-web-app_com_smart-logistic-hub_internal_profile_dto.UpdateProfileRequest": {
-            avatar_url?: string;
-            display_name?: string;
+            name?: string;
             phone?: string;
         };
         "my-web-app_com_smart-logistic-hub_internal_tracking_dto.CreateTrackingEventRequest": {

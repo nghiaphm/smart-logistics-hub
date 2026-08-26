@@ -27,7 +27,7 @@ function getTokenEndpoint(): string {
   return `${url}/realms/${realm}/protocol/openid-connect/token`;
 }
 
-export function createAuthorizationUrl(redirectUri: string, state: string): string {
+export function createAuthorizationUrl(redirectUri: string, state: string, isRegister = false): string {
   const { url, realm, clientId } = getKeycloakConfig();
   const params = new URLSearchParams({
     client_id: clientId,
@@ -36,7 +36,8 @@ export function createAuthorizationUrl(redirectUri: string, state: string): stri
     scope: "openid",
     state,
   });
-  return `${url}/realms/${realm}/protocol/openid-connect/auth?${params.toString()}`;
+  const endpoint = isRegister ? "reg" : "auth";
+  return `${url}/realms/${realm}/protocol/openid-connect/${endpoint}?${params.toString()}`;
 }
 
 export function saveOAuthState(state: string): void {

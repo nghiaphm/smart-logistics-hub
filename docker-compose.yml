@@ -82,6 +82,8 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
       - "8180:8080"
+    volumes:
+      - ./keycloak/themes:/opt/keycloak/themes
     depends_on:
       - postgres-keycloak
     networks:

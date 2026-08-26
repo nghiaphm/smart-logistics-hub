@@ -719,26 +719,38 @@ definitions:
       weight_gram:
         type: integer
     type: object
-  my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse:
+  my-web-app_com_smart-logistic-hub_internal_profile_dto.CreateProfileRequest:
     properties:
-      avatar_url:
-        type: string
-      created_at:
-        type: string
-      display_name:
+      name:
         type: string
       phone:
         type: string
-      updated_at:
+    required:
+    - name
+    - phone
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse:
+    properties:
+      created_at:
+        type: string
+      display_name:
+        description: For frontend compatibility
+        type: string
+      id:
+        type: integer
+      keycloak_user_id:
+        type: string
+      name:
+        type: string
+      phone:
         type: string
       user_sub:
+        description: For frontend compatibility
         type: string
     type: object
   my-web-app_com_smart-logistic-hub_internal_profile_dto.UpdateProfileRequest:
     properties:
-      avatar_url:
-        type: string
-      display_name:
+      name:
         type: string
       phone:
         type: string
@@ -2326,6 +2338,43 @@ paths:
       security:
       - BearerAuth: []
       summary: Get current user profile
+      tags:
+      - Profile
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create user profile
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_profile_dto.CreateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create user profile
       tags:
       - Profile
     put:

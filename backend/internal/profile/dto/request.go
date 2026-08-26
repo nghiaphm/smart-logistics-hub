@@ -1,7 +1,11 @@
 package dto
 
+type CreateProfileRequest struct {
+	Name  string `json:"name" binding:"required"`
+	Phone string `json:"phone" binding:"required"`
+}
+
 type UpdateProfileRequest struct {
-	DisplayName *string `json:"display_name,omitempty"`
-	Phone       *string `json:"phone,omitempty"`
-	AvatarURL   *string `json:"avatar_url,omitempty"`
+	Name  *string `json:"name,omitempty"`
+	Phone *string `json:"phone,omitempty"`
 }

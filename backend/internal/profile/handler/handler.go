@@ -59,6 +59,38 @@ func (h *Handler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.ToResponse(p))
 }
 
+// @Summary Create user profile
+// @Tags Profile
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param profile body dto.CreateProfileRequest true "Create user profile"
+// @Success 201 {object} dto.ProfileResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /profile [post]
+func (h *Handler) Create(c *gin.Context) {
+	sub, err := userSub(c)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	var req dto.CreateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(fmt.Errorf("%w: %v", apierrors.ErrBadRequest, err))
+		return
+	}
+
+	p, err := h.Service.Create(c.Request.Context(), sub, &req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusCreated, dto.ToResponse(p))
+}
+
 // @Summary Update current user profile
 // @Tags Profile
 // @Accept json
