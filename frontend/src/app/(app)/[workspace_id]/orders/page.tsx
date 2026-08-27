@@ -99,7 +99,7 @@ export default function Page() {
   const confirmDelete = async () => {
     if (!orderToDelete?.id) return
     deleteMutation.mutate(orderToDelete.id, {
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast.add({
           title: "Xoá thất bại",
           description: err instanceof Error ? err.message : "Đã xảy ra lỗi khi xoá đơn hàng này.",
@@ -236,6 +236,7 @@ export default function Page() {
       )}
 
       <OrderFormModal
+        key={`${modalOpen}-${selectedOrder?.id ?? "new"}`}
         open={modalOpen}
         onOpenChange={setModalOpen}
         order={selectedOrder}

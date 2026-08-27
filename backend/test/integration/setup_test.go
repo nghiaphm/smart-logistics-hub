@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 
 func setupTestDB() (*sql.DB, error) {
 	host := getEnv("MARIADB_HOST", "localhost")
-	port := getEnv("MARIADB_PORT", "3306")
+	port := getEnv("MARIADB_PORT", "3307")
 	user := getEnv("MARIADB_USER", "root")
 	password := getEnv("MARIADB_PASSWORD", "root")
 	dbName := getEnv("MARIADB_DB_NAME", "smart_logistics")

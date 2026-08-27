@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
-	"my-web-app.com/smart-logistic-hub/internal/role/dto"
+	_ "my-web-app.com/smart-logistic-hub/internal/role/dto"
 	"my-web-app.com/smart-logistic-hub/internal/role/service"
 )
 

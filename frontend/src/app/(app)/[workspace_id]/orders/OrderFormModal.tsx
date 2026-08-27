@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Alert02Icon, Add01Icon, Delete01Icon } from "@hugeicons/core-free-icons"
@@ -36,25 +36,39 @@ export function OrderFormModal({ open, onOpenChange, order, onSuccess }: OrderFo
   const isEdit = !!order
 
   // Form Fields
-  const [orderCode, setOrderCode] = useState("")
+  const [orderCode, setOrderCode] = useState(() => {
+    if (order) return order.order_code ?? ""
+    return `DH-${new Date().getFullYear().toString().slice(-2)}${(new Date().getMonth() + 1).toString().padStart(2, "0")}-${Math.floor(1000 + Math.random() * 9000)}`
+  })
   const [warehouseId, setWarehouseId] = useState("")
-  const [senderName, setSenderName] = useState("")
-  const [senderPhone, setSenderPhone] = useState("")
-  const [senderAddress, setSenderAddress] = useState("")
-  const [senderProvince, setSenderProvince] = useState("")
-  const [senderDistrict, setSenderDistrict] = useState("")
-  const [senderWard, setSenderWard] = useState("")
-  const [senderPostalCode, setSenderPostalCode] = useState("")
+  const [senderName, setSenderName] = useState(order?.sender_name ?? "")
+  const [senderPhone, setSenderPhone] = useState(order?.sender_phone ?? "")
+  const [senderAddress, setSenderAddress] = useState(order?.sender_address ?? "")
+  const [senderProvince, setSenderProvince] = useState(order?.sender_province ?? "")
+  const [senderDistrict, setSenderDistrict] = useState(order?.sender_district ?? "")
+  const [senderWard, setSenderWard] = useState(order?.sender_ward ?? "")
+  const [senderPostalCode, setSenderPostalCode] = useState(order?.sender_postal_code ?? "")
 
-  const [receiverName, setReceiverName] = useState("")
-  const [receiverPhone, setReceiverPhone] = useState("")
-  const [receiverAddress, setReceiverAddress] = useState("")
-  const [receiverProvince, setReceiverProvince] = useState("")
-  const [receiverDistrict, setReceiverDistrict] = useState("")
-  const [receiverWard, setReceiverWard] = useState("")
-  const [receiverPostalCode, setReceiverPostalCode] = useState("")
+  const [receiverName, setReceiverName] = useState(order?.receiver_name ?? "")
+  const [receiverPhone, setReceiverPhone] = useState(order?.receiver_phone ?? "")
+  const [receiverAddress, setReceiverAddress] = useState(order?.receiver_address ?? "")
+  const [receiverProvince, setReceiverProvince] = useState(order?.receiver_province ?? "")
+  const [receiverDistrict, setReceiverDistrict] = useState(order?.receiver_district ?? "")
+  const [receiverWard, setReceiverWard] = useState(order?.receiver_ward ?? "")
+  const [receiverPostalCode, setReceiverPostalCode] = useState(order?.receiver_postal_code ?? "")
 
-  const [items, setItems] = useState<FormItem[]>([])
+  const [items, setItems] = useState<FormItem[]>(() => {
+    if (order) {
+      const mappedItems = (order.items ?? []).map((it) => ({
+        productId: String(it.product_id ?? ""),
+        productName: it.product_name ?? "",
+        quantity: it.quantity ?? 1,
+        weightGram: it.weight_gram ?? 0,
+      }))
+      return mappedItems.length > 0 ? mappedItems : [{ productId: "", productName: "", quantity: 1, weightGram: 0 }]
+    }
+    return [{ productId: "", productName: "", quantity: 1, weightGram: 0 }]
+  })
 
   // Errors state
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
@@ -73,72 +87,16 @@ export function OrderFormModal({ open, onOpenChange, order, onSuccess }: OrderFo
     enabled: open,
   })
 
-  const warehouses = warehousesData?.items ?? []
-  const products = productsData?.items ?? []
-
-  // Initialize fields on open or change
-  useEffect(() => {
-    if (open) {
-      setValidationErrors({})
-      if (order) {
-        setOrderCode(order.order_code ?? "")
-        // Find warehouse_id associated with order; wait, backend order does not return warehouse_id directly? 
-        // Let's check order fields: receiver_province, receiver_address etc. but wait! Does order have warehouse_id in GET /orders/:id?
-        // Ah, order database only has assigned_driver_id, status etc., but let's default to the first available warehouse if not editable.
-        setWarehouseId("") // Let them choose or default
-        setSenderName(order.sender_name ?? "")
-        setSenderPhone(order.sender_phone ?? "")
-        setSenderAddress(order.sender_address ?? "")
-        setSenderProvince(order.sender_province ?? "")
-        setSenderDistrict(order.sender_district ?? "")
-        setSenderWard(order.sender_ward ?? "")
-        setSenderPostalCode(order.sender_postal_code ?? "")
-
-        setReceiverName(order.receiver_name ?? "")
-        setReceiverPhone(order.receiver_phone ?? "")
-        setReceiverAddress(order.receiver_address ?? "")
-        setReceiverProvince(order.receiver_province ?? "")
-        setReceiverDistrict(order.receiver_district ?? "")
-        setReceiverWard(order.receiver_ward ?? "")
-        setReceiverPostalCode(order.receiver_postal_code ?? "")
-
-        // Populate items
-        const mappedItems = (order.items ?? []).map((it) => ({
-          productId: String(it.product_id ?? ""),
-          productName: it.product_name ?? "",
-          quantity: it.quantity ?? 1,
-          weightGram: it.weight_gram ?? 0,
-        }))
-        setItems(mappedItems.length > 0 ? mappedItems : [{ productId: "", productName: "", quantity: 1, weightGram: 0 }])
-      } else {
-        // Create new
-        setOrderCode(`DH-${new Date().getFullYear().toString().slice(-2)}${(new Date().getMonth() + 1).toString().padStart(2, "0")}-${Math.floor(1000 + Math.random() * 9000)}`)
-        setWarehouseId("")
-        setSenderName("")
-        setSenderPhone("")
-        setSenderAddress("")
-        setSenderProvince("")
-        setSenderDistrict("")
-        setSenderWard("")
-        setSenderPostalCode("")
-
-        setReceiverName("")
-        setReceiverPhone("")
-        setReceiverAddress("")
-        setReceiverProvince("")
-        setReceiverDistrict("")
-        setReceiverWard("")
-        setReceiverPostalCode("")
-
-        setItems([{ productId: "", productName: "", quantity: 1, weightGram: 0 }])
-      }
-    }
-  }, [open, order])
+  const warehouses = useMemo(() => warehousesData?.items ?? [], [warehousesData?.items])
+  const products = useMemo(() => productsData?.items ?? [], [productsData?.items])
 
   // Populate first warehouse once loaded on creation
   useEffect(() => {
     if (open && !isEdit && warehouses.length > 0 && !warehouseId) {
-      setWarehouseId(String(warehouses[0].id))
+      const timer = setTimeout(() => {
+        setWarehouseId(String(warehouses[0].id))
+      }, 0)
+      return () => clearTimeout(timer)
     }
   }, [open, isEdit, warehouses, warehouseId])
 
@@ -250,7 +208,7 @@ export function OrderFormModal({ open, onOpenChange, order, onSuccess }: OrderFo
           receiver_postal_code: receiverPostalCode,
         },
       }, {
-        onError: (err: any) => {
+        onError: (err: unknown) => {
           toast.add({
             title: "Cập nhật thất bại",
             description: err instanceof Error ? err.message : "Đã xảy ra lỗi khi lưu thông tin đơn hàng.",
@@ -284,7 +242,7 @@ export function OrderFormModal({ open, onOpenChange, order, onSuccess }: OrderFo
         })),
         status: "PENDING",
       }, {
-        onError: (err: any) => {
+        onError: (err: unknown) => {
           toast.add({
             title: "Khởi tạo thất bại",
             description: err instanceof Error ? err.message : "Đã xảy ra lỗi khi lưu thông tin đơn hàng.",
