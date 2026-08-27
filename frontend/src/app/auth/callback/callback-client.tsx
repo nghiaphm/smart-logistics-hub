@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { consumeOAuthState, exchangeCodeForTokens, setTokens } from "@/lib/auth";
+import { apiClient } from "@/lib/api-client";
+import { ApiError } from "@/types/api";
 
 export default function CallbackClient() {
   const router = useRouter();
@@ -37,8 +39,21 @@ export default function CallbackClient() {
         const redirectUri = `${window.location.origin}/auth/callback`;
         const tokens = await exchangeCodeForTokens(code, redirectUri);
         setTokens(tokens);
-        router.replace("/workspaces");
-      } catch {
+
+        // Gọi API đọc profile để phân biệt user mới/cũ
+        try {
+          await apiClient("/profile");
+          router.replace("/modules");
+        } catch (apiErr) {
+          if (apiErr instanceof ApiError && apiErr.status === 404) {
+            router.replace("/auth/complete-profile");
+          } else {
+            console.error("Lỗi khi tải thông tin hồ sơ:", apiErr);
+            setError("Lỗi hệ thống khi xác thực hồ sơ.");
+          }
+        }
+      } catch (err) {
+        console.error("Lỗi OAuth callback:", err);
         setError("Không thể hoàn tất đăng nhập. Vui lòng thử lại.");
       }
     }

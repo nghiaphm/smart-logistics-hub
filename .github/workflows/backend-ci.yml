@@ -2,7 +2,7 @@ name: Backend CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [staging, main]
   workflow_dispatch:
 
 jobs:
@@ -43,6 +43,8 @@ jobs:
 
       - name: Test
         run: go test ./...
+        env:
+          MARIADB_PORT: 3306
 
       - name: Build
         run: go build ./...

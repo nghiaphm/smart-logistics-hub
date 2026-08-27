@@ -1,0 +1,281 @@
+/* Custom CSS for Smart Logistics Hub - Keycloak Theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body.login-pf {
+    background-color: #09090b !important; /* zinc-950 */
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+        linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px) !important;
+    background-size: 100% 100%, 100% 100%, 24px 24px, 24px 24px !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f4f4f5 !important; /* zinc-100 */
+}
+
+/* Hide default Keycloak header/logo */
+#kc-logo, #kc-logo-wrapper {
+    display: none !important;
+}
+
+/* Custom Header / Brand Logo container */
+#kc-header {
+    margin-bottom: 2rem !important;
+    text-align: center !important;
+}
+
+#kc-header-wrapper {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 1.75rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.05em !important;
+    color: #ffffff !important;
+    text-transform: uppercase !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+#kc-header-wrapper::before {
+    content: "🚚";
+    display: inline-block;
+    font-size: 1.8rem;
+}
+
+#kc-header-wrapper::after {
+    content: " SMART LOGISTIC HUB";
+    color: #ffffff;
+    font-weight: 800;
+}
+
+/* Main card wrapper */
+.login-pf-page .card-pf {
+    background: rgba(18, 18, 20, 0.8) !important; /* Custom absolute dark background */
+    border: 1px solid rgba(63, 63, 70, 0.4) !important; /* zinc-704/zinc-800 border */
+    border-radius: 1rem !important; /* rounded-2xl */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4) !important;
+    padding: 2.5rem !important;
+    max-width: 440px !important;
+    width: 100% !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* Card titles */
+.login-pf-page .card-pf h1,
+#kc-page-title {
+    color: #ffffff !important;
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.025em;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    text-align: center !important;
+}
+
+/* Form inputs & controls */
+.form-group {
+    margin-bottom: 1.25rem !important;
+}
+
+label {
+    color: #a1a1aa !important; /* zinc-400 */
+    font-size: 0.875rem !important; /* text-sm */
+    font-weight: 500 !important;
+    margin-bottom: 0.5rem !important;
+    display: block;
+}
+
+.form-control {
+    background-color: rgba(9, 9, 11, 0.6) !important; /* zinc-950 with opacity */
+    border: 1px solid rgba(63, 63, 70, 0.8) !important; /* zinc-700 */
+    border-radius: 0.5rem !important; /* rounded-lg */
+    color: #f4f4f5 !important; /* zinc-100 */
+    font-size: 0.95rem !important;
+    padding: 0.75rem 1rem !important;
+    width: 100% !important;
+    height: auto !important;
+    box-sizing: border-box !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+.form-control:focus {
+    border-color: #4f46e5 !important; /* indigo-600 */
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.4) !important;
+    outline: none !important;
+}
+
+/* Checkbox & radio custom styling */
+input[type="checkbox"] {
+    accent-color: #4f46e5 !important;
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+/* Links & text actions */
+a {
+    color: #818cf8 !important; /* indigo-400 */
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    transition: color 0.15s ease !important;
+    font-size: 0.875rem !important;
+}
+
+a:hover {
+    color: #a5b4fc !important; /* indigo-300 */
+    text-decoration: underline !important;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important; /* Indigo gradient */
+    border: none !important;
+    border-radius: 0.5rem !important;
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    padding: 0.75rem 1.5rem !important;
+    width: 100% !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(79, 70, 229, 0.2) !important;
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    background: #4338ca !important;
+    transform: translateY(1px);
+}
+
+/* Keycloak specific containers layout */
+#kc-form {
+    margin-top: 1rem;
+}
+
+#kc-form-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+}
+
+.checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0 !important;
+    cursor: pointer;
+}
+
+#kc-form-buttons {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+#kc-info {
+    border-top: 1px solid rgba(63, 63, 70, 0.4) !important;
+    margin-top: 1.5rem !important;
+    padding-top: 1.5rem !important;
+    text-align: center !important;
+}
+
+#kc-info-wrapper {
+    color: #a1a1aa !important;
+    font-size: 0.875rem !important;
+}
+
+/* Alerts and feedback messages */
+.alert {
+    border-radius: 0.5rem !important;
+    padding: 0.75rem 1rem !important;
+    margin-bottom: 1.25rem !important;
+    font-size: 0.875rem !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.alert-error {
+    background-color: rgba(239, 68, 68, 0.1) !important; /* red-500 with opacity */
+    border: 1px solid rgba(239, 68, 68, 0.4) !important;
+    color: #fca5a5 !important; /* red-300 */
+}
+
+.alert-warning {
+    background-color: rgba(245, 158, 11, 0.1) !important; /* amber-500 with opacity */
+    border: 1px solid rgba(245, 158, 11, 0.4) !important;
+    color: #fde4aa !important; /* amber-300 */
+}
+
+.alert-success {
+    background-color: rgba(16, 185, 129, 0.1) !important; /* emerald-500 with opacity */
+    border: 1px solid rgba(16, 185, 129, 0.4) !important;
+    color: #a7f3d0 !important; /* emerald-300 */
+}
+
+.alert-info {
+    background-color: rgba(59, 130, 246, 0.1) !important; /* blue-500 with opacity */
+    border: 1px solid rgba(59, 130, 246, 0.4) !important;
+    color: #bfdbfe !important; /* blue-300 */
+}
+
+.pf-c-alert__icon, .kc-feedback-text {
+    margin-right: 0.5rem;
+}
+
+/* Social Login Providers (if active) */
+#kc-social-providers {
+    margin-top: 1.5rem;
+    border-top: 1px solid rgba(63, 63, 70, 0.4);
+    padding-top: 1.5rem;
+}
+
+#kc-social-providers h4 {
+    color: #a1a1aa;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.z-social-btn {
+    background-color: rgba(9, 9, 11, 0.6) !important;
+    border: 1px solid rgba(63, 63, 70, 0.8) !important;
+    border-radius: 0.5rem !important;
+    color: #f4f4f5 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.z-social-btn:hover {
+    background-color: rgba(24, 24, 27, 0.8) !important;
+    border-color: rgba(82, 82, 91, 0.8) !important;
+}

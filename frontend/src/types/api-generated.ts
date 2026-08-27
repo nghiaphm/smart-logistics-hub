@@ -1987,6 +1987,122 @@ export interface paths {
                 };
             };
         };
+        /** Create user profile */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Create user profile */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_profile_dto.CreateProfileRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/roles/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get roles and permissions for current user */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_role_dto.UserRolesAndPermissionsResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -3737,18 +3853,38 @@ export interface components {
             price?: number;
             weight_gram?: number;
         };
+        "my-web-app_com_smart-logistic-hub_internal_profile_dto.CreateProfileRequest": {
+            name: string;
+            phone: string;
+        };
         "my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse": {
-            avatar_url?: string;
             created_at?: string;
+            /** @description For frontend compatibility */
             display_name?: string;
+            id?: number;
+            keycloak_user_id?: string;
+            name?: string;
             phone?: string;
-            updated_at?: string;
+            /** @description For frontend compatibility */
             user_sub?: string;
         };
         "my-web-app_com_smart-logistic-hub_internal_profile_dto.UpdateProfileRequest": {
-            avatar_url?: string;
-            display_name?: string;
+            name?: string;
             phone?: string;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_role_dto.PermissionResponse": {
+            action?: string;
+            resource?: string;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_role_dto.RoleResponse": {
+            description?: string;
+            id?: number;
+            name?: string;
+            permissions?: components["schemas"]["my-web-app_com_smart-logistic-hub_internal_role_dto.PermissionResponse"][];
+        };
+        "my-web-app_com_smart-logistic-hub_internal_role_dto.UserRolesAndPermissionsResponse": {
+            keycloak_user_id?: string;
+            roles?: components["schemas"]["my-web-app_com_smart-logistic-hub_internal_role_dto.RoleResponse"][];
         };
         "my-web-app_com_smart-logistic-hub_internal_tracking_dto.CreateTrackingEventRequest": {
             driver_code: string;

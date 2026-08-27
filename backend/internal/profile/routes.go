@@ -19,6 +19,7 @@ func RegisterRoutes(router *gin.RouterGroup, db *sql.DB, authMw gin.HandlerFunc)
 	group.Use(authMw)
 	{
 		group.GET("", h.Get)
+		group.POST("", h.Create)
 		group.PUT("", h.Update)
 	}
 }

@@ -18,13 +18,13 @@ func NewRepository(db *sql.DB) *Repository {
 	return &Repository{db: db}
 }
 
-const profileColumns = `id, user_sub, display_name, phone, avatar_url, created_at, updated_at`
+const profileColumns = `id, keycloak_user_id, name, phone, created_at`
 
-func (r *Repository) GetByUserSub(ctx context.Context, userSub string) (*entity.Profile, error) {
-	query := `SELECT ` + profileColumns + ` FROM profiles WHERE user_sub = ?`
+func (r *Repository) GetByKeycloakUserID(ctx context.Context, keycloakUserID string) (*entity.Profile, error) {
+	query := `SELECT ` + profileColumns + ` FROM user_profiles WHERE keycloak_user_id = ?`
 	p := &entity.Profile{}
-	err := r.db.QueryRowContext(ctx, query, userSub).Scan(
-		&p.ID, &p.UserSub, &p.DisplayName, &p.Phone, &p.AvatarURL, &p.CreatedAt, &p.UpdatedAt,
+	err := r.db.QueryRowContext(ctx, query, keycloakUserID).Scan(
+		&p.ID, &p.KeycloakUserID, &p.Name, &p.Phone, &p.CreatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, apierrors.ErrNotFound
@@ -37,25 +37,21 @@ func (r *Repository) GetByUserSub(ctx context.Context, userSub string) (*entity.
 
 func (r *Repository) Create(ctx context.Context, p *entity.Profile) error {
 	now := time.Now().UTC()
-	query := `INSERT INTO profiles (user_sub, display_name, phone, avatar_url, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO user_profiles (keycloak_user_id, name, phone, created_at) VALUES (?, ?, ?, ?)`
 	result, err := r.db.ExecContext(ctx, query,
-		p.UserSub, p.DisplayName, p.Phone, p.AvatarURL, now, now)
+		p.KeycloakUserID, p.Name, p.Phone, now)
 	if err != nil {
 		return fmt.Errorf("create profile: %w", err)
 	}
 	id, _ := result.LastInsertId()
 	p.ID = id
 	p.CreatedAt = now
-	p.UpdatedAt = now
 	return nil
 }
 
 func (r *Repository) Update(ctx context.Context, p *entity.Profile) error {
-	now := time.Now().UTC()
-	query := `UPDATE profiles SET display_name=?, phone=?, avatar_url=?, updated_at=? WHERE user_sub=?`
-	result, err := r.db.ExecContext(ctx, query,
-		p.DisplayName, p.Phone, p.AvatarURL, now, p.UserSub)
+	query := `UPDATE user_profiles SET name=?, phone=? WHERE keycloak_user_id=?`
+	result, err := r.db.ExecContext(ctx, query, p.Name, p.Phone, p.KeycloakUserID)
 	if err != nil {
 		return fmt.Errorf("update profile: %w", err)
 	}
@@ -63,6 +59,5 @@ func (r *Repository) Update(ctx context.Context, p *entity.Profile) error {
 	if rows == 0 {
 		return apierrors.ErrNotFound
 	}
-	p.UpdatedAt = now
 	return nil
 }
