@@ -1951,6 +1951,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/roles/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role"
+                ],
+                "summary": "Get roles and permissions for current user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_role_dto.UserRolesAndPermissionsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/tracking-logs": {
             "get": {
                 "security": [
@@ -4405,6 +4443,51 @@ const docTemplate = `{
                 },
                 "phone": {
                     "type": "string"
+                }
+            }
+        },
+        "my-web-app_com_smart-logistic-hub_internal_role_dto.PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "my-web-app_com_smart-logistic-hub_internal_role_dto.RoleResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_role_dto.PermissionResponse"
+                    }
+                }
+            }
+        },
+        "my-web-app_com_smart-logistic-hub_internal_role_dto.UserRolesAndPermissionsResponse": {
+            "type": "object",
+            "properties": {
+                "keycloak_user_id": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_role_dto.RoleResponse"
+                    }
                 }
             }
         },

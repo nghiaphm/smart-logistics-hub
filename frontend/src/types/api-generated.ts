@@ -2052,6 +2052,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/roles/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get roles and permissions for current user */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_role_dto.UserRolesAndPermissionsResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tracking-logs": {
         parameters: {
             query?: never;
@@ -3813,6 +3871,20 @@ export interface components {
         "my-web-app_com_smart-logistic-hub_internal_profile_dto.UpdateProfileRequest": {
             name?: string;
             phone?: string;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_role_dto.PermissionResponse": {
+            action?: string;
+            resource?: string;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_role_dto.RoleResponse": {
+            description?: string;
+            id?: number;
+            name?: string;
+            permissions?: components["schemas"]["my-web-app_com_smart-logistic-hub_internal_role_dto.PermissionResponse"][];
+        };
+        "my-web-app_com_smart-logistic-hub_internal_role_dto.UserRolesAndPermissionsResponse": {
+            keycloak_user_id?: string;
+            roles?: components["schemas"]["my-web-app_com_smart-logistic-hub_internal_role_dto.RoleResponse"][];
         };
         "my-web-app_com_smart-logistic-hub_internal_tracking_dto.CreateTrackingEventRequest": {
             driver_code: string;

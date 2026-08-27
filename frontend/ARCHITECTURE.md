@@ -198,6 +198,7 @@ frontend/
 - Proxy/server không đọc được localStorage → `setTokens`/`clearTokens` đồng thời set/xoá cookie `slh_access_token` (không HttpOnly — chỉ phục vụ chặn route UX, xác thực thật vẫn qua Authorization header ở backend). Cookie được cập nhật mỗi lần refresh.
 - **Chống CSRF (OIDC state):** `SSOLoginButton` tạo `state` (`crypto.randomUUID`) lưu `sessionStorage`; callback validate qua `consumeOAuthState` (dùng 1 lần).
 - **Bảo vệ route:** Next.js 16 đổi tên `middleware` → **`proxy.ts`** (Node runtime). Matcher bảo vệ (app)/, (system-admin)/ và `[workspace_id]`; giữ public `/`, `/auth/*`, `/terms`, `/privacy`, `/api/*`; kiểm tra cookie `slh_access_token` + `exp` của JWT — thiếu/hết hạn → redirect `/`.
+  - **Cơ chế phân quyền Admin:** `proxy.ts` lọc kiểm tra các tuyến đường bắt đầu bằng tiền tố `ADMIN_PREFIX` (`/admin`), thực thi gọi hàm `hasAdminRole()` để giải mã JWT token và tiến hành so khớp verify thông qua helper `isSystemAdmin()` (`src/lib/permissions.ts`). Nếu JWT claim không chứa role chuẩn `system_admin`, hệ thống sẽ chặn và thực hiện chuyển hướng redirect người dùng về trang `/workspaces`. Nếu khớp, proxy thực thi kiểm tra tiếp theo danh sách allowlist `ADMIN_ROUTES` để chống rò rỉ lộ tuyến đường động khác. Phía frontend, helper `isSystemAdmin()` trực tiếp bóc tách và kiểm định JWT claim từ Keycloak, tương đương với backend, hệ thống chưa triển khai bảng cơ sở dữ liệu phân quyền riêng biệt.
 
 ---
 

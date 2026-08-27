@@ -755,6 +755,35 @@ definitions:
       phone:
         type: string
     type: object
+  my-web-app_com_smart-logistic-hub_internal_role_dto.PermissionResponse:
+    properties:
+      action:
+        type: string
+      resource:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_role_dto.RoleResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_role_dto.PermissionResponse'
+        type: array
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_role_dto.UserRolesAndPermissionsResponse:
+    properties:
+      keycloak_user_id:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_role_dto.RoleResponse'
+        type: array
+    type: object
   my-web-app_com_smart-logistic-hub_internal_tracking_dto.CreateTrackingEventRequest:
     properties:
       driver_code:
@@ -2414,6 +2443,30 @@ paths:
       summary: Update current user profile
       tags:
       - Profile
+  /roles/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_role_dto.UserRolesAndPermissionsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get roles and permissions for current user
+      tags:
+      - Role
   /tracking-logs:
     get:
       parameters:

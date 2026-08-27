@@ -256,6 +256,7 @@ The service layer never receives `*sql.DB` directly — it depends only on its c
 | `client.go` | `keycloak` | **No** (orphaned) | Package-level `FetchJWKS()` function — never called |
 
 **JWTVerifier** (`verifier.go`):
+
 - `func NewJWTVerifier(cfg *config.Config) *JWTVerifier`
 - `func (v *JWTVerifier) VerifyToken(ctx, tokenString) (jwt.MapClaims, error)`:
   - Parses RS256 JWT
@@ -576,6 +577,7 @@ Verified by inspecting actual `import` statements:
 ### 9.2 Configuration Loading
 
 `config.LoadConfig()` in `internal/infrastructure/config/config.go`:
+
 1. Reads `APP_ENV` (default: `development`)
 2. Loads `.env.{APP_ENV}` via `godotenv`
 3. Falls back to OS environment variables
@@ -619,6 +621,7 @@ Verified by inspecting actual `import` statements:
 | Error monitoring | **No** |
 
 **HTTP metrics** (`internal/infrastructure/middleware/metrics.go`, applied globally):
+
 - `http_requests_total{method,path,status}` — request counter (5xx errors are derivable from the `status` label)
 - `http_request_duration_seconds{method,path}` — request latency histogram
 
@@ -709,7 +712,7 @@ The metrics server is started alongside the API server in `cmd/api/main.go` and 
 
 4. ~~**Service constructor asymmetry**~~ — **Resolved.** All ten implemented domains (`driver`, `order`, `inventory`, `tracking`, `product`, `warehouse`, `trip`, `inbound`, `billing`, `ai`) now strictly follow the `NewService(repo)` pattern via **Interface Injection**. Each domain's `RegisterRoutes` wires `db → repository.New(db) → service.New(repo) → handler.New(service)`, and no service package depends on `*sql.DB` directly. `NewServiceWithRepo` remains only as an alias used by unit tests for repository mocking.
 
-5. ~~**Inconsistent auth/RBAC coverage**~~ — **Resolved.** All CRUD endpoints in `inventory` and `tracking` are protected by the JWT `authMw` (previously documented as `None`), and their DELETE routes additionally require `RequireRole("admin")` — identical to `order` and `driver`. `cmd/api/main.go` passes the same `authMw` to all ten `RegisterRoutes` calls.
+5. ~~**Inconsistent auth/RBAC coverage**~~ — **Resolved.** All CRUD endpoints in `inventory` and `tracking` are protected by the JWT `authMw` (previously documented as `None`), and their DELETE routes additionally require `RequireRole("admin")` — identical to `order` and `driver`. `cmd/api/main.go` passes the same `authMw` to all ten `RegisterRoutes` calls. Phân quyền hiện tại dùng `RequireRole()` middleware đọc JWT claim từ Keycloak trực tiếp (không có bảng DB riêng cho role/permission). Đủ dùng cho nhu cầu hiện tại (admin vs user thường). Kế hoạch: khi triển khai module Nhân sự (xem `FEATURE-ROADMAP.md` Nhóm 3), sẽ thiết kế bảng `roles`, `permissions`, `user_roles` chi tiết hơn — CHƯA triển khai.
 
 6. ~~**No inter-domain communication**~~ — **Resolved.** Inter-domain orchestration is now implemented via injected consumer-side interfaces: `order.Service` validates each item's product and reserves stock (decrease `available_qty`, increase `reserved_qty`) on creation, rejecting insufficient stock with `apierrors.ErrConflict` and unknown products with `apierrors.ErrBadRequest`; `trip.Service` validates driver existence and `AVAILABLE` status before assignment (unknown → `ErrBadRequest`, unavailable → `ErrConflict`); `inbound.Service` adds `received_qty` to inventory `available_qty` when an inbound transitions to `COMPLETED`; `billing.Service` validates the order exists before invoicing and rejects a second billing record for an already-`PAID` order. All cross-domain dependencies are interface-based and wired in each domain's `routes.go` — no circular imports. **Known limitation**: repositories own separate `*sql.DB` connections, so cross-domain mutations (e.g., order creation + inventory reservation, inbound completion + stock top-up) are not wrapped in a single DB transaction; a shared transaction boundary would be needed for atomic rollback.
 
@@ -731,6 +734,7 @@ No circular dependencies. Infrastructure packages do not import domain packages.
 ### 15.3 Microservice Readiness
 
 The modular monolith structure supports future extraction:
+
 - Each domain has clear boundaries (entity, service, repository)
 - No cross-domain database access in current code
 - Cross-domain calls are interface-based (`order.Service` → `product`/`inventory`, `trip.Service` → `driver`, `inbound.Service` → `inventory`, `billing.Service` → `order` consumer interfaces), so domains can be extracted into separate services with database per service

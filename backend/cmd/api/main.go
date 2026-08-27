@@ -35,6 +35,7 @@ import (
 	"my-web-app.com/smart-logistic-hub/internal/product"
 	prodrepo "my-web-app.com/smart-logistic-hub/internal/product/repository"
 	"my-web-app.com/smart-logistic-hub/internal/profile"
+	"my-web-app.com/smart-logistic-hub/internal/role"
 	"my-web-app.com/smart-logistic-hub/internal/tracking"
 	"my-web-app.com/smart-logistic-hub/internal/trip"
 	"my-web-app.com/smart-logistic-hub/internal/user"
@@ -111,6 +112,7 @@ func main() {
 		ai.RegisterRoutes(protected, db, authMw)
 		workspace.RegisterRoutes(protected, db, authMw)
 		profile.RegisterRoutes(protected, db, authMw)
+		role.RegisterRoutes(protected, db, authMw)
 		user.RegisterRoutes(protected, db, authMw)
 	}
 
