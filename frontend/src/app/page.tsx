@@ -102,7 +102,10 @@ export default function HomePage() {
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               Hệ thống: Sẵn sàng
             </Badge>
-            <SSOLoginButton />
+            <div className="flex items-center gap-2">
+              <SSOLoginButton />
+              <SSOLoginButton isRegister />
+            </div>
           </div>
         </div>
 

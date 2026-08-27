@@ -7,21 +7,23 @@ import (
 )
 
 type ProfileResponse struct {
-	UserSub     string    `json:"user_sub"`
-	DisplayName string    `json:"display_name"`
-	Phone       string    `json:"phone"`
-	AvatarURL   string    `json:"avatar_url"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID             int64     `json:"id"`
+	KeycloakUserID string    `json:"keycloak_user_id"`
+	Name           string    `json:"name"`
+	UserSub        string    `json:"user_sub"`     // For frontend compatibility
+	DisplayName    string    `json:"display_name"` // For frontend compatibility
+	Phone          string    `json:"phone"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 func ToResponse(p *entity.Profile) ProfileResponse {
 	return ProfileResponse{
-		UserSub:     p.UserSub,
-		DisplayName: p.DisplayName,
-		Phone:       p.Phone,
-		AvatarURL:   p.AvatarURL,
-		CreatedAt:   p.CreatedAt,
-		UpdatedAt:   p.UpdatedAt,
+		ID:             p.ID,
+		KeycloakUserID: p.KeycloakUserID,
+		Name:           p.Name,
+		UserSub:        p.KeycloakUserID,
+		DisplayName:    p.Name,
+		Phone:          p.Phone,
+		CreatedAt:      p.CreatedAt,
 	}
 }

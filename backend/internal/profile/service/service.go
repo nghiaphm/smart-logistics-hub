@@ -3,13 +3,12 @@ package service
 import (
 	"context"
 
-	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
 	"my-web-app.com/smart-logistic-hub/internal/profile/dto"
 	"my-web-app.com/smart-logistic-hub/internal/profile/entity"
 )
 
 type ProfileRepository interface {
-	GetByUserSub(ctx context.Context, userSub string) (*entity.Profile, error)
+	GetByKeycloakUserID(ctx context.Context, keycloakUserID string) (*entity.Profile, error)
 	Create(ctx context.Context, p *entity.Profile) error
 	Update(ctx context.Context, p *entity.Profile) error
 }
@@ -22,35 +21,33 @@ func NewService(repo ProfileRepository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) Get(ctx context.Context, userSub string) (*entity.Profile, error) {
-	p, err := s.repo.GetByUserSub(ctx, userSub)
-	if err == apierrors.ErrNotFound {
-		p = &entity.Profile{UserSub: userSub}
-		if err := s.repo.Create(ctx, p); err != nil {
-			return nil, err
-		}
-		return p, nil
+func (s *Service) Get(ctx context.Context, keycloakUserID string) (*entity.Profile, error) {
+	return s.repo.GetByKeycloakUserID(ctx, keycloakUserID)
+}
+
+func (s *Service) Create(ctx context.Context, keycloakUserID string, req *dto.CreateProfileRequest) (*entity.Profile, error) {
+	p := &entity.Profile{
+		KeycloakUserID: keycloakUserID,
+		Name:           req.Name,
+		Phone:          req.Phone,
 	}
-	if err != nil {
+	if err := s.repo.Create(ctx, p); err != nil {
 		return nil, err
 	}
 	return p, nil
 }
 
-func (s *Service) Update(ctx context.Context, userSub string, req *dto.UpdateProfileRequest) (*entity.Profile, error) {
-	p, err := s.Get(ctx, userSub)
+func (s *Service) Update(ctx context.Context, keycloakUserID string, req *dto.UpdateProfileRequest) (*entity.Profile, error) {
+	p, err := s.Get(ctx, keycloakUserID)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.DisplayName != nil {
-		p.DisplayName = *req.DisplayName
+	if req.Name != nil {
+		p.Name = *req.Name
 	}
 	if req.Phone != nil {
 		p.Phone = *req.Phone
-	}
-	if req.AvatarURL != nil {
-		p.AvatarURL = *req.AvatarURL
 	}
 
 	if err := s.repo.Update(ctx, p); err != nil {

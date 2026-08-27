@@ -719,29 +719,70 @@ definitions:
       weight_gram:
         type: integer
     type: object
-  my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse:
+  my-web-app_com_smart-logistic-hub_internal_profile_dto.CreateProfileRequest:
     properties:
-      avatar_url:
-        type: string
-      created_at:
-        type: string
-      display_name:
+      name:
         type: string
       phone:
         type: string
-      updated_at:
+    required:
+    - name
+    - phone
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse:
+    properties:
+      created_at:
+        type: string
+      display_name:
+        description: For frontend compatibility
+        type: string
+      id:
+        type: integer
+      keycloak_user_id:
+        type: string
+      name:
+        type: string
+      phone:
         type: string
       user_sub:
+        description: For frontend compatibility
         type: string
     type: object
   my-web-app_com_smart-logistic-hub_internal_profile_dto.UpdateProfileRequest:
     properties:
-      avatar_url:
-        type: string
-      display_name:
+      name:
         type: string
       phone:
         type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_role_dto.PermissionResponse:
+    properties:
+      action:
+        type: string
+      resource:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_role_dto.RoleResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_role_dto.PermissionResponse'
+        type: array
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_role_dto.UserRolesAndPermissionsResponse:
+    properties:
+      keycloak_user_id:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_role_dto.RoleResponse'
+        type: array
     type: object
   my-web-app_com_smart-logistic-hub_internal_tracking_dto.CreateTrackingEventRequest:
     properties:
@@ -2328,6 +2369,43 @@ paths:
       summary: Get current user profile
       tags:
       - Profile
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create user profile
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_profile_dto.CreateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create user profile
+      tags:
+      - Profile
     put:
       consumes:
       - application/json
@@ -2365,6 +2443,30 @@ paths:
       summary: Update current user profile
       tags:
       - Profile
+  /roles/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_role_dto.UserRolesAndPermissionsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get roles and permissions for current user
+      tags:
+      - Role
   /tracking-logs:
     get:
       parameters:

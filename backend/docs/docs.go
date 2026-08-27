@@ -1892,6 +1892,101 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Create user profile",
+                "parameters": [
+                    {
+                        "description": "Create user profile",
+                        "name": "profile",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_profile_dto.CreateProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role"
+                ],
+                "summary": "Get roles and permissions for current user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_role_dto.UserRolesAndPermissionsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
             }
         },
         "/tracking-logs": {
@@ -4297,25 +4392,45 @@ const docTemplate = `{
                 }
             }
         },
+        "my-web-app_com_smart-logistic-hub_internal_profile_dto.CreateProfileRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "phone"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
         "my-web-app_com_smart-logistic-hub_internal_profile_dto.ProfileResponse": {
             "type": "object",
             "properties": {
-                "avatar_url": {
-                    "type": "string"
-                },
                 "created_at": {
                     "type": "string"
                 },
                 "display_name": {
+                    "description": "For frontend compatibility",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "keycloak_user_id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 },
                 "phone": {
                     "type": "string"
                 },
-                "updated_at": {
-                    "type": "string"
-                },
                 "user_sub": {
+                    "description": "For frontend compatibility",
                     "type": "string"
                 }
             }
@@ -4323,14 +4438,56 @@ const docTemplate = `{
         "my-web-app_com_smart-logistic-hub_internal_profile_dto.UpdateProfileRequest": {
             "type": "object",
             "properties": {
-                "avatar_url": {
-                    "type": "string"
-                },
-                "display_name": {
+                "name": {
                     "type": "string"
                 },
                 "phone": {
                     "type": "string"
+                }
+            }
+        },
+        "my-web-app_com_smart-logistic-hub_internal_role_dto.PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "my-web-app_com_smart-logistic-hub_internal_role_dto.RoleResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_role_dto.PermissionResponse"
+                    }
+                }
+            }
+        },
+        "my-web-app_com_smart-logistic-hub_internal_role_dto.UserRolesAndPermissionsResponse": {
+            "type": "object",
+            "properties": {
+                "keycloak_user_id": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_role_dto.RoleResponse"
+                    }
                 }
             }
         },
