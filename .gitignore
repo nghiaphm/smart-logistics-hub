@@ -24,3 +24,9 @@ vendor/
 frontend/.ua
 tasks
 docs
+# Local AI / development files
+.github/skills/
+.vscode/mcp.json
+AGENTS.md
+FEATURE-ROADMAP.md
+FRONTEND-ROADMAP.md
