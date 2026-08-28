@@ -1,35 +1,40 @@
 "use client"
 
-import { useEffect } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useEffect, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Alert02Icon } from "@hugeicons/core-free-icons"
+import { Alert02Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
 
-import { apiClient } from "@/lib/api-client"
 import type { components } from "@/types/api"
 import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { DataTable } from "@/components/shared/DataTable"
+import type { Column } from "@/components/shared/DataTable"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { FormActions } from "@/components/shared/form/Form"
+import { useTracking, useDeleteTrackingEvent } from "@/hooks/use-tracking"
+import { TrackingFormModal } from "./TrackingFormModal"
 
-type PaginatedTracking = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_tracking_dto.PaginatedResponse"]
+type TrackingEvent = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_tracking_dto.TrackingEventResponse"]
+
+const columns: Column<TrackingEvent>[] = [
+  { key: "order_code", header: "Mã đơn", cell: (item) => <span className="font-medium">{item.order_code}</span> },
+  { key: "driver_code", header: "Tài xế", cell: (item) => item.driver_code ?? "—" },
+  { key: "status_update", header: "Trạng thái", cell: (item) => item.status_update ?? "—" },
+  { key: "note", header: "Ghi chú", cell: (item) => item.note ?? "—" },
+  { key: "timestamp", header: "Thời điểm", cell: (item) => item.timestamp ?? "—", className: "text-muted-foreground" },
+]
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Đã có lỗi xảy ra. Vui lòng thử lại."
 }
 
 export default function Page() {
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["tracking"],
-    queryFn: () => apiClient<PaginatedTracking>("/tracking-logs"),
-  })
+  const [formOpen, setFormOpen] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState<TrackingEvent | undefined>()
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [eventToDelete, setEventToDelete] = useState<TrackingEvent | undefined>()
+  const { data, isLoading, isError, error, refetch } = useTracking()
 
   useEffect(() => {
     if (isError && error) {
@@ -41,6 +46,31 @@ export default function Page() {
       })
     }
   }, [isError, error])
+
+  const deleteMutation = useDeleteTrackingEvent(() => {
+    toast.add({
+      title: "Xóa thành công",
+      description: `Sự kiện theo dõi đơn ${eventToDelete?.order_code} đã được loại bỏ khỏi hệ thống.`,
+      type: "success",
+    })
+    setDeleteConfirmOpen(false)
+    setEventToDelete(undefined)
+  })
+
+  const isDeleting = deleteMutation.isPending
+
+  const confirmDelete = async () => {
+    if (!eventToDelete?.id) return
+    deleteMutation.mutate(eventToDelete.id, {
+      onError: (err: unknown) => {
+        toast.add({
+          title: "Xoá thất bại",
+          description: err instanceof Error ? err.message : "Đã xảy ra lỗi khi xoá sự kiện theo dõi này.",
+          type: "error",
+        })
+      }
+    })
+  }
 
   if (isLoading) {
     return (
@@ -69,43 +99,103 @@ export default function Page() {
 
   const items = data?.items ?? []
 
+  const openCreateForm = () => {
+    setSelectedEvent(undefined)
+    setFormOpen(true)
+  }
+
+  const openEditForm = (event: TrackingEvent) => {
+    setSelectedEvent(event)
+    setFormOpen(true)
+  }
+
+  const handleDeleteClick = (event: TrackingEvent) => {
+    setEventToDelete(event)
+    setDeleteConfirmOpen(true)
+  }
+
+  const tableColumns: Column<TrackingEvent>[] = [
+    ...columns,
+    {
+      key: "actions",
+      header: "Thao tác",
+      className: "text-right",
+      headerClassName: "text-right",
+      cell: (event) => (
+        <div className="flex justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title="Sửa sự kiện theo dõi"
+            onClick={() => openEditForm(event)}
+          >
+            <HugeiconsIcon icon={Edit02Icon} className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title="Xoá sự kiện theo dõi"
+            onClick={() => handleDeleteClick(event)}
+            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          >
+            <HugeiconsIcon icon={Delete01Icon} className="size-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
+
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">Theo dõi đơn</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Nhật ký theo dõi vận chuyển theo đơn</p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Theo dõi đơn</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Nhật ký theo dõi vận chuyển theo đơn</p>
+        </div>
+        <Button size="sm" onClick={openCreateForm}>Ghi nhận sự kiện</Button>
       </div>
-      {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card px-6 py-14 text-center">
-          <p className="font-medium">Chưa có dữ liệu theo dõi</p>
-          <p className="text-sm text-muted-foreground">Sự kiện theo dõi sẽ xuất hiện ở đây khi có hoạt động vận chuyển.</p>
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead>Mã đơn</TableHead>
-                <TableHead>Tài xế</TableHead>
-                <TableHead>Trạng thái</TableHead>
-                <TableHead>Ghi chú</TableHead>
-                <TableHead>Thời điểm</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((item, index) => (
-                <TableRow key={item.id ?? `${item.order_code}-${index}`}>
-                  <TableCell className="font-medium">{item.order_code}</TableCell>
-                  <TableCell>{item.driver_code}</TableCell>
-                  <TableCell>{item.status_update}</TableCell>
-                  <TableCell className="text-muted-foreground">{item.note ?? "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{item.timestamp}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable
+        columns={tableColumns}
+        rows={items}
+        rowKey={(item) => item.id ?? `${item.order_code}-${item.timestamp ?? ""}`}
+        loading={isLoading}
+        emptyText="Chưa có dữ liệu theo dõi"
+      />
+      <TrackingFormModal
+        key={`${formOpen}-${selectedEvent?.id ?? "new"}`}
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        event={selectedEvent}
+        onSuccess={() => void refetch()}
+      />
+
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Xác nhận xoá sự kiện theo dõi</DialogTitle>
+            <DialogDescription>
+              Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xoá vĩnh viễn sự kiện theo dõi của đơn{" "}
+              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                {eventToDelete?.order_code}
+              </span>{" "}
+              (trạng thái{" "}
+              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                {eventToDelete?.status_update}
+              </span>
+              ) khỏi hệ thống?
+            </DialogDescription>
+          </DialogHeader>
+
+          <FormActions>
+            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} disabled={isDeleting}>
+              Không, quay lại
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
+              {isDeleting ? "Đang xoá..." : "Xác nhận xoá"}
+            </Button>
+          </FormActions>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
