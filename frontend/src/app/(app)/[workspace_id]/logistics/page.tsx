@@ -3,6 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Alert02Icon } from "@hugeicons/core-free-icons"
 
 import { AppShell } from "@/components/shared/AppShell"
 import { DataTable } from "@/components/shared/DataTable"
@@ -12,6 +14,7 @@ import { AppModalActions, AppModalShell } from "@/components/shared/modal"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useOrders } from "@/hooks/use-orders"
 import type { components } from "@/types/api"
 
@@ -87,9 +90,36 @@ export default function Page() {
   const params = useParams<{ workspace_id: string }>()
   const workspaceId = params.workspace_id
 
-  const { data, isLoading } = useOrders(workspaceId, 3)
+  const { data, isLoading, isError, error, refetch } = useOrders(workspaceId, 3)
 
   const orders = data?.items ?? []
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={index} className="h-11 w-full rounded-2xl" />
+        ))}
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card px-6 py-14 text-center">
+        <HugeiconsIcon icon={Alert02Icon} className="size-8 text-destructive" />
+        <div>
+          <p className="font-medium">Không thể tải danh sách đơn hàng</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {error instanceof Error ? error.message : "Đã có lỗi xảy ra. Vui lòng thử lại."}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
+          Thử lại
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <AppShell
@@ -110,8 +140,8 @@ export default function Page() {
         columns={columns}
         rows={orders}
         rowKey={(order) => order.id ?? order.order_code ?? ""}
-        loading={isLoading}
         emptyText="Chưa có đơn hàng nào được tạo."
+        emptyDescription="Bấm “Thêm đơn hàng” để tạo đơn mới."
       />
 
       <AppModalShell

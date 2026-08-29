@@ -1,13 +1,17 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useParams } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Alert02Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
+import { Alert02Icon, ArrowLeft01Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
 
 import type { components } from "@/types/api"
 import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AppShell } from "@/components/shared/AppShell"
 import { DataTable } from "@/components/shared/DataTable"
 import type { Column } from "@/components/shared/DataTable"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -17,22 +21,41 @@ import { TripFormModal } from "./TripFormModal"
 
 type Trip = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_trip_dto.TripResponse"]
 
+function getStatusBadge(status?: string) {
+  switch (status?.toUpperCase()) {
+    case "PLANNED":
+      return <Badge variant="secondary">Đã lên kế hoạch</Badge>
+    case "IN_TRANSIT":
+      return <Badge variant="default">Đang chạy</Badge>
+    case "COMPLETED":
+      return (
+        <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          Hoàn thành
+        </Badge>
+      )
+    default:
+      return <Badge variant="outline">{status || "—"}</Badge>
+  }
+}
+
 const columns: Column<Trip>[] = [
-  { key: "trip_code", header: "Mã chuyến", cell: (item) => <span className="font-medium">{item.trip_code}</span> },
+  { key: "trip_code", header: "Mã chuyến", cell: (item) => <span className="font-semibold">{item.trip_code}</span> },
   { key: "driver_id", header: "Tài xế", cell: (item) => item.driver_id ?? "—" },
   { key: "vehicle_license_plate", header: "Biển số", cell: (item) => item.vehicle_license_plate ?? "—" },
-  { key: "status", header: "Trạng thái", cell: (item) => item.status ?? "—" },
+  { key: "status", header: "Trạng thái", cell: (item) => getStatusBadge(item.status) },
   {
     key: "total_distance_km",
     header: "Quãng đường (km)",
     cell: (item) => item.total_distance_km ?? "—",
     className: "text-right",
+    headerClassName: "text-right",
   },
   {
     key: "estimated_duration_min",
     header: "Thời lượng (phút)",
     cell: (item) => item.estimated_duration_min ?? "—",
     className: "text-right",
+    headerClassName: "text-right",
   },
 ]
 
@@ -41,6 +64,8 @@ function errorMessage(error: unknown): string {
 }
 
 export default function Page() {
+  const params = useParams<{ workspace_id: string }>()
+  const workspaceId = params.workspace_id
   const [formOpen, setFormOpen] = useState(false)
   const [selectedTrip, setSelectedTrip] = useState<Trip | undefined>()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -157,20 +182,26 @@ export default function Page() {
   ]
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Chuyến xe</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Danh sách chuyến vận chuyển</p>
+    <AppShell
+      title="Chuyến xe"
+      description="Danh sách chuyến vận chuyển"
+      actions={
+        <div className="flex items-center gap-2">
+          <Link href={`/${workspaceId}/logistics`}>
+            <Button variant="outline" size="sm" className="gap-1">
+              <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" /> Quay lại
+            </Button>
+          </Link>
+          <Button size="sm" onClick={openCreateForm}>Tạo chuyến xe</Button>
         </div>
-        <Button size="sm" onClick={openCreateForm}>Tạo chuyến xe</Button>
-      </div>
+      }
+    >
       <DataTable
         columns={tableColumns}
         rows={items}
         rowKey={(item) => item.id ?? item.trip_code ?? ""}
-        loading={isLoading}
         emptyText="Chưa có dữ liệu chuyến xe"
+        emptyDescription="Bấm “Tạo chuyến xe” để bắt đầu."
       />
       <TripFormModal
         key={`${formOpen}-${selectedTrip?.id ?? "new"}`}
@@ -203,6 +234,6 @@ export default function Page() {
           </FormActions>
         </DialogContent>
       </Dialog>
-    </div>
+    </AppShell>
   )
 }

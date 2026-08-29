@@ -1,30 +1,63 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useParams } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Alert02Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
+import { Alert02Icon, ArrowLeft01Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
 
 import type { components } from "@/types/api"
 import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AppShell } from "@/components/shared/AppShell"
 import { DataTable } from "@/components/shared/DataTable"
 import type { Column } from "@/components/shared/DataTable"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FormActions } from "@/components/shared/form/Form"
+import { formatDateTime } from "@/lib/format"
 import { useInventory, useDeleteInventory } from "@/hooks/use-inventory"
 import { InventoryFormModal } from "./InventoryFormModal"
 
 type Inventory = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_inventory_dto.InventoryResponse"]
 
 const columns: Column<Inventory>[] = [
-  { key: "product_id", header: "Mã sản phẩm", cell: (item) => <span className="font-medium">{item.product_id}</span> },
+  { key: "product_id", header: "Mã sản phẩm", cell: (item) => <span className="font-semibold">{item.product_id}</span> },
   { key: "warehouse_id", header: "Kho", cell: (item) => item.warehouse_id },
-  { key: "available_qty", header: "Tồn sẵn sàng", cell: (item) => item.available_qty ?? 0, className: "text-right" },
-  { key: "reserved_qty", header: "Giữ chỗ", cell: (item) => item.reserved_qty ?? 0, className: "text-right" },
-  { key: "damaged_qty", header: "Hư hỏng", cell: (item) => item.damaged_qty ?? 0, className: "text-right" },
-  { key: "hold_qty", header: "Chờ duyệt", cell: (item) => item.hold_qty ?? 0, className: "text-right" },
-  { key: "updated_at", header: "Cập nhật", cell: (item) => item.updated_at ?? "—", className: "text-muted-foreground" },
+  {
+    key: "available_qty",
+    header: "Tồn sẵn sàng",
+    cell: (item) => item.available_qty ?? 0,
+    className: "text-right",
+    headerClassName: "text-right",
+  },
+  {
+    key: "reserved_qty",
+    header: "Giữ chỗ",
+    cell: (item) => item.reserved_qty ?? 0,
+    className: "text-right",
+    headerClassName: "text-right",
+  },
+  {
+    key: "damaged_qty",
+    header: "Hư hỏng",
+    cell: (item) => item.damaged_qty ?? 0,
+    className: "text-right",
+    headerClassName: "text-right",
+  },
+  {
+    key: "hold_qty",
+    header: "Chờ duyệt",
+    cell: (item) => item.hold_qty ?? 0,
+    className: "text-right",
+    headerClassName: "text-right",
+  },
+  {
+    key: "updated_at",
+    header: "Cập nhật",
+    cell: (item) => formatDateTime(item.updated_at),
+    className: "text-muted-foreground",
+  },
 ]
 
 function errorMessage(error: unknown): string {
@@ -32,6 +65,8 @@ function errorMessage(error: unknown): string {
 }
 
 export default function Page() {
+  const params = useParams<{ workspace_id: string }>()
+  const workspaceId = params.workspace_id
   const [formOpen, setFormOpen] = useState(false)
   const [selectedInventory, setSelectedInventory] = useState<Inventory | undefined>()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -148,20 +183,26 @@ export default function Page() {
   ]
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Tồn kho</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Danh sách tồn kho theo sản phẩm và kho</p>
+    <AppShell
+      title="Tồn kho"
+      description="Danh sách tồn kho theo sản phẩm và kho"
+      actions={
+        <div className="flex items-center gap-2">
+          <Link href={`/${workspaceId}/logistics`}>
+            <Button variant="outline" size="sm" className="gap-1">
+              <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" /> Quay lại
+            </Button>
+          </Link>
+          <Button size="sm" onClick={openCreateForm}>Thêm tồn kho</Button>
         </div>
-        <Button size="sm" onClick={openCreateForm}>Thêm tồn kho</Button>
-      </div>
+      }
+    >
       <DataTable
         columns={tableColumns}
         rows={items}
         rowKey={(item) => item.id ?? `${item.product_id}-${item.warehouse_id}`}
-        loading={isLoading}
         emptyText="Chưa có dữ liệu tồn kho"
+        emptyDescription="Bấm “Thêm tồn kho” để tạo bản ghi mới."
       />
       <InventoryFormModal
         key={`${formOpen}-${selectedInventory?.id ?? "new"}`}
@@ -198,6 +239,6 @@ export default function Page() {
           </FormActions>
         </DialogContent>
       </Dialog>
-    </div>
+    </AppShell>
   )
 }
