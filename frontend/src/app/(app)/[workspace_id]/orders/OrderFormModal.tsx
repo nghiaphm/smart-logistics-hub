@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Form, FormField, FormActions } from "@/components/shared/form/Form"
+import { Select } from "@/components/shared/form/Select"
 import type { components } from "@/types/api"
 
 type OrderResponse = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_order_dto.OrderResponse"]
@@ -279,17 +280,16 @@ export function OrderFormModal({ open, onOpenChange, order, onSuccess }: OrderFo
 
             {!isEdit && (
               <FormField label="Kho bãi khởi tạo" error={validationErrors.warehouseId} required>
-                <select
+                <Select
                   value={warehouseId}
                   onChange={(e) => setWarehouseId(e.target.value)}
                   disabled={isSubmitting}
-                  className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 py-1 text-sm outline-none transition-colors focus:border-ring focus:ring-1 focus:ring-ring"
                 >
                   <option value="" disabled>-- Chọn kho bãi --</option>
                   {warehouses.map((w) => (
                     <option key={w.id} value={w.id}>{w.name} ({w.warehouse_code})</option>
                   ))}
-                </select>
+                </Select>
               </FormField>
             )}
           </div>
@@ -326,7 +326,7 @@ export function OrderFormModal({ open, onOpenChange, order, onSuccess }: OrderFo
                 />
               </FormField>
 
-              <div className="grid gap-2 grid-cols-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <FormField label="Phường/Xã">
                   <Input
                     value={senderWard}
@@ -345,7 +345,7 @@ export function OrderFormModal({ open, onOpenChange, order, onSuccess }: OrderFo
                 </FormField>
               </div>
 
-              <div className="grid gap-2 grid-cols-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <FormField label="Tỉnh/Thành">
                   <Input
                     value={senderProvince}
@@ -396,7 +396,7 @@ export function OrderFormModal({ open, onOpenChange, order, onSuccess }: OrderFo
                 />
               </FormField>
 
-              <div className="grid gap-2 grid-cols-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <FormField label="Phường/Xã">
                   <Input
                     value={receiverWard}
@@ -415,7 +415,7 @@ export function OrderFormModal({ open, onOpenChange, order, onSuccess }: OrderFo
                 </FormField>
               </div>
 
-              <div className="grid gap-2 grid-cols-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <FormField label="Tỉnh/Thành">
                   <Input
                     value={receiverProvince}
@@ -466,17 +466,16 @@ export function OrderFormModal({ open, onOpenChange, order, onSuccess }: OrderFo
                       <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block mb-1">
                         Sản phẩm ({index + 1})
                       </label>
-                      <select
+                      <Select
                         value={item.productId}
                         onChange={(e) => handleItemProductChange(index, e.target.value)}
                         disabled={isSubmitting}
-                        className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 py-1 text-sm outline-none transition-colors focus:border-ring focus:ring-1 focus:ring-ring"
                       >
                         <option value="">-- Chọn sản phẩm --</option>
                         {products.map((p) => (
                           <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
 
                     <div className="w-24">

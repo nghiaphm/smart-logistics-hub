@@ -1,24 +1,28 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useParams } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Alert02Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
+import { Alert02Icon, ArrowLeft01Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
 
 import type { components } from "@/types/api"
 import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AppShell } from "@/components/shared/AppShell"
 import { DataTable } from "@/components/shared/DataTable"
 import type { Column } from "@/components/shared/DataTable"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FormActions } from "@/components/shared/form/Form"
+import { formatDateTime } from "@/lib/format"
 import { useProducts, useDeleteProduct } from "@/hooks/use-products"
 import { ProductFormModal } from "./ProductFormModal"
 
 type Product = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_product_dto.ProductResponse"]
 
 const columns: Column<Product>[] = [
-  { key: "sku", header: "Mã SKU", cell: (item) => <span className="font-medium">{item.sku}</span> },
+  { key: "sku", header: "Mã SKU", cell: (item) => <span className="font-semibold">{item.sku}</span> },
   { key: "name", header: "Tên sản phẩm", cell: (item) => item.name },
   { key: "category", header: "Danh mục", cell: (item) => item.category ?? "—" },
   {
@@ -26,9 +30,21 @@ const columns: Column<Product>[] = [
     header: "Giá",
     cell: (item) => (item.price != null ? `${item.price.toLocaleString("vi-VN")} ₫` : "—"),
     className: "text-right",
+    headerClassName: "text-right",
   },
-  { key: "weight_gram", header: "Cân nặng (g)", cell: (item) => item.weight_gram ?? "—", className: "text-right" },
-  { key: "updated_at", header: "Cập nhật", cell: (item) => item.updated_at ?? "—", className: "text-muted-foreground" },
+  {
+    key: "weight_gram",
+    header: "Cân nặng (g)",
+    cell: (item) => item.weight_gram ?? "—",
+    className: "text-right",
+    headerClassName: "text-right",
+  },
+  {
+    key: "updated_at",
+    header: "Cập nhật",
+    cell: (item) => formatDateTime(item.updated_at),
+    className: "text-muted-foreground",
+  },
 ]
 
 function errorMessage(error: unknown): string {
@@ -36,6 +52,8 @@ function errorMessage(error: unknown): string {
 }
 
 export default function Page() {
+  const params = useParams<{ workspace_id: string }>()
+  const workspaceId = params.workspace_id
   const [formOpen, setFormOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -152,20 +170,26 @@ export default function Page() {
   ]
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Sản phẩm</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Danh sách sản phẩm trong hệ thống</p>
+    <AppShell
+      title="Sản phẩm"
+      description="Danh sách sản phẩm trong hệ thống"
+      actions={
+        <div className="flex items-center gap-2">
+          <Link href={`/${workspaceId}/logistics`}>
+            <Button variant="outline" size="sm" className="gap-1">
+              <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" /> Quay lại
+            </Button>
+          </Link>
+          <Button size="sm" onClick={openCreateForm}>Thêm sản phẩm</Button>
         </div>
-        <Button size="sm" onClick={openCreateForm}>Thêm sản phẩm</Button>
-      </div>
+      }
+    >
       <DataTable
         columns={tableColumns}
         rows={items}
         rowKey={(item) => item.id ?? item.sku ?? ""}
-        loading={isLoading}
         emptyText="Chưa có dữ liệu sản phẩm"
+        emptyDescription="Bấm “Thêm sản phẩm” để tạo mới."
       />
       <ProductFormModal
         key={`${formOpen}-${selectedProduct?.id ?? "new"}`}
@@ -202,6 +226,6 @@ export default function Page() {
           </FormActions>
         </DialogContent>
       </Dialog>
-    </div>
+    </AppShell>
   )
 }
