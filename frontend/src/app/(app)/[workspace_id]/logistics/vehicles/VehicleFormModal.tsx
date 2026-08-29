@@ -11,7 +11,6 @@ import type { components } from "@/types/api"
 import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select } from "@/components/shared/form/Select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Form, FormActions, FormField } from "@/components/shared/form/Form"
 
@@ -150,18 +149,19 @@ export function VehicleFormModal({ open, onOpenChange, vehicle, onSuccess }: Veh
               />
             </FormField>
             <FormField label="Trạng thái" htmlFor="vehicle-status">
-              <Select
+              <select
                 id="vehicle-status"
                 value={status}
                 onChange={(event) => setStatus(event.target.value as VehicleStatus)}
                 disabled={isSubmitting}
+                className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 {STATUS_OPTIONS.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
                 ))}
-              </Select>
+              </select>
             </FormField>
           </div>
 

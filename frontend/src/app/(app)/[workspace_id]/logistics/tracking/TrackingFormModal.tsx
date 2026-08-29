@@ -13,7 +13,6 @@ import type { components } from "@/types/api"
 import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select } from "@/components/shared/form/Select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Form, FormActions, FormField } from "@/components/shared/form/Form"
 
@@ -166,11 +165,12 @@ export function TrackingFormModal({
             htmlFor="tracking-order"
             hint="Chọn đơn hàng để tự động điền mã đơn và liên kết theo dõi với đơn đó."
           >
-            <Select
+            <select
               id="tracking-order"
               value={selectedOrderId}
               onChange={(event) => handleOrderSelect(event.target.value)}
               disabled={isSubmitting}
+              className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
               <option value="">Chưa liên kết (nhập mã đơn tay)</option>
               {orders.map((order) => (
@@ -178,7 +178,7 @@ export function TrackingFormModal({
                   {order.order_code}
                 </option>
               ))}
-            </Select>
+            </select>
           </FormField>
 
           <FormField label="Trạng thái" htmlFor="tracking-status" error={errors.statusUpdate} required>

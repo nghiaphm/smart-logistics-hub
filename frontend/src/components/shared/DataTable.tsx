@@ -25,6 +25,7 @@ type DataTableProps<T> = {
   rowKey: (row: T) => string | number
   loading?: boolean
   emptyText?: string
+  emptyDescription?: string
   className?: string
 }
 
@@ -34,6 +35,7 @@ export function DataTable<T>({
   rowKey,
   loading = false,
   emptyText = "Không có dữ liệu",
+  emptyDescription,
   className,
 }: DataTableProps<T>) {
   return (
@@ -67,6 +69,9 @@ export function DataTable<T>({
                       className="h-24 text-center text-sm text-muted-foreground"
                     >
                       {emptyText}
+                      {emptyDescription ? (
+                        <p className="mt-1 text-xs text-muted-foreground/70">{emptyDescription}</p>
+                      ) : null}
                     </TableCell>
                   </TableRow>
                 )

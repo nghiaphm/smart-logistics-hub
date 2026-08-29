@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Alert02Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
 
@@ -32,6 +33,8 @@ function errorMessage(error: unknown): string {
 }
 
 export default function Page() {
+  const params = useParams<{ workspace_id: string }>()
+  const workspaceId = params.workspace_id
   const [formOpen, setFormOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<TrackingEvent | undefined>()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
