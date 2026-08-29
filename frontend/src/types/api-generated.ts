@@ -3011,6 +3011,261 @@ export interface paths {
         };
         trace?: never;
     };
+    "/vehicles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List vehicles */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Filter by vehicle status */
+                    status?: string;
+                    /** @description Number of items to skip */
+                    skip?: number;
+                    /** @description Max items per page */
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_vehicle_dto.PaginatedResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a vehicle */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Vehicle payload */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_vehicle_dto.CreateVehicleRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a vehicle by ID */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Vehicle ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Delete a vehicle */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Vehicle ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "*/*": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "*/*": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update a vehicle */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Vehicle ID */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Vehicle update */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_vehicle_dto.UpdateVehicleRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/warehouses": {
         parameters: {
             query?: never;
@@ -3892,6 +4147,7 @@ export interface components {
             lng?: number;
             note?: string;
             order_code: string;
+            order_id?: number;
             status_update: string;
         };
         "my-web-app_com_smart-logistic-hub_internal_tracking_dto.PaginatedResponse": {
@@ -3907,6 +4163,7 @@ export interface components {
             lng?: number;
             note?: string;
             order_code?: string;
+            order_id?: number;
             status_update?: string;
             timestamp?: string;
         };
@@ -3916,6 +4173,7 @@ export interface components {
             lng?: number;
             note?: string;
             order_code?: string;
+            order_id?: number;
             status_update?: string;
         };
         "my-web-app_com_smart-logistic-hub_internal_trip_dto.AssignDriverRequest": {
@@ -4018,6 +4276,36 @@ export interface components {
             role?: string;
             updated_at?: string;
             username?: string;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_vehicle_dto.CreateVehicleRequest": {
+            capacity?: number;
+            license_plate: string;
+            /** @enum {string} */
+            status?: "ACTIVE" | "MAINTENANCE" | "INACTIVE";
+            type?: string;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_vehicle_dto.PaginatedResponse": {
+            items?: components["schemas"]["my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse"][];
+            limit?: number;
+            skip?: number;
+            total?: number;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_vehicle_dto.UpdateVehicleRequest": {
+            capacity?: number;
+            license_plate?: string;
+            /** @enum {string} */
+            status?: "ACTIVE" | "MAINTENANCE" | "INACTIVE";
+            type?: string;
+        };
+        "my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse": {
+            capacity?: number;
+            created_at?: string;
+            created_by?: string;
+            id?: number;
+            license_plate?: string;
+            status?: string;
+            type?: string;
+            updated_at?: string;
         };
         "my-web-app_com_smart-logistic-hub_internal_warehouse_dto.CreateWarehouseRequest": {
             address: string;

@@ -60,6 +60,21 @@ func setupTestDB() (*sql.DB, error) {
 func applyMigrations(db *sql.DB) error {
 	upPath := filepath.Join("..", "..", "migrations", "000001_initial_schema.up.sql")
 	downPath := filepath.Join("..", "..", "migrations", "000001_initial_schema.down.sql")
+	vehiclesDownPath := filepath.Join("..", "..", "migrations", "000008_vehicles.down.sql")
+	orderIDPath := filepath.Join("..", "..", "migrations", "000007_tracking_order_id.up.sql")
+	vehiclesPath := filepath.Join("..", "..", "migrations", "000008_vehicles.up.sql")
+
+	// Reset: migration 000001 down chỉ drop các bảng gốc — bảng tạo bởi
+	// migration sau phải drop riêng ở đây (nếu không, chạy lần 2 sẽ lỗi
+	// "table already exists"). Thêm migration tạo bảng mới nào sau này cũng
+	// phải bổ sung down file tương ứng vào reset này.
+	vehiclesDownContent, err := os.ReadFile(vehiclesDownPath)
+	if err != nil {
+		return fmt.Errorf("read vehicles down migration file: %w", err)
+	}
+	if _, err := db.Exec(string(vehiclesDownContent)); err != nil {
+		return fmt.Errorf("reset vehicles migration: %w", err)
+	}
 
 	downContent, err := os.ReadFile(downPath)
 	if err != nil {
@@ -78,6 +93,22 @@ func applyMigrations(db *sql.DB) error {
 	}
 	if _, err := db.Exec(string(content)); err != nil {
 		return fmt.Errorf("apply migrations: %w", err)
+	}
+
+	orderIDContent, err := os.ReadFile(orderIDPath)
+	if err != nil {
+		return fmt.Errorf("read tracking order_id migration file: %w", err)
+	}
+	if _, err := db.Exec(string(orderIDContent)); err != nil {
+		return fmt.Errorf("apply tracking order_id migration: %w", err)
+	}
+
+	vehiclesContent, err := os.ReadFile(vehiclesPath)
+	if err != nil {
+		return fmt.Errorf("read vehicles migration file: %w", err)
+	}
+	if _, err := db.Exec(string(vehiclesContent)); err != nil {
+		return fmt.Errorf("apply vehicles migration: %w", err)
 	}
 	return nil
 }
@@ -101,6 +132,7 @@ func truncateTables(t *testing.T) {
 		"orders",
 		"inventory",
 		"drivers",
+		"vehicles",
 		"ai_events",
 		"inbound_items",
 		"inbounds",

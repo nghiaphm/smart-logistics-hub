@@ -8,6 +8,7 @@ import (
 
 type TrackingEventResponse struct {
 	ID           int64     `json:"id"`
+	OrderID      *int64    `json:"order_id"`
 	OrderCode    string    `json:"order_code"`
 	DriverCode   string    `json:"driver_code"`
 	StatusUpdate string    `json:"status_update"`
@@ -26,8 +27,8 @@ type PaginatedResponse struct {
 
 func ToResponse(event *entity.TrackingEvent) TrackingEventResponse {
 	return TrackingEventResponse{
-		ID: event.ID, OrderCode: event.OrderCode, DriverCode: event.DriverCode,
-		StatusUpdate: event.StatusUpdate, Lat: event.Lat, Lng: event.Lng,
+		ID: event.ID, OrderID: event.OrderID, OrderCode: event.OrderCode,
+		DriverCode: event.DriverCode, StatusUpdate: event.StatusUpdate, Lat: event.Lat, Lng: event.Lng,
 		Note: event.Note, Timestamp: event.Timestamp,
 	}
 }

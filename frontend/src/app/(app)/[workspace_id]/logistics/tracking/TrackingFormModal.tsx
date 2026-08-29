@@ -2,15 +2,18 @@
 
 import { useState } from "react"
 import type { FormEvent } from "react"
+import { useParams } from "next/navigation"
 
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Alert02Icon } from "@hugeicons/core-free-icons"
 
 import { useCreateTrackingEvent, useUpdateTrackingEvent } from "@/hooks/use-tracking"
+import { useOrders } from "@/hooks/use-orders"
 import type { components } from "@/types/api"
 import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Select } from "@/components/shared/form/Select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Form, FormActions, FormField } from "@/components/shared/form/Form"
 
@@ -40,8 +43,16 @@ export function TrackingFormModal({
   event,
   onSuccess,
 }: TrackingFormModalProps) {
+  const params = useParams<{ workspace_id: string }>()
+  const workspaceId = params.workspace_id
+  const { data: ordersData } = useOrders(workspaceId, 100)
+  const orders = ordersData?.items ?? []
+
   const isEdit = Boolean(event)
   const [orderCode, setOrderCode] = useState(event?.order_code ?? "")
+  const [selectedOrderId, setSelectedOrderId] = useState(
+    event?.order_id != null ? String(event.order_id) : ""
+  )
   const [driverCode, setDriverCode] = useState(event?.driver_code ?? "")
   const [statusUpdate, setStatusUpdate] = useState(event?.status_update ?? "")
   const [lat, setLat] = useState(event?.lat != null ? String(event.lat) : "")
@@ -70,6 +81,12 @@ export function TrackingFormModal({
     return Object.keys(nextErrors).length === 0
   }
 
+  const handleOrderSelect = (value: string) => {
+    setSelectedOrderId(value)
+    const order = orders.find((o) => o.id != null && String(o.id) === value)
+    if (order?.order_code) setOrderCode(order.order_code)
+  }
+
   const handleSubmit = (eventForm: FormEvent<HTMLFormElement>) => {
     eventForm.preventDefault()
     if (!validate()) {
@@ -83,6 +100,7 @@ export function TrackingFormModal({
 
     const payload: CreateTrackingEventRequest & UpdateTrackingEventRequest = {
       order_code: orderCode.trim(),
+      order_id: selectedOrderId ? Number(selectedOrderId) : undefined,
       driver_code: driverCode.trim(),
       status_update: statusUpdate.trim(),
       lat: toCoordinate(lat),
@@ -124,7 +142,10 @@ export function TrackingFormModal({
               <Input
                 id="tracking-order-code"
                 value={orderCode}
-                onChange={(event) => setOrderCode(event.target.value)}
+                onChange={(event) => {
+                  setOrderCode(event.target.value)
+                  setSelectedOrderId("")
+                }}
                 placeholder="VD: DH-2408-001"
                 disabled={isSubmitting}
               />
@@ -139,6 +160,26 @@ export function TrackingFormModal({
               />
             </FormField>
           </div>
+
+          <FormField
+            label="Đơn hàng liên kết"
+            htmlFor="tracking-order"
+            hint="Chọn đơn hàng để tự động điền mã đơn và liên kết theo dõi với đơn đó."
+          >
+            <Select
+              id="tracking-order"
+              value={selectedOrderId}
+              onChange={(event) => handleOrderSelect(event.target.value)}
+              disabled={isSubmitting}
+            >
+              <option value="">Chưa liên kết (nhập mã đơn tay)</option>
+              {orders.map((order) => (
+                <option key={order.id ?? order.order_code} value={order.id ?? ""}>
+                  {order.order_code}
+                </option>
+              ))}
+            </Select>
+          </FormField>
 
           <FormField label="Trạng thái" htmlFor="tracking-status" error={errors.statusUpdate} required>
             <Input
