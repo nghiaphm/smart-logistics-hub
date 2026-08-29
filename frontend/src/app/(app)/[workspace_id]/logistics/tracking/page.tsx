@@ -24,7 +24,7 @@ import { TrackingFormModal } from "./TrackingFormModal"
 type TrackingEvent = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_tracking_dto.TrackingEventResponse"]
 type OrderResponse = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_order_dto.OrderResponse"]
 
-const columns: Column<TrackingEvent>[] = [
+const baseColumns: Column<TrackingEvent>[] = [
   { key: "order_code", header: "Mã đơn", cell: (item) => <span className="font-semibold">{item.order_code}</span> },
   { key: "driver_code", header: "Tài xế", cell: (item) => item.driver_code ?? "—" },
   {
