@@ -796,6 +796,8 @@ definitions:
         type: string
       order_code:
         type: string
+      order_id:
+        type: integer
       status_update:
         type: string
     required:
@@ -830,6 +832,8 @@ definitions:
         type: string
       order_code:
         type: string
+      order_id:
+        type: integer
       status_update:
         type: string
       timestamp:
@@ -847,6 +851,8 @@ definitions:
         type: string
       order_code:
         type: string
+      order_id:
+        type: integer
       status_update:
         type: string
     type: object
@@ -1059,6 +1065,70 @@ definitions:
       updated_at:
         type: string
       username:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_vehicle_dto.CreateVehicleRequest:
+    properties:
+      capacity:
+        type: number
+      license_plate:
+        type: string
+      status:
+        enum:
+        - ACTIVE
+        - MAINTENANCE
+        - INACTIVE
+        type: string
+      type:
+        type: string
+    required:
+    - license_plate
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_vehicle_dto.PaginatedResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse'
+        type: array
+      limit:
+        type: integer
+      skip:
+        type: integer
+      total:
+        type: integer
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_vehicle_dto.UpdateVehicleRequest:
+    properties:
+      capacity:
+        type: number
+      license_plate:
+        type: string
+      status:
+        enum:
+        - ACTIVE
+        - MAINTENANCE
+        - INACTIVE
+        type: string
+      type:
+        type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse:
+    properties:
+      capacity:
+        type: number
+      created_at:
+        type: string
+      created_by:
+        type: string
+      id:
+        type: integer
+      license_plate:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updated_at:
         type: string
     type: object
   my-web-app_com_smart-logistic-hub_internal_warehouse_dto.CreateWarehouseRequest:
@@ -3012,6 +3082,164 @@ paths:
       summary: Update a user
       tags:
       - Users
+  /vehicles:
+    get:
+      parameters:
+      - description: Filter by vehicle status
+        in: query
+        name: status
+        type: string
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: skip
+        type: integer
+      - default: 20
+        description: Max items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List vehicles
+      tags:
+      - Vehicles
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Vehicle payload
+        in: body
+        name: vehicle
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.CreateVehicleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a vehicle
+      tags:
+      - Vehicles
+  /vehicles/{id}:
+    delete:
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a vehicle
+      tags:
+      - Vehicles
+    get:
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a vehicle by ID
+      tags:
+      - Vehicles
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Vehicle update
+        in: body
+        name: vehicle
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.UpdateVehicleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a vehicle
+      tags:
+      - Vehicles
   /warehouses:
     get:
       parameters:

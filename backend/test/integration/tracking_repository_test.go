@@ -7,9 +7,51 @@ import (
 	"time"
 
 	apierrors "my-web-app.com/smart-logistic-hub/internal/common/errors"
+	orderentity "my-web-app.com/smart-logistic-hub/internal/order/entity"
+	orderrepo "my-web-app.com/smart-logistic-hub/internal/order/repository"
 	"my-web-app.com/smart-logistic-hub/internal/tracking/entity"
 	trkrepo "my-web-app.com/smart-logistic-hub/internal/tracking/repository"
 )
+
+func TestTrackingRepositoryLinksOrder(t *testing.T) {
+	truncateTables(t)
+	ctx := context.Background()
+
+	order := &orderentity.Order{
+		OrderCode:       "ORD-IT-002",
+		SenderName:      "Sender",
+		SenderPhone:     "0900000001",
+		SenderAddress:   "123 Street",
+		ReceiverName:    "Receiver",
+		ReceiverPhone:   "0900000002",
+		ReceiverAddress: "456 Avenue",
+		Status:          "PENDING",
+	}
+	orders := orderrepo.NewRepository(testDB)
+	if err := orders.Create(ctx, order); err != nil {
+		t.Fatalf("create order: %v", err)
+	}
+
+	repo := trkrepo.NewRepository(testDB)
+	event := &entity.TrackingEvent{
+		OrderID:      &order.ID,
+		OrderCode:    order.OrderCode,
+		DriverCode:   "DRV-IT-001",
+		StatusUpdate: "PICKED_UP",
+		Timestamp:    time.Now().UTC(),
+	}
+	if err := repo.Create(ctx, event); err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	got, err := repo.GetByID(ctx, event.ID)
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	if got.OrderID == nil || *got.OrderID != order.ID {
+		t.Errorf("GetByID() OrderID = %v, want %d", got.OrderID, order.ID)
+	}
+}
 
 func TestTrackingRepositoryCRUD(t *testing.T) {
 	truncateTables(t)

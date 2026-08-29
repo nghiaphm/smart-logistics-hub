@@ -18,11 +18,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { FormActions } from "@/components/shared/form/Form"
 import { formatDateTime } from "@/lib/format"
 import { useTracking, useDeleteTrackingEvent } from "@/hooks/use-tracking"
+import { useOrders } from "@/hooks/use-orders"
 import { TrackingFormModal } from "./TrackingFormModal"
 
 type TrackingEvent = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_tracking_dto.TrackingEventResponse"]
+type OrderResponse = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_order_dto.OrderResponse"]
 
-const columns: Column<TrackingEvent>[] = [
+const baseColumns: Column<TrackingEvent>[] = [
   { key: "order_code", header: "Mã đơn", cell: (item) => <span className="font-semibold">{item.order_code}</span> },
   { key: "driver_code", header: "Tài xế", cell: (item) => item.driver_code ?? "—" },
   {
@@ -51,6 +53,20 @@ export default function Page() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [eventToDelete, setEventToDelete] = useState<TrackingEvent | undefined>()
   const { data, isLoading, isError, error, refetch } = useTracking()
+  const { data: ordersData } = useOrders(workspaceId, 100)
+
+  // Join theo order_id (ưu tiên) — fallback order_code cho tracking cũ chưa có link (xem WN-043).
+  const ordersById = new Map<number, OrderResponse>()
+  const ordersByCode = new Map<string, OrderResponse>()
+  for (const order of ordersData?.items ?? []) {
+    if (order.id != null) ordersById.set(order.id, order)
+    if (order.order_code) ordersByCode.set(order.order_code, order)
+  }
+  const findOrder = (event: TrackingEvent): OrderResponse | undefined => {
+    if (event.order_id != null) return ordersById.get(event.order_id)
+    if (event.order_code) return ordersByCode.get(event.order_code)
+    return undefined
+  }
 
   useEffect(() => {
     if (isError && error) {
@@ -130,8 +146,54 @@ export default function Page() {
     setDeleteConfirmOpen(true)
   }
 
+  const orderColumns: Column<TrackingEvent>[] = [
+    {
+      key: "order_sender",
+      header: "Người gửi",
+      cell: (event) => {
+        const order = findOrder(event)
+        if (!order) return "—"
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium text-sm">{order.sender_name}</span>
+            <span className="text-xs text-muted-foreground">{order.sender_phone}</span>
+          </div>
+        )
+      },
+    },
+    {
+      key: "order_receiver",
+      header: "Người nhận",
+      cell: (event) => {
+        const order = findOrder(event)
+        if (!order) return "—"
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium text-sm">{order.receiver_name}</span>
+            <span className="text-xs text-muted-foreground">{order.receiver_phone}</span>
+          </div>
+        )
+      },
+    },
+    {
+      key: "order_destination",
+      header: "Điểm đến",
+      cell: (event) => {
+        const order = findOrder(event)
+        if (!order) return "—"
+        const destination = [order.receiver_address, order.receiver_province].filter(Boolean).join(", ")
+        return (
+          <span className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-1">
+            {destination || "—"}
+          </span>
+        )
+      },
+    },
+  ]
+
   const tableColumns: Column<TrackingEvent>[] = [
-    ...columns,
+    ...baseColumns,
+    ...orderColumns,
     {
       key: "actions",
       header: "Thao tác",

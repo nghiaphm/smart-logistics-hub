@@ -2837,6 +2837,252 @@ const docTemplate = `{
                 }
             }
         },
+        "/vehicles": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "List vehicles",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by vehicle status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of items to skip",
+                        "name": "skip",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Max items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.PaginatedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Create a vehicle",
+                "parameters": [
+                    {
+                        "description": "Vehicle payload",
+                        "name": "vehicle",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.CreateVehicleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/vehicles/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Get a vehicle by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Vehicle ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Delete a vehicle",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Vehicle ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Update a vehicle",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Vehicle ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Vehicle update",
+                        "name": "vehicle",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.UpdateVehicleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/warehouses": {
             "get": {
                 "security": [
@@ -4514,6 +4760,9 @@ const docTemplate = `{
                 "order_code": {
                     "type": "string"
                 },
+                "order_id": {
+                    "type": "integer"
+                },
                 "status_update": {
                     "type": "string"
                 }
@@ -4560,6 +4809,9 @@ const docTemplate = `{
                 "order_code": {
                     "type": "string"
                 },
+                "order_id": {
+                    "type": "integer"
+                },
                 "status_update": {
                     "type": "string"
                 },
@@ -4585,6 +4837,9 @@ const docTemplate = `{
                 },
                 "order_code": {
                     "type": "string"
+                },
+                "order_id": {
+                    "type": "integer"
                 },
                 "status_update": {
                     "type": "string"
@@ -4908,6 +5163,102 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "my-web-app_com_smart-logistic-hub_internal_vehicle_dto.CreateVehicleRequest": {
+            "type": "object",
+            "required": [
+                "license_plate"
+            ],
+            "properties": {
+                "capacity": {
+                    "type": "number"
+                },
+                "license_plate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "ACTIVE",
+                        "MAINTENANCE",
+                        "INACTIVE"
+                    ]
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "my-web-app_com_smart-logistic-hub_internal_vehicle_dto.PaginatedResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "skip": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "my-web-app_com_smart-logistic-hub_internal_vehicle_dto.UpdateVehicleRequest": {
+            "type": "object",
+            "properties": {
+                "capacity": {
+                    "type": "number"
+                },
+                "license_plate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "ACTIVE",
+                        "MAINTENANCE",
+                        "INACTIVE"
+                    ]
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse": {
+            "type": "object",
+            "properties": {
+                "capacity": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "license_plate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }

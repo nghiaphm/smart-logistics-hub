@@ -44,6 +44,7 @@ func (s *Service) Create(ctx context.Context, req *dto.CreateTrackingEventReques
 		return nil, fmt.Errorf("%w: status_update is required", apierrors.ErrBadRequest)
 	}
 	event := &entity.TrackingEvent{
+		OrderID:      req.OrderID,
 		OrderCode:    req.OrderCode,
 		DriverCode:   req.DriverCode,
 		StatusUpdate: req.StatusUpdate,
@@ -88,6 +89,9 @@ func (s *Service) Update(ctx context.Context, id int64, req *dto.UpdateTrackingE
 			return nil, fmt.Errorf("%w: order_code must not be empty", apierrors.ErrBadRequest)
 		}
 		event.OrderCode = *req.OrderCode
+	}
+	if req.OrderID != nil {
+		event.OrderID = req.OrderID
 	}
 	if req.DriverCode != nil {
 		if *req.DriverCode == "" {

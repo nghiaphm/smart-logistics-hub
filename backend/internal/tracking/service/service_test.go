@@ -69,7 +69,8 @@ func TestTrackingCreateValid(t *testing.T) {
 	var saved *entity.TrackingEvent
 	repo := &mockTrackingRepo{createFn: func(ctx context.Context, event *entity.TrackingEvent) error { event.ID = 1; saved = event; return nil }}
 	svc := service.NewServiceWithRepo(repo)
-	event, err := svc.Create(context.Background(), &dto.CreateTrackingEventRequest{OrderCode: "ORD001", DriverCode: "DRV001", StatusUpdate: "PICKED_UP"})
+	orderID := int64(42)
+	event, err := svc.Create(context.Background(), &dto.CreateTrackingEventRequest{OrderID: &orderID, OrderCode: "ORD001", DriverCode: "DRV001", StatusUpdate: "PICKED_UP"})
 	if err != nil {
 		t.Fatalf("Create() error = %v", err)
 	}
@@ -81,6 +82,9 @@ func TestTrackingCreateValid(t *testing.T) {
 	}
 	if saved == nil {
 		t.Fatal("Create() did not call repository.Create")
+	}
+	if saved.OrderID == nil || *saved.OrderID != orderID {
+		t.Errorf("Create() OrderID = %v, want %d", saved.OrderID, orderID)
 	}
 }
 
@@ -176,12 +180,16 @@ func TestTrackingUpdateAppliesPartialFields(t *testing.T) {
 	repo := &mockTrackingRepo{getByIDFn: func(ctx context.Context, id int64) (*entity.TrackingEvent, error) { return existing, nil }}
 	svc := service.NewServiceWithRepo(repo)
 	note := "updated note"
-	event, err := svc.Update(context.Background(), 1, &dto.UpdateTrackingEventRequest{Note: &note})
+	orderID := int64(7)
+	event, err := svc.Update(context.Background(), 1, &dto.UpdateTrackingEventRequest{Note: &note, OrderID: &orderID})
 	if err != nil {
 		t.Fatalf("Update() error = %v", err)
 	}
 	if event.Note != note {
 		t.Errorf("Update() Note = %q, want %q", event.Note, note)
+	}
+	if event.OrderID == nil || *event.OrderID != orderID {
+		t.Errorf("Update() OrderID = %v, want %d", event.OrderID, orderID)
 	}
 	if !event.Timestamp.After(time.Time{}) {
 		t.Error("Update() should refresh Timestamp")

@@ -39,6 +39,10 @@ import (
 	"my-web-app.com/smart-logistic-hub/internal/tracking"
 	"my-web-app.com/smart-logistic-hub/internal/trip"
 	"my-web-app.com/smart-logistic-hub/internal/user"
+	"my-web-app.com/smart-logistic-hub/internal/vehicle"
+	vehiclehandler "my-web-app.com/smart-logistic-hub/internal/vehicle/handler"
+	vehiclerepo "my-web-app.com/smart-logistic-hub/internal/vehicle/repository"
+	vehicleservice "my-web-app.com/smart-logistic-hub/internal/vehicle/service"
 	"my-web-app.com/smart-logistic-hub/internal/warehouse"
 	"my-web-app.com/smart-logistic-hub/internal/workspace"
 )
@@ -91,6 +95,10 @@ func main() {
 	driverSvc := driverservice.NewService(driverRepo)
 	driverHandler := handler.NewHandler(driverSvc)
 
+	vehicleRepo := vehiclerepo.NewRepository(db)
+	vehicleSvc := vehicleservice.NewService(vehicleRepo)
+	vehicleHandler := vehiclehandler.NewHandler(vehicleSvc)
+
 	orderRepo := orderrepo.NewRepository(db)
 	orderProductRepo := prodrepo.NewRepository(db)
 	orderInventoryRepo := invrepo.NewRepository(db)
@@ -101,6 +109,7 @@ func main() {
 	protected.Use(authMw)
 	{
 		driver.RegisterRoutes(protected, driverHandler)
+		vehicle.RegisterRoutes(protected, vehicleHandler)
 		order.RegisterRoutes(protected, orderHandler)
 		inventory.RegisterRoutes(protected, db, authMw)
 		tracking.RegisterRoutes(protected, db, authMw)

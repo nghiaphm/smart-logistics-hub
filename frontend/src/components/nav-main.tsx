@@ -4,12 +4,11 @@ import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  BoxesIcon,
+  Car01Icon,
   DashboardSquare01Icon,
   Location01Icon,
-  PackageAddIcon,
-  PackageIcon,
   TruckIcon,
+  UserCircleIcon,
 } from "@hugeicons/core-free-icons"
 
 import { cn } from "@/lib/utils"
@@ -27,20 +26,24 @@ type NavSection = {
 
 const sections: NavSection[] = [
   {
-    label: "Điều hành",
+    label: "Điều hành vận tải",
     items: [
       { label: "Tổng quan", href: "/logistics", icon: DashboardSquare01Icon },
-      { label: "Hàng nhập", href: "/logistics/inbounds", icon: PackageAddIcon },
-      { label: "Tồn kho", href: "/logistics/inventory", icon: BoxesIcon },
-      { label: "Sản phẩm", href: "/logistics/products", icon: PackageIcon },
+      { label: "Theo dõi Đơn hàng", href: "/logistics/tracking", icon: Location01Icon },
+      { label: "Chuyến xe", href: "/logistics/trips", icon: TruckIcon },
     ],
   },
   {
-    label: "Vận tải",
+    label: "Đội xe & Tài xế",
     items: [
-      { label: "Theo dõi đơn", href: "/logistics/tracking", icon: Location01Icon },
-      { label: "Chuyến xe", href: "/logistics/trips", icon: TruckIcon },
+      { label: "Phương tiện", href: "/logistics/vehicles", icon: Car01Icon },
+      { label: "Tài xế", href: "/logistics/drivers", icon: UserCircleIcon },
     ],
+  },
+  {
+    // Nhóm trống — chưa có nội dung; bị ẩn ở render (khung cho tính năng tương lai).
+    label: "Tích hợp & Tối ưu",
+    items: [],
   },
 ]
 
@@ -48,10 +51,11 @@ export function NavMain() {
   const params = useParams<{ workspace_id: string }>()
   const pathname = usePathname()
   const base = `/${params.workspace_id}`
+  const visibleSections = sections.filter((section) => section.items.length > 0)
 
   return (
     <nav className="flex flex-col gap-6 px-3">
-      {sections.map((section) => (
+      {visibleSections.map((section) => (
         <div key={section.label} className="flex flex-col gap-1">
           <p className="px-3 pb-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
             {section.label}
