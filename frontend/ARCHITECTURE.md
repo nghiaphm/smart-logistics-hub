@@ -224,3 +224,79 @@ frontend/
 - Phần lớn cấu trúc route, component, cũng như các thư mục mới `config/`, `contexts/`, `hooks/` (gồm `hooks/admin`, `hooks/logistic`) và `lib/auth.ts` là **file rỗng (stub)** — chưa nên coi là "đã triển khai" khi đọc cây thư mục.
 - Chưa có giao tiếp frontend ↔ backend Go, chưa có xác thực (login/callback/impersonation đều rỗng), chưa có bất kỳ quy ước data fetching nào thực thi.
 - `Dockerfile` rỗng nên frontend chưa thể đóng gói container từ repo này.
+
+---
+
+## 8. Design tokens — ngôn ngữ thiết kế hiện hành
+
+> Mục này **GHI LẠI** pattern đã "thắng thế" (majority) sau audit TASK-076/077/078
+> và `styles/tokens.ts` (TASK-081) — làm chuẩn tham chiếu cho Nhóm 3 và các module sau.
+> KHÔNG phát minh token mới: mọi giá trị dưới đây đều đang tồn tại trong code.
+> Nguồn: `src/app/globals.css`, `src/styles/tokens.ts`, `src/components/shared/*`,
+> 6 module logistics (`(app)/[workspace_id]/logistics/*`, `(app)/[workspace_id]/orders/*`).
+
+### 8.1. Màu sắc
+
+Tất cả màu dùng **oklch** qua CSS variables (`:root` + `.dark`), map vào Tailwind v4 qua `@theme inline`. Bản "xuất ra JS" (dùng cho chart/canvas) nằm ở `src/styles/tokens.ts`.
+
+| Ý nghĩa | Token | Light | Dark | Dùng cho |
+| --- | --- | --- | --- | --- |
+| Nền chính | `--background` | `oklch(1 0 0)` | `oklch(0.145 0 0)` | body, `bg-background` |
+| Chữ chính | `--foreground` | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` | tiêu đề, chữ chính |
+| Card/panel | `--card` + `--card-foreground` | trắng / đen nhạt | `oklch(0.205 0 0)` | `bg-card`, bảng, panel lỗi |
+| Nút chính | `--primary` / `--primary-foreground` | đen `0.205` / trắng `0.985` | trắng `0.922` / đen | Button default |
+| Phụ/trung tính | `--secondary`, `--muted` / `--muted-foreground` | `0.97` / `0.556` | `0.269` / `0.708` | chữ mờ, badge secondary |
+| Nguy hiểm | `--destructive` | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` | nút Xoá, lỗi |
+| Viền | `--border` | `oklch(0.922 0 0)` | `oklch(1 0 0 / 10%)` | border card/table/input |
+| Focus | `--ring` | `oklch(0.708 0 0)` | `oklch(0.556 0 0)` | `focus-visible:ring` |
+| Sidebar app | `--sidebar*` | nền sáng `0.985`; accent **đen** `0.205` | nền `0.205`; accent **xanh** `oklch(0.488 0.243 264.376)` | sidebar `(app)` |
+| Sidebar admin | `--admin-sidebar*` | sidebar TỐI `0.145` ngay cả light | `0.205` | sidebar `(system-admin)` |
+| Accent admin | `--admin-accent` | **amber** `oklch(0.666 0.179 58.318)` | **amber** `oklch(0.769 0.188 70.08)` | badge "ADMIN", icon admin |
+| Chart | `--chart-1..5` | thang xám `0.87 → 0.269` | giống light | biểu đồ (chart.js) |
+
+**Badge màu trạng thái** (inline, không phải CSS var — xem `getStatusBadge`):
+`PENDING` = amber (`border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400`), `SHIPPED`/`IN_TRANSIT` = `default`, `DELIVERED`/`COMPLETED` = emerald (`border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400`), `ASSIGNED`/`PLANNED`/`RECEIVING` = `secondary`, giá trị không biết = `outline`.
+
+### 8.2. Typography
+
+- Chữ UI: **Inter** (`--font-sans`). Mã mono: **Geist Mono** (`--font-geist-mono` → `font-mono`) cho đồng hồ, số liệu, mã — luôn kèm `tabular-nums`.
+- Scale trang list: tiêu đề `text-xl font-semibold tracking-tight`, mô tả `mt-1 text-sm text-muted-foreground`.
+- Label field: `text-sm font-medium` (FormField). Label nhóm nhỏ: `text-sm font-semibold uppercase tracking-wider` ("MẶT HÀNG", "ĐIỂM DỪNG").
+- Text nhấn trong dialog xoá: `font-semibold text-neutral-900 dark:text-neutral-100`.
+- Giá trị rỗng dùng `—` (em dash). Toàn bộ giao diện tiếng Việt (có dấu).
+
+### 8.3. Spacing scale
+
+| Ngữ cảnh | Giá trị |
+| --- | --- |
+| Padding main shell | `p-4 lg:p-6` |
+| AppShell: header → nội dung | `gap-6`; các children trong nội dung `gap-4` |
+| Grid form 2 cột (desktop) / 1 cột (mobile) | `grid gap-4 sm:grid-cols-2` |
+| Cặp field hẹp | `grid grid-cols-1 gap-2 sm:grid-cols-2` |
+| Card lớn / panel | `p-5`; card section trong form `p-4` |
+| Panel lỗi/empty | `px-6 py-14` |
+| Hàng action table | `gap-1`, `justify-end` |
+
+### 8.4. Border radius
+
+- `rounded-2xl` — card, bảng (DataTable), panel lỗi/empty, box nhập dữ liệu trong form.
+- `rounded-4xl` — Button, Input, Select, Dialog.
+- `rounded-full` — avatar, đồng hồ pill, marker.
+- Token gốc `--radius: 0.625rem` (scale sm→4xl = 0.6→2.6 lần).
+
+### 8.5. Component chuẩn (variant đang thắng thế)
+
+- **Button**: hành động chính `size="sm"` (default variant); phụ/nút "Quay lại" `variant="outline" size="sm"` + icon `ArrowLeft01Icon`; xoá `variant="destructive"`; hành động trong bảng `variant="ghost" size="icon-sm"` (xoá thêm `text-muted-foreground hover:text-destructive hover:bg-destructive/10`).
+- **Badge status**: theo bảng màu 8.1 (không dùng badge cho dữ liệu thường).
+- **DataTable** (`components/shared/DataTable.tsx`): cột mã định danh đầu `font-semibold`; cột số `className + headerClassName="text-right"`; cột thời gian `text-muted-foreground` dùng `formatDateTime` (`lib/format.ts`, vi-VN `dd/MM/yyyy HH:mm`, rỗng → "—"); cột "Thao tác" cuối `text-right`; empty-state icon `InboxIcon` + `emptyText` + `emptyDescription`.
+- **Form/Modal** (`components/shared/form/Form.tsx`, `modal/`): `Form + FormField + FormActions`; `Select` dùng chung (`components/shared/form/Select.tsx`); Dialog `sm:max-w-2xl/3xl max-h-[90vh] overflow-y-auto` cho form, `sm:max-w-md` cho xoá; **pattern key-remount** cho form modal (`key={`${open}-${selected?.id ?? "new"}`}`) — không dùng useEffect reset (xem WN-033/FIX-005).
+- **Shell trang list**: `AppShell` (`components/shared/AppShell.tsx`) — `title` + `description` + `actions`.
+- **4 trạng thái** (chuẩn WN-039): `if (isLoading) return` skeleton 4 thanh `h-11 rounded-2xl`; `if (isError) return` panel `rounded-2xl border border-border bg-card` + toast + "Thử lại"; empty qua DataTable; success = DataTable. Hook mutation đặt TRƯỚC early-return.
+- **Icon**: Hugeicons (`@hugeicons/react` + `@hugeicons/core-free-icons`), size icon `size-4`/`size-3.5` trong form, `size-8` panel lỗi.
+
+### 8.6. Quy ước hiển thị dữ liệu
+
+- Thời gian: `formatDateTime` (lib/format.ts) — thống nhất 4 module; không hiển thị raw ISO.
+- Số: `toLocaleString("vi-VN")` cho giá tiền (`₫`), cột số căn phải.
+- Toạ độ (lat/lng): input `type="number" step="any"`, CÓ THỂ ÂM — không clamp (khác số lượng).
+- Trạng thái tự do (VD `status_update` tracking): hiện badge `outline` trung tính, không map màu.

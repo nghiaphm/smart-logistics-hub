@@ -1,28 +1,42 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useParams } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Alert02Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
+import { Alert02Icon, ArrowLeft01Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
 
 import type { components } from "@/types/api"
 import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AppShell } from "@/components/shared/AppShell"
 import { DataTable } from "@/components/shared/DataTable"
 import type { Column } from "@/components/shared/DataTable"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FormActions } from "@/components/shared/form/Form"
+import { formatDateTime } from "@/lib/format"
 import { useTracking, useDeleteTrackingEvent } from "@/hooks/use-tracking"
 import { TrackingFormModal } from "./TrackingFormModal"
 
 type TrackingEvent = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_tracking_dto.TrackingEventResponse"]
 
 const columns: Column<TrackingEvent>[] = [
-  { key: "order_code", header: "Mã đơn", cell: (item) => <span className="font-medium">{item.order_code}</span> },
+  { key: "order_code", header: "Mã đơn", cell: (item) => <span className="font-semibold">{item.order_code}</span> },
   { key: "driver_code", header: "Tài xế", cell: (item) => item.driver_code ?? "—" },
-  { key: "status_update", header: "Trạng thái", cell: (item) => item.status_update ?? "—" },
+  {
+    key: "status_update",
+    header: "Trạng thái",
+    cell: (item) => (item.status_update ? <Badge variant="outline">{item.status_update}</Badge> : "—"),
+  },
   { key: "note", header: "Ghi chú", cell: (item) => item.note ?? "—" },
-  { key: "timestamp", header: "Thời điểm", cell: (item) => item.timestamp ?? "—", className: "text-muted-foreground" },
+  {
+    key: "timestamp",
+    header: "Thời điểm",
+    cell: (item) => formatDateTime(item.timestamp),
+    className: "text-muted-foreground",
+  },
 ]
 
 function errorMessage(error: unknown): string {
@@ -30,6 +44,8 @@ function errorMessage(error: unknown): string {
 }
 
 export default function Page() {
+  const params = useParams<{ workspace_id: string }>()
+  const workspaceId = params.workspace_id
   const [formOpen, setFormOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<TrackingEvent | undefined>()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -146,20 +162,26 @@ export default function Page() {
   ]
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Theo dõi đơn</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Nhật ký theo dõi vận chuyển theo đơn</p>
+    <AppShell
+      title="Theo dõi đơn"
+      description="Nhật ký theo dõi vận chuyển theo đơn"
+      actions={
+        <div className="flex items-center gap-2">
+          <Link href={`/${workspaceId}/logistics`}>
+            <Button variant="outline" size="sm" className="gap-1">
+              <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" /> Quay lại
+            </Button>
+          </Link>
+          <Button size="sm" onClick={openCreateForm}>Ghi nhận sự kiện</Button>
         </div>
-        <Button size="sm" onClick={openCreateForm}>Ghi nhận sự kiện</Button>
-      </div>
+      }
+    >
       <DataTable
         columns={tableColumns}
         rows={items}
         rowKey={(item) => item.id ?? `${item.order_code}-${item.timestamp ?? ""}`}
-        loading={isLoading}
         emptyText="Chưa có dữ liệu theo dõi"
+        emptyDescription="Ghi nhận sự kiện khi có hoạt động vận chuyển."
       />
       <TrackingFormModal
         key={`${formOpen}-${selectedEvent?.id ?? "new"}`}
@@ -196,6 +218,6 @@ export default function Page() {
           </FormActions>
         </DialogContent>
       </Dialog>
-    </div>
+    </AppShell>
   )
 }

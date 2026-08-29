@@ -1,5 +1,8 @@
 import type { ReactNode } from "react"
 
+import { HugeiconsIcon } from "@hugeicons/react"
+import { InboxIcon } from "@hugeicons/core-free-icons"
+
 import {
   Table,
   TableBody,
@@ -25,6 +28,7 @@ type DataTableProps<T> = {
   rowKey: (row: T) => string | number
   loading?: boolean
   emptyText?: string
+  emptyDescription?: string
   className?: string
 }
 
@@ -34,6 +38,7 @@ export function DataTable<T>({
   rowKey,
   loading = false,
   emptyText = "Không có dữ liệu",
+  emptyDescription,
   className,
 }: DataTableProps<T>) {
   return (
@@ -62,11 +67,14 @@ export function DataTable<T>({
             : rows.length === 0
               ? (
                   <TableRow className="hover:bg-transparent">
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center text-sm text-muted-foreground"
-                    >
-                      {emptyText}
+                    <TableCell colSpan={columns.length} className="h-24">
+                      <div className="flex flex-col items-center justify-center gap-2 text-center">
+                        <HugeiconsIcon icon={InboxIcon} className="size-6 text-muted-foreground/50" />
+                        <p className="text-sm text-muted-foreground">{emptyText}</p>
+                        {emptyDescription ? (
+                          <p className="text-xs text-muted-foreground/70">{emptyDescription}</p>
+                        ) : null}
+                      </div>
                     </TableCell>
                   </TableRow>
                 )

@@ -1,28 +1,59 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useParams } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Alert02Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
+import { Alert02Icon, ArrowLeft01Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
 
 import type { components } from "@/types/api"
 import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AppShell } from "@/components/shared/AppShell"
 import { DataTable } from "@/components/shared/DataTable"
 import type { Column } from "@/components/shared/DataTable"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FormActions } from "@/components/shared/form/Form"
+import { formatDateTime } from "@/lib/format"
 import { useInbounds, useDeleteInbound } from "@/hooks/use-inbounds"
 import { InboundFormModal } from "./InboundFormModal"
 
 type Inbound = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundResponse"]
 
+function getStatusBadge(status?: string) {
+  switch (status?.toUpperCase()) {
+    case "PENDING":
+      return (
+        <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+          Chờ duyệt
+        </Badge>
+      )
+    case "RECEIVING":
+      return <Badge variant="secondary">Đang nhập</Badge>
+    case "COMPLETED":
+      return (
+        <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          Hoàn thành
+        </Badge>
+      )
+    default:
+      return <Badge variant="outline">{status || "—"}</Badge>
+  }
+}
+
 const columns: Column<Inbound>[] = [
-  { key: "receipt_code", header: "Mã phiếu", cell: (item) => <span className="font-medium">{item.receipt_code}</span> },
+  { key: "receipt_code", header: "Mã phiếu", cell: (item) => <span className="font-semibold">{item.receipt_code}</span> },
   { key: "supplier_name", header: "Nhà cung cấp", cell: (item) => item.supplier_name },
   { key: "warehouse_id", header: "Kho", cell: (item) => item.warehouse_id },
-  { key: "status", header: "Trạng thái", cell: (item) => item.status ?? "—" },
-  { key: "updated_at", header: "Cập nhật", cell: (item) => item.updated_at ?? "—", className: "text-muted-foreground" },
+  { key: "status", header: "Trạng thái", cell: (item) => getStatusBadge(item.status) },
+  {
+    key: "updated_at",
+    header: "Cập nhật",
+    cell: (item) => formatDateTime(item.updated_at),
+    className: "text-muted-foreground",
+  },
 ]
 
 function errorMessage(error: unknown): string {
@@ -30,6 +61,8 @@ function errorMessage(error: unknown): string {
 }
 
 export default function Page() {
+  const params = useParams<{ workspace_id: string }>()
+  const workspaceId = params.workspace_id
   const [formOpen, setFormOpen] = useState(false)
   const [selectedInbound, setSelectedInbound] = useState<Inbound | undefined>()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -146,20 +179,26 @@ export default function Page() {
   ]
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Hàng nhập</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Danh sách phiếu nhập hàng vào kho</p>
+    <AppShell
+      title="Hàng nhập"
+      description="Danh sách phiếu nhập hàng vào kho"
+      actions={
+        <div className="flex items-center gap-2">
+          <Link href={`/${workspaceId}/logistics`}>
+            <Button variant="outline" size="sm" className="gap-1">
+              <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" /> Quay lại
+            </Button>
+          </Link>
+          <Button size="sm" onClick={openCreateForm}>Thêm phiếu nhập</Button>
         </div>
-        <Button size="sm" onClick={openCreateForm}>Thêm phiếu nhập</Button>
-      </div>
+      }
+    >
       <DataTable
         columns={tableColumns}
         rows={items}
         rowKey={(item) => item.id ?? item.receipt_code ?? ""}
-        loading={isLoading}
         emptyText="Chưa có dữ liệu hàng nhập"
+        emptyDescription="Bấm “Thêm phiếu nhập” để tạo mới."
       />
       <InboundFormModal
         key={`${formOpen}-${selectedInbound?.id ?? "new"}`}
@@ -192,6 +231,6 @@ export default function Page() {
           </FormActions>
         </DialogContent>
       </Dialog>
-    </div>
+    </AppShell>
   )
 }

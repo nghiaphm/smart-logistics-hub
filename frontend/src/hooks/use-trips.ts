@@ -2,30 +2,26 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { apiClient } from "@/lib/api-client"
-import type { components } from "@/types/api"
-
-type Trip = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_trip_dto.TripResponse"]
-type PaginatedTrips = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_trip_dto.PaginatedResponse"]
-type CreateTripRequest = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_trip_dto.CreateTripRequest"]
-type UpdateTripRequest = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_trip_dto.UpdateTripRequest"]
+import {
+  listTrips,
+  createTrip,
+  updateTrip,
+  deleteTrip,
+  type CreateTripRequest,
+  type UpdateTripRequest,
+} from "@/services/trip.service"
 
 export function useTrips(limit = 100) {
   return useQuery({
     queryKey: ["trips", { limit }],
-    queryFn: () => apiClient<PaginatedTrips>(`/trips?limit=${limit}`),
+    queryFn: () => listTrips(limit),
   })
 }
 
 export function useCreateTrip(onSuccess?: () => void) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (payload: CreateTripRequest) =>
-      apiClient<Trip>("/trips", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }),
+    mutationFn: (payload: CreateTripRequest) => createTrip(payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["trips"] })
       onSuccess?.()
@@ -36,12 +32,7 @@ export function useCreateTrip(onSuccess?: () => void) {
 export function useUpdateTrip(onSuccess?: () => void) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: UpdateTripRequest }) =>
-      apiClient<Trip>(`/trips/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }),
+    mutationFn: ({ id, payload }: { id: number; payload: UpdateTripRequest }) => updateTrip(id, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["trips"] })
       onSuccess?.()
@@ -52,7 +43,7 @@ export function useUpdateTrip(onSuccess?: () => void) {
 export function useDeleteTrip(onSuccess?: () => void) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => apiClient<void>(`/trips/${id}`, { method: "DELETE" }),
+    mutationFn: (id: number) => deleteTrip(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["trips"] })
       onSuccess?.()
