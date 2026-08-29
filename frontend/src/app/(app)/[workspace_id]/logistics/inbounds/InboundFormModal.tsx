@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Form, FormActions, FormField } from "@/components/shared/form/Form"
+import { Select } from "@/components/shared/form/Select"
 
 type Inbound = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundResponse"]
 type CreateInboundRequest = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_inbound_dto.CreateInboundRequest"]
@@ -207,12 +208,11 @@ export function InboundFormModal({
               {isEdit ? (
                 <Input id="inbound-warehouse" value={warehouseId} disabled />
               ) : (
-                <select
+                <Select
                   id="inbound-warehouse"
                   value={warehouseId}
                   onChange={(event) => setWarehouseId(event.target.value)}
                   disabled={isSubmitting}
-                  className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                   <option value="">Chọn kho</option>
                   {(warehouses.data?.items ?? []).map((warehouse) => (
@@ -220,23 +220,22 @@ export function InboundFormModal({
                       {warehouse.name} ({warehouse.warehouse_code})
                     </option>
                   ))}
-                </select>
+                </Select>
               )}
             </FormField>
             <FormField label="Trạng thái" htmlFor="inbound-status">
-              <select
+              <Select
                 id="inbound-status"
                 value={status}
                 onChange={(event) => setStatus(event.target.value)}
                 disabled={isSubmitting}
-                className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 {STATUS_OPTIONS.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
                 ))}
-              </select>
+              </Select>
             </FormField>
           </div>
 
@@ -268,44 +267,47 @@ export function InboundFormModal({
               </p>
             ) : null}
             {items.map((item, index) => (
-              <div key={index} className="flex flex-wrap items-end gap-2 rounded-2xl border border-border/60 bg-muted/10 p-3">
-                <FormField label={`Sản phẩm ${index + 1}`} className="min-w-40 flex-1">
-                  <select
-                    value={item.productId}
-                    onChange={(event) => handleItemChange(index, "productId", event.target.value)}
-                    disabled={isSubmitting}
-                    className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              <div key={index} className="space-y-2 rounded-2xl border border-border/60 bg-muted/10 p-3">
+                <div className="flex flex-wrap items-end gap-2">
+                  <FormField label={`Sản phẩm ${index + 1}`} className="min-w-40 flex-1">
+                    <Select
+                      value={item.productId}
+                      onChange={(event) => handleItemChange(index, "productId", event.target.value)}
+                      disabled={isSubmitting}
+                    >
+                      <option value="">-- Chọn sản phẩm --</option>
+                      {(products.data?.items ?? []).map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} ({product.sku})
+                        </option>
+                      ))}
+                    </Select>
+                  </FormField>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveItem(index)}
+                    className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
+                    disabled={isSubmitting || items.length <= 1}
                   >
-                    <option value="">-- Chọn sản phẩm --</option>
-                    {(products.data?.items ?? []).map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name} ({product.sku})
-                      </option>
-                    ))}
-                  </select>
-                </FormField>
-                <FormField label="Dự kiến" className="w-24">
-                  <Input type="number" min="0" value={item.expectedQty} onChange={(event) => handleItemChange(index, "expectedQty", event.target.value)} disabled={isSubmitting} />
-                </FormField>
-                <FormField label="Nhận" className="w-24">
-                  <Input type="number" min="0" value={item.receivedQty} onChange={(event) => handleItemChange(index, "receivedQty", event.target.value)} disabled={isSubmitting} />
-                </FormField>
-                <FormField label="Loại" className="w-24">
-                  <Input type="number" min="0" value={item.rejectedQty} onChange={(event) => handleItemChange(index, "rejectedQty", event.target.value)} disabled={isSubmitting} />
-                </FormField>
-                <FormField label="QC đạt" className="w-24">
-                  <Input type="number" min="0" value={item.qcPassed} onChange={(event) => handleItemChange(index, "qcPassed", event.target.value)} disabled={isSubmitting} />
-                </FormField>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemoveItem(index)}
-                  className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
-                  disabled={isSubmitting || items.length <= 1}
-                >
-                  <HugeiconsIcon icon={Delete01Icon} className="size-4" />
-                </Button>
+                    <HugeiconsIcon icon={Delete01Icon} className="size-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-end sm:gap-2">
+                  <FormField label="Dự kiến" className="w-full sm:w-24">
+                    <Input type="number" min="0" value={item.expectedQty} onChange={(event) => handleItemChange(index, "expectedQty", event.target.value)} disabled={isSubmitting} />
+                  </FormField>
+                  <FormField label="Nhận" className="w-full sm:w-24">
+                    <Input type="number" min="0" value={item.receivedQty} onChange={(event) => handleItemChange(index, "receivedQty", event.target.value)} disabled={isSubmitting} />
+                  </FormField>
+                  <FormField label="Loại" className="w-full sm:w-24">
+                    <Input type="number" min="0" value={item.rejectedQty} onChange={(event) => handleItemChange(index, "rejectedQty", event.target.value)} disabled={isSubmitting} />
+                  </FormField>
+                  <FormField label="QC đạt" className="w-full sm:w-24">
+                    <Input type="number" min="0" value={item.qcPassed} onChange={(event) => handleItemChange(index, "qcPassed", event.target.value)} disabled={isSubmitting} />
+                  </FormField>
+                </div>
               </div>
             ))}
           </div>

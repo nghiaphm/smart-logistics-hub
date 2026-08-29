@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Form, FormActions, FormField } from "@/components/shared/form/Form"
+import { Select } from "@/components/shared/form/Select"
 
 type Trip = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_trip_dto.TripResponse"]
 type CreateTripRequest = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_trip_dto.CreateTripRequest"]
@@ -220,19 +221,18 @@ export function TripFormModal({ open, onOpenChange, trip, onSuccess }: TripFormM
           </div>
 
           <FormField label="Trạng thái" htmlFor="trip-status">
-            <select
+            <Select
               id="trip-status"
               value={status}
               onChange={(event) => setStatus(event.target.value)}
               disabled={isSubmitting}
-              className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
               ))}
-            </select>
+            </Select>
           </FormField>
 
           <div className="space-y-3">
@@ -251,69 +251,73 @@ export function TripFormModal({ open, onOpenChange, trip, onSuccess }: TripFormM
               </p>
             ) : null}
             {stops.map((stop, index) => (
-              <div key={index} className="flex flex-wrap items-end gap-2 rounded-2xl border border-border/60 bg-muted/10 p-3">
-                <FormField label={`Mã đơn ${index + 1}`} className="min-w-36 flex-1">
-                  <Input
-                    value={stop.orderCode}
-                    onChange={(event) => handleStopChange(index, "orderCode", event.target.value)}
-                    placeholder="VD: DH-2408-001"
-                    disabled={isSubmitting}
-                  />
-                </FormField>
-                <FormField label="Địa chỉ" className="min-w-44 flex-1">
-                  <Input
-                    value={stop.address}
-                    onChange={(event) => handleStopChange(index, "address", event.target.value)}
-                    placeholder="Địa chỉ điểm dừng"
-                    disabled={isSubmitting}
-                  />
-                </FormField>
-                <FormField label="Loại điểm" className="w-28">
-                  <Input
-                    value={stop.stopType}
-                    onChange={(event) => handleStopChange(index, "stopType", event.target.value)}
-                    placeholder="PICKUP"
-                    disabled={isSubmitting}
-                  />
-                </FormField>
-                <FormField label="Trạng thái" className="w-28">
-                  <Input
-                    value={stop.status}
-                    onChange={(event) => handleStopChange(index, "status", event.target.value)}
-                    placeholder="PENDING"
-                    disabled={isSubmitting}
-                  />
-                </FormField>
-                <FormField label="Lat" className="w-24">
-                  <Input
-                    type="number"
-                    step="any"
-                    value={stop.lat}
-                    onChange={(event) => handleStopChange(index, "lat", event.target.value)}
-                    placeholder="Vĩ độ"
-                    disabled={isSubmitting}
-                  />
-                </FormField>
-                <FormField label="Lng" className="w-24">
-                  <Input
-                    type="number"
-                    step="any"
-                    value={stop.lng}
-                    onChange={(event) => handleStopChange(index, "lng", event.target.value)}
-                    placeholder="Kinh độ"
-                    disabled={isSubmitting}
-                  />
-                </FormField>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemoveStop(index)}
-                  className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
-                  disabled={isSubmitting || stops.length <= 1}
-                >
-                  <HugeiconsIcon icon={Delete01Icon} className="size-4" />
-                </Button>
+              <div key={index} className="space-y-2 rounded-2xl border border-border/60 bg-muted/10 p-3">
+                <div className="flex flex-wrap items-end gap-2">
+                  <FormField label={`Mã đơn ${index + 1}`} className="min-w-36 flex-1">
+                    <Input
+                      value={stop.orderCode}
+                      onChange={(event) => handleStopChange(index, "orderCode", event.target.value)}
+                      placeholder="VD: DH-2408-001"
+                      disabled={isSubmitting}
+                    />
+                  </FormField>
+                  <FormField label="Địa chỉ" className="min-w-44 flex-1">
+                    <Input
+                      value={stop.address}
+                      onChange={(event) => handleStopChange(index, "address", event.target.value)}
+                      placeholder="Địa chỉ điểm dừng"
+                      disabled={isSubmitting}
+                    />
+                  </FormField>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveStop(index)}
+                    className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
+                    disabled={isSubmitting || stops.length <= 1}
+                  >
+                    <HugeiconsIcon icon={Delete01Icon} className="size-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-end sm:gap-2">
+                  <FormField label="Loại điểm" className="w-full sm:w-28">
+                    <Input
+                      value={stop.stopType}
+                      onChange={(event) => handleStopChange(index, "stopType", event.target.value)}
+                      placeholder="PICKUP"
+                      disabled={isSubmitting}
+                    />
+                  </FormField>
+                  <FormField label="Trạng thái" className="w-full sm:w-28">
+                    <Input
+                      value={stop.status}
+                      onChange={(event) => handleStopChange(index, "status", event.target.value)}
+                      placeholder="PENDING"
+                      disabled={isSubmitting}
+                    />
+                  </FormField>
+                  <FormField label="Lat" className="w-full sm:w-24">
+                    <Input
+                      type="number"
+                      step="any"
+                      value={stop.lat}
+                      onChange={(event) => handleStopChange(index, "lat", event.target.value)}
+                      placeholder="Vĩ độ"
+                      disabled={isSubmitting}
+                    />
+                  </FormField>
+                  <FormField label="Lng" className="w-full sm:w-24">
+                    <Input
+                      type="number"
+                      step="any"
+                      value={stop.lng}
+                      onChange={(event) => handleStopChange(index, "lng", event.target.value)}
+                      placeholder="Kinh độ"
+                      disabled={isSubmitting}
+                    />
+                  </FormField>
+                </div>
               </div>
             ))}
           </div>

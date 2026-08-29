@@ -168,7 +168,7 @@ export default function Page() {
       ) : (
         <>
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
+            <div className="flex min-w-0 flex-1 items-center gap-4 rounded-2xl border border-border bg-card p-5">
               <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-lg font-semibold text-sidebar-primary-foreground">
                 {initials}
               </span>

@@ -10,6 +10,7 @@ import { useOrders, useDeleteOrder } from "@/hooks/use-orders"
 import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { AppShell } from "@/components/shared/AppShell"
 import { DataTable } from "@/components/shared/DataTable"
 import type { Column } from "@/components/shared/DataTable"
@@ -110,6 +111,31 @@ export default function Page() {
   }
 
   const isDeleting = deleteMutation.isPending
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={index} className="h-11 w-full rounded-2xl" />
+        ))}
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card px-6 py-14 text-center">
+        <HugeiconsIcon icon={Alert02Icon} className="size-8 text-destructive" />
+        <div>
+          <p className="font-medium">Không thể tải danh sách đơn hàng</p>
+          <p className="mt-1 text-sm text-muted-foreground">{errorMessage(error)}</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
+          Thử lại
+        </Button>
+      </div>
+    )
+  }
 
   const columns: Column<OrderResponse>[] = [
     {
@@ -214,26 +240,13 @@ export default function Page() {
         </div>
       }
     >
-      {isError ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card px-6 py-14 text-center">
-          <HugeiconsIcon icon={Alert02Icon} className="size-8 text-destructive" />
-          <div>
-            <p className="font-medium">Không thể tải danh sách đơn hàng</p>
-            <p className="mt-1 text-sm text-muted-foreground">{errorMessage(error)}</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => void refetch()}>
-            Thử lại
-          </Button>
-        </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          rows={orders}
-          rowKey={(order) => order.id ?? order.order_code ?? ""}
-          loading={isLoading}
-          emptyText="Chưa có đơn hàng nào được tạo."
-        />
-      )}
+      <DataTable
+        columns={columns}
+        rows={orders}
+        rowKey={(order) => order.id ?? order.order_code ?? ""}
+        emptyText="Chưa có đơn hàng nào được tạo."
+        emptyDescription="Bấm “Thêm đơn hàng” để tạo đơn mới."
+      />
 
       <OrderFormModal
         key={`${modalOpen}-${selectedOrder?.id ?? "new"}`}

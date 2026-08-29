@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Form, FormActions, FormField } from "@/components/shared/form/Form"
+import { Select } from "@/components/shared/form/Select"
 
 type Inventory = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_inventory_dto.InventoryResponse"]
 type CreateInventoryRequest = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_inventory_dto.CreateInventoryRequest"]
@@ -157,12 +158,11 @@ export function InventoryFormModal({
           {!isEdit ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField label="Sản phẩm" htmlFor="inventory-product" error={errors.productId} required>
-                <select
+                <Select
                   id="inventory-product"
                   value={productId}
                   onChange={(event) => setProductId(event.target.value)}
                   disabled={isSubmitting}
-                  className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                   <option value="">Chọn sản phẩm</option>
                   {(products.data?.items ?? []).map((product) => (
@@ -170,15 +170,14 @@ export function InventoryFormModal({
                       {product.name} ({product.sku})
                     </option>
                   ))}
-                </select>
+                </Select>
               </FormField>
               <FormField label="Kho" htmlFor="inventory-warehouse" error={errors.warehouseId} required>
-                <select
+                <Select
                   id="inventory-warehouse"
                   value={warehouseId}
                   onChange={(event) => setWarehouseId(event.target.value)}
                   disabled={isSubmitting}
-                  className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                   <option value="">Chọn kho</option>
                   {(warehouses.data?.items ?? []).map((warehouse) => (
@@ -186,7 +185,7 @@ export function InventoryFormModal({
                       {warehouse.name} ({warehouse.warehouse_code})
                     </option>
                   ))}
-                </select>
+                </Select>
               </FormField>
             </div>
           ) : (
