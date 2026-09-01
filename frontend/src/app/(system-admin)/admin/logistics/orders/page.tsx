@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Alert02Icon, ArrowLeft01Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
 
-import { useOrders, useDeleteOrder } from "@/hooks/use-orders"
+import { apiClient } from "@/lib/api-client"
+import type { components } from "@/types/api"
 import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,12 +15,13 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { AppShell } from "@/components/shared/AppShell"
 import { DataTable } from "@/components/shared/DataTable"
 import type { Column } from "@/components/shared/DataTable"
-import { OrderFormModal } from "./OrderFormModal"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FormActions } from "@/components/shared/form/Form"
-import type { components } from "@/types/api"
+import { useOrders, useDeleteOrder } from "@/hooks/use-orders"
+import { OrderFormModal } from "@/components/logistic/OrderFormModal"
 
 type OrderResponse = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_order_dto.OrderResponse"]
+type PaginatedWorkspaces = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_workspace_dto.PaginatedResponse"]
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Đã có lỗi xảy ra. Vui lòng thử lại."
@@ -49,15 +51,27 @@ function getStatusBadge(status?: string) {
 }
 
 export default function Page() {
-  const params = useParams<{ workspace_id: string }>()
-  const workspaceId = params.workspace_id
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<OrderResponse | undefined>(undefined)
-
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [orderToDelete, setOrderToDelete] = useState<OrderResponse | undefined>(undefined)
 
-  const { data, isLoading, isError, error, refetch } = useOrders(workspaceId, 100)
+  const { data, isLoading, isError, error, refetch } = useOrders(undefined, 200)
+
+  const { data: workspacesData } = useQuery({
+    queryKey: ["workspaces"],
+    queryFn: () => apiClient<PaginatedWorkspaces>("/workspaces?limit=100"),
+  })
+
+  const workspaceNames = useMemo(() => {
+    const map = new Map<number, string>()
+    for (const workspace of workspacesData?.items ?? []) {
+      if (workspace.id != null) {
+        map.set(workspace.id, workspace.name ?? "")
+      }
+    }
+    return map
+  }, [workspacesData])
 
   useEffect(() => {
     if (isError && error) {
@@ -70,23 +84,6 @@ export default function Page() {
     }
   }, [isError, error])
 
-  const orders = data?.items ?? []
-
-  const handleEditClick = (order: OrderResponse) => {
-    setSelectedOrder(order)
-    setModalOpen(true)
-  }
-
-  const handleCreateClick = () => {
-    setSelectedOrder(undefined)
-    setModalOpen(true)
-  }
-
-  const handleDeleteClick = (order: OrderResponse) => {
-    setOrderToDelete(order)
-    setDeleteConfirmOpen(true)
-  }
-
   const deleteMutation = useDeleteOrder(() => {
     toast.add({
       title: "Xóa thành công",
@@ -96,6 +93,8 @@ export default function Page() {
     setDeleteConfirmOpen(false)
     setOrderToDelete(undefined)
   })
+
+  const isDeleting = deleteMutation.isPending
 
   const confirmDelete = async () => {
     if (!orderToDelete?.id) return
@@ -109,8 +108,6 @@ export default function Page() {
       }
     })
   }
-
-  const isDeleting = deleteMutation.isPending
 
   if (isLoading) {
     return (
@@ -137,6 +134,8 @@ export default function Page() {
     )
   }
 
+  const orders = data?.items ?? []
+
   const columns: Column<OrderResponse>[] = [
     {
       key: "order_code",
@@ -144,14 +143,20 @@ export default function Page() {
       cell: (order) => <span className="font-semibold">{order.order_code}</span>,
     },
     {
-      key: "sender_name",
+      key: "sender_workspace",
       header: "Người gửi",
-      cell: (order) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-sm">{order.sender_name}</span>
-          <span className="text-xs text-muted-foreground">{order.sender_phone}</span>
-        </div>
-      ),
+      cell: (order) => {
+        const workspaceName =
+          order.sender_workspace_id != null ? workspaceNames.get(order.sender_workspace_id) : undefined
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium text-sm">
+              {workspaceName ?? (order.sender_workspace_id != null ? `Workspace #${order.sender_workspace_id}` : "—")}
+            </span>
+            <span className="text-xs text-muted-foreground">{order.sender_name}</span>
+          </div>
+        )
+      },
     },
     {
       key: "receiver_name",
@@ -206,19 +211,25 @@ export default function Page() {
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() => handleEditClick(order)}
+            onClick={() => {
+              setSelectedOrder(order)
+              setModalOpen(true)
+            }}
             title="Chỉnh sửa thông tin đơn hàng"
           >
-            <HugeiconsIcon icon={Edit02Icon} className="h-4 w-4" />
+            <HugeiconsIcon icon={Edit02Icon} className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() => handleDeleteClick(order)}
+            onClick={() => {
+              setOrderToDelete(order)
+              setDeleteConfirmOpen(true)
+            }}
             className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             title="Xoá đơn hàng"
           >
-            <HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />
+            <HugeiconsIcon icon={Delete01Icon} className="size-4" />
           </Button>
         </div>
       ),
@@ -227,16 +238,15 @@ export default function Page() {
 
   return (
     <AppShell
-      title="Danh sách đơn hàng"
-      description="Quản lý thông tin đơn hàng và theo dõi tuyến kết nối kho bãi"
+      title="Toàn bộ đơn hàng"
+      description="Tổng hợp đơn hàng từ mọi workspace"
       actions={
         <div className="flex items-center gap-2">
-          <Link href={`/${workspaceId}/logistics`}>
+          <Link href="/admin/logistics">
             <Button variant="outline" size="sm" className="gap-1">
-              <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" /> Quay lại
+              <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" /> Quay lại
             </Button>
           </Link>
-          <Button size="sm" onClick={handleCreateClick}>Thêm đơn hàng</Button>
         </div>
       }
     >
@@ -245,7 +255,7 @@ export default function Page() {
         rows={orders}
         rowKey={(order) => order.id ?? order.order_code ?? ""}
         emptyText="Chưa có đơn hàng nào được tạo."
-        emptyDescription="Bấm “Thêm đơn hàng” để tạo đơn mới."
+        emptyDescription="Đơn hàng sẽ xuất hiện ở đây khi người gửi tạo mới."
       />
 
       <OrderFormModal

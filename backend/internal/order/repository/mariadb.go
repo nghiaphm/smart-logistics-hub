@@ -19,12 +19,12 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (r *Repository) Create(ctx context.Context, o *entity.Order) error {
-	query := `INSERT INTO orders (order_code, sender_name, sender_phone, sender_address, sender_province, sender_district, sender_ward, sender_postal_code,
+	query := `INSERT INTO orders (order_code, sender_workspace_id, sender_name, sender_phone, sender_address, sender_province, sender_district, sender_ward, sender_postal_code,
 		receiver_name, receiver_phone, receiver_address, receiver_province, receiver_district, receiver_ward, receiver_postal_code,
 		status, assigned_driver_id, created_at, updated_at, created_by)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	result, err := r.db.ExecContext(ctx, query,
-		o.OrderCode, o.SenderName, o.SenderPhone, o.SenderAddress, o.SenderProvince, o.SenderDistrict, o.SenderWard, o.SenderPostalCode,
+		o.OrderCode, o.SenderWorkspaceID, o.SenderName, o.SenderPhone, o.SenderAddress, o.SenderProvince, o.SenderDistrict, o.SenderWard, o.SenderPostalCode,
 		o.ReceiverName, o.ReceiverPhone, o.ReceiverAddress, o.ReceiverProvince, o.ReceiverDistrict, o.ReceiverWard, o.ReceiverPostalCode,
 		o.Status, o.AssignedDriverID, o.CreatedAt, o.UpdatedAt, o.CreatedBy,
 	)
@@ -36,58 +36,66 @@ func (r *Repository) Create(ctx context.Context, o *entity.Order) error {
 	return nil
 }
 
-func (r *Repository) GetByID(ctx context.Context, id int64) (*entity.Order, error) {
-	query := `SELECT id, order_code, sender_name, sender_phone, sender_address, sender_province, sender_district, sender_ward, sender_postal_code,
-		receiver_name, receiver_phone, receiver_address, receiver_province, receiver_district, receiver_ward, receiver_postal_code,
-		status, assigned_driver_id, created_at, updated_at, created_by FROM orders WHERE id = ?`
-	o := &entity.Order{}
+const orderColumns = `id, order_code, sender_workspace_id, sender_name, sender_phone, sender_address, sender_province, sender_district, sender_ward, sender_postal_code,
+	receiver_name, receiver_phone, receiver_address, receiver_province, receiver_district, receiver_ward, receiver_postal_code,
+	status, assigned_driver_id, created_at, updated_at, created_by`
+
+func scanOrder(scanner interface{ Scan(...any) error }, o *entity.Order) error {
 	var driverID sql.NullInt64
-	err := r.db.QueryRowContext(ctx, query, id).Scan(
-		&o.ID, &o.OrderCode, &o.SenderName, &o.SenderPhone, &o.SenderAddress, &o.SenderProvince, &o.SenderDistrict, &o.SenderWard, &o.SenderPostalCode,
+	var workspaceID sql.NullInt64
+	err := scanner.Scan(
+		&o.ID, &o.OrderCode, &workspaceID, &o.SenderName, &o.SenderPhone, &o.SenderAddress, &o.SenderProvince, &o.SenderDistrict, &o.SenderWard, &o.SenderPostalCode,
 		&o.ReceiverName, &o.ReceiverPhone, &o.ReceiverAddress, &o.ReceiverProvince, &o.ReceiverDistrict, &o.ReceiverWard, &o.ReceiverPostalCode,
 		&o.Status, &driverID, &o.CreatedAt, &o.UpdatedAt, &o.CreatedBy,
 	)
+	if err != nil {
+		return err
+	}
+	if driverID.Valid {
+		o.AssignedDriverID = &driverID.Int64
+	}
+	if workspaceID.Valid {
+		o.SenderWorkspaceID = &workspaceID.Int64
+	}
+	return nil
+}
+
+func (r *Repository) GetByID(ctx context.Context, id int64) (*entity.Order, error) {
+	query := `SELECT ` + orderColumns + ` FROM orders WHERE id = ?`
+	o := &entity.Order{}
+	err := scanOrder(r.db.QueryRowContext(ctx, query, id), o)
 	if err == sql.ErrNoRows {
 		return nil, apierrors.ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("get order: %w", err)
 	}
-	if driverID.Valid {
-		o.AssignedDriverID = &driverID.Int64
-	}
 	return o, nil
 }
 
 func (r *Repository) GetByCode(ctx context.Context, code string) (*entity.Order, error) {
-	query := `SELECT id, order_code, sender_name, sender_phone, sender_address, sender_province, sender_district, sender_ward, sender_postal_code,
-		receiver_name, receiver_phone, receiver_address, receiver_province, receiver_district, receiver_ward, receiver_postal_code,
-		status, assigned_driver_id, created_at, updated_at, created_by FROM orders WHERE order_code = ?`
+	query := `SELECT ` + orderColumns + ` FROM orders WHERE order_code = ?`
 	o := &entity.Order{}
-	var driverID sql.NullInt64
-	err := r.db.QueryRowContext(ctx, query, code).Scan(
-		&o.ID, &o.OrderCode, &o.SenderName, &o.SenderPhone, &o.SenderAddress, &o.SenderProvince, &o.SenderDistrict, &o.SenderWard, &o.SenderPostalCode,
-		&o.ReceiverName, &o.ReceiverPhone, &o.ReceiverAddress, &o.ReceiverProvince, &o.ReceiverDistrict, &o.ReceiverWard, &o.ReceiverPostalCode,
-		&o.Status, &driverID, &o.CreatedAt, &o.UpdatedAt, &o.CreatedBy,
-	)
+	err := scanOrder(r.db.QueryRowContext(ctx, query, code), o)
 	if err == sql.ErrNoRows {
 		return nil, apierrors.ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("get order by code: %w", err)
 	}
-	if driverID.Valid {
-		o.AssignedDriverID = &driverID.Int64
-	}
 	return o, nil
 }
 
-func (r *Repository) List(ctx context.Context, offset, limit int) ([]entity.Order, error) {
-	query := `SELECT id, order_code, sender_name, sender_phone, sender_address, sender_province, sender_district, sender_ward, sender_postal_code,
-		receiver_name, receiver_phone, receiver_address, receiver_province, receiver_district, receiver_ward, receiver_postal_code,
-		status, assigned_driver_id, created_at, updated_at, created_by
-		FROM orders ORDER BY created_at DESC LIMIT ? OFFSET ?`
-	rows, err := r.db.QueryContext(ctx, query, limit, offset)
+func (r *Repository) List(ctx context.Context, offset, limit int, workspaceID *int64) ([]entity.Order, error) {
+	query := `SELECT ` + orderColumns + ` FROM orders`
+	args := make([]interface{}, 0, 3)
+	if workspaceID != nil {
+		query += ` WHERE sender_workspace_id = ?`
+		args = append(args, *workspaceID)
+	}
+	query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list orders: %w", err)
 	}
@@ -96,25 +104,23 @@ func (r *Repository) List(ctx context.Context, offset, limit int) ([]entity.Orde
 	var orders []entity.Order
 	for rows.Next() {
 		var o entity.Order
-		var driverID sql.NullInt64
-		if err := rows.Scan(
-			&o.ID, &o.OrderCode, &o.SenderName, &o.SenderPhone, &o.SenderAddress, &o.SenderProvince, &o.SenderDistrict, &o.SenderWard, &o.SenderPostalCode,
-			&o.ReceiverName, &o.ReceiverPhone, &o.ReceiverAddress, &o.ReceiverProvince, &o.ReceiverDistrict, &o.ReceiverWard, &o.ReceiverPostalCode,
-			&o.Status, &driverID, &o.CreatedAt, &o.UpdatedAt, &o.CreatedBy,
-		); err != nil {
+		if err := scanOrder(rows, &o); err != nil {
 			return nil, fmt.Errorf("scan order: %w", err)
-		}
-		if driverID.Valid {
-			o.AssignedDriverID = &driverID.Int64
 		}
 		orders = append(orders, o)
 	}
 	return orders, rows.Err()
 }
 
-func (r *Repository) Count(ctx context.Context) (int, error) {
+func (r *Repository) Count(ctx context.Context, workspaceID *int64) (int, error) {
+	query := `SELECT COUNT(*) FROM orders`
+	args := make([]interface{}, 0, 1)
+	if workspaceID != nil {
+		query += ` WHERE sender_workspace_id = ?`
+		args = append(args, *workspaceID)
+	}
 	var count int
-	err := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM orders").Scan(&count)
+	err := r.db.QueryRowContext(ctx, query, args...).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("count orders: %w", err)
 	}

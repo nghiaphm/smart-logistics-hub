@@ -19,7 +19,7 @@ import { FormActions } from "@/components/shared/form/Form"
 import { formatDateTime } from "@/lib/format"
 import { useTracking, useDeleteTrackingEvent } from "@/hooks/use-tracking"
 import { useOrders } from "@/hooks/use-orders"
-import { TrackingFormModal } from "./TrackingFormModal"
+import { TrackingFormModal } from "@/components/system-admin/logistic/TrackingFormModal"
 
 type TrackingEvent = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_tracking_dto.TrackingEventResponse"]
 type OrderResponse = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_order_dto.OrderResponse"]
@@ -229,7 +229,7 @@ export default function Page() {
       description="Nhật ký theo dõi vận chuyển theo đơn"
       actions={
         <div className="flex items-center gap-2">
-          <Link href={`/${workspaceId}/logistics`}>
+          <Link href={`/admin/logistics`}>
             <Button variant="outline" size="sm" className="gap-1">
               <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" /> Quay lại
             </Button>

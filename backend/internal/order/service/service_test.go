@@ -16,8 +16,8 @@ import (
 type mockOrderRepo struct {
 	createFn      func(ctx context.Context, o *entity.Order) error
 	getByIDFn     func(ctx context.Context, id int64) (*entity.Order, error)
-	listFn        func(ctx context.Context, offset, limit int) ([]entity.Order, error)
-	countFn       func(ctx context.Context) (int, error)
+	listFn        func(ctx context.Context, offset, limit int, workspaceID *int64) ([]entity.Order, error)
+	countFn       func(ctx context.Context, workspaceID *int64) (int, error)
 	updateFn      func(ctx context.Context, id int64, o *entity.Order) error
 	deleteFn      func(ctx context.Context, id int64) error
 	createItemFn  func(ctx context.Context, item *entity.OrderItem) error
@@ -43,16 +43,16 @@ func (m *mockOrderRepo) GetByCode(ctx context.Context, code string) (*entity.Ord
 	return nil, apierrors.ErrNotFound
 }
 
-func (m *mockOrderRepo) List(ctx context.Context, offset, limit int) ([]entity.Order, error) {
+func (m *mockOrderRepo) List(ctx context.Context, offset, limit int, workspaceID *int64) ([]entity.Order, error) {
 	if m.listFn != nil {
-		return m.listFn(ctx, offset, limit)
+		return m.listFn(ctx, offset, limit, workspaceID)
 	}
 	return []entity.Order{}, nil
 }
 
-func (m *mockOrderRepo) Count(ctx context.Context) (int, error) {
+func (m *mockOrderRepo) Count(ctx context.Context, workspaceID *int64) (int, error) {
 	if m.countFn != nil {
-		return m.countFn(ctx)
+		return m.countFn(ctx, workspaceID)
 	}
 	return 0, nil
 }
@@ -399,16 +399,16 @@ func TestOrderGetItems(t *testing.T) {
 func TestOrderListReturnsItemsAndCount(t *testing.T) {
 	items := []entity.Order{{ID: 1, OrderCode: "ORD001"}}
 	orderRepo := &mockOrderRepo{
-		listFn: func(ctx context.Context, offset, limit int) ([]entity.Order, error) {
+		listFn: func(ctx context.Context, offset, limit int, workspaceID *int64) ([]entity.Order, error) {
 			return items, nil
 		},
-		countFn: func(ctx context.Context) (int, error) {
+		countFn: func(ctx context.Context, workspaceID *int64) (int, error) {
 			return 1, nil
 		},
 	}
 	svc := service.NewServiceWithRepo(orderRepo, &mockProductRepo{}, &mockInventoryRepo{})
 
-	got, total, err := svc.List(context.Background(), 0, 10)
+	got, total, err := svc.List(context.Background(), 0, 10, nil)
 	if err != nil {
 		t.Fatalf("List() error = %v", err)
 	}

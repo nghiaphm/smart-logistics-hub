@@ -9,6 +9,7 @@ import (
 type OrderResponse struct {
 	ID                 int64               `json:"id"`
 	OrderCode          string              `json:"order_code"`
+	SenderWorkspaceID  *int64              `json:"sender_workspace_id"`
 	SenderName         string              `json:"sender_name"`
 	SenderPhone        string              `json:"sender_phone"`
 	SenderAddress      string              `json:"sender_address"`
@@ -51,6 +52,7 @@ func ToResponse(o *entity.Order) OrderResponse {
 	return OrderResponse{
 		ID:                 o.ID,
 		OrderCode:          o.OrderCode,
+		SenderWorkspaceID:  o.SenderWorkspaceID,
 		SenderName:         o.SenderName,
 		SenderPhone:        o.SenderPhone,
 		SenderAddress:      o.SenderAddress,

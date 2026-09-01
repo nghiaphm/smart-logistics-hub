@@ -90,6 +90,7 @@ func (h *Handler) Get(c *gin.Context) {
 // @Security BearerAuth
 // @Param skip query int false "Number of items to skip" default(0)
 // @Param limit query int false "Max items per page" default(10)
+// @Param workspace_id query int false "Filter by sender workspace ID (chỉ trả đơn của workspace đó)"
 // @Success 200 {object} dto.PaginatedResponse
 // @Failure 500 {object} map[string]interface{}
 // @Router /orders [get]
@@ -100,7 +101,14 @@ func (h *Handler) List(c *gin.Context) {
 		limit = 10
 	}
 
-	orders, total, err := h.svc.List(c.Request.Context(), offset, limit)
+	var workspaceID *int64
+	if raw := c.Query("workspace_id"); raw != "" {
+		if id, err := strconv.ParseInt(raw, 10, 64); err == nil && id > 0 {
+			workspaceID = &id
+		}
+	}
+
+	orders, total, err := h.svc.List(c.Request.Context(), offset, limit, workspaceID)
 	if err != nil {
 		c.Error(err)
 		return

@@ -3,6 +3,7 @@ package dto
 type CreateOrderRequest struct {
 	OrderCode          string             `json:"order_code" binding:"required"`
 	WarehouseID        int64              `json:"warehouse_id" binding:"required,min=1"`
+	SenderWorkspaceID  *int64             `json:"sender_workspace_id"`
 	SenderName         string             `json:"sender_name" binding:"required"`
 	SenderPhone        string             `json:"sender_phone" binding:"required"`
 	SenderAddress      string             `json:"sender_address" binding:"required"`

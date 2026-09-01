@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Alert02Icon, ArrowLeft01Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
 
@@ -18,7 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { FormActions } from "@/components/shared/form/Form"
 import { formatDateTime } from "@/lib/format"
 import { useInbounds, useDeleteInbound } from "@/hooks/use-inbounds"
-import { InboundFormModal } from "./InboundFormModal"
+import { InboundFormModal } from "@/components/system-admin/logistic/InboundFormModal"
 
 type Inbound = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_inbound_dto.InboundResponse"]
 
@@ -61,8 +60,6 @@ function errorMessage(error: unknown): string {
 }
 
 export default function Page() {
-  const params = useParams<{ workspace_id: string }>()
-  const workspaceId = params.workspace_id
   const [formOpen, setFormOpen] = useState(false)
   const [selectedInbound, setSelectedInbound] = useState<Inbound | undefined>()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -184,7 +181,7 @@ export default function Page() {
       description="Danh sách phiếu nhập hàng vào kho"
       actions={
         <div className="flex items-center gap-2">
-          <Link href={`/${workspaceId}/logistics`}>
+          <Link href={`/admin/logistics`}>
             <Button variant="outline" size="sm" className="gap-1">
               <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" /> Quay lại
             </Button>

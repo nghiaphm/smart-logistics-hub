@@ -6,8 +6,11 @@ export type PaginatedOrders = components["schemas"]["my-web-app_com_smart-logist
 export type CreateOrderRequest = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_order_dto.CreateOrderRequest"]
 export type UpdateOrderRequest = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_order_dto.UpdateOrderRequest"]
 
-export function listOrders(limit: number) {
-  return apiClient<PaginatedOrders>(`/orders?limit=${limit}`)
+export function listOrders(limit: number, workspaceId?: string) {
+  const query = workspaceId
+    ? `/orders?limit=${limit}&workspace_id=${workspaceId}`
+    : `/orders?limit=${limit}`
+  return apiClient<PaginatedOrders>(query)
 }
 
 export function createOrder(payload: CreateOrderRequest) {

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
+import { useParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Alert02Icon, Add01Icon, Delete01Icon } from "@hugeicons/core-free-icons"
@@ -35,6 +36,8 @@ interface OrderFormModalProps {
 
 export function OrderFormModal({ open, onOpenChange, order, onSuccess }: OrderFormModalProps) {
   const isEdit = !!order
+  const params = useParams<{ workspace_id?: string }>()
+  const workspaceId = params.workspace_id
 
   // Form Fields
   const [orderCode, setOrderCode] = useState(() => {
@@ -221,6 +224,7 @@ export function OrderFormModal({ open, onOpenChange, order, onSuccess }: OrderFo
       createMutation.mutate({
         order_code: orderCode,
         warehouse_id: parseInt(warehouseId, 10),
+        sender_workspace_id: workspaceId ? parseInt(workspaceId, 10) : undefined,
         sender_name: senderName,
         sender_phone: senderPhone,
         sender_address: senderAddress,

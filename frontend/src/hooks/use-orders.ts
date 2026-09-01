@@ -14,10 +14,10 @@ import {
 /**
  * Hook to retrieve orders list. By invalidating ["orders"], we can refetch this list.
  */
-export function useOrders(workspaceId: string, limit = 100) {
+export function useOrders(workspaceId: string | undefined, limit = 100) {
   return useQuery({
     queryKey: ["orders", { workspaceId, limit }],
-    queryFn: () => listOrders(limit),
+    queryFn: () => listOrders(limit, workspaceId),
   })
 }
 

@@ -1347,6 +1347,12 @@ const docTemplate = `{
                         "description": "Max items per page",
                         "name": "limit",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by sender workspace ID (chỉ trả đơn của workspace đó)",
+                        "name": "workspace_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -4287,6 +4293,9 @@ const docTemplate = `{
                 "sender_ward": {
                     "type": "string"
                 },
+                "sender_workspace_id": {
+                    "type": "integer"
+                },
                 "status": {
                     "type": "string",
                     "enum": [
@@ -4415,6 +4424,9 @@ const docTemplate = `{
                 },
                 "sender_ward": {
                     "type": "string"
+                },
+                "sender_workspace_id": {
+                    "type": "integer"
                 },
                 "status": {
                     "type": "string"

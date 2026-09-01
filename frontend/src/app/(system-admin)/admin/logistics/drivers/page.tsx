@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Alert02Icon, ArrowLeft01Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
 
 import type { components } from "@/types/api"
 import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AppShell } from "@/components/shared/AppShell"
 import { DataTable } from "@/components/shared/DataTable"
@@ -16,42 +16,47 @@ import type { Column } from "@/components/shared/DataTable"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FormActions } from "@/components/shared/form/Form"
 import { formatDateTime } from "@/lib/format"
-import { useInventory, useDeleteInventory } from "@/hooks/use-inventory"
-import { InventoryFormModal } from "./InventoryFormModal"
+import { useDrivers, useDeleteDriver } from "@/hooks/use-drivers"
+import { DriverFormModal } from "@/components/system-admin/logistic/DriverFormModal"
 
-type Inventory = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_inventory_dto.InventoryResponse"]
+type Driver = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_driver_dto.DriverResponse"]
 
-const columns: Column<Inventory>[] = [
-  { key: "product_id", header: "Mã sản phẩm", cell: (item) => <span className="font-semibold">{item.product_id}</span> },
-  { key: "warehouse_id", header: "Kho", cell: (item) => item.warehouse_id },
+function getStatusBadge(status?: string) {
+  switch (status?.toUpperCase()) {
+    case "AVAILABLE":
+      return (
+        <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          Sẵn sàng
+        </Badge>
+      )
+    case "BUSY":
+      return <Badge variant="default">Đang làm việc</Badge>
+    case "OFFLINE":
+      return <Badge variant="secondary">Nghỉ</Badge>
+    default:
+      return <Badge variant="outline">{status || "—"}</Badge>
+  }
+}
+
+const columns: Column<Driver>[] = [
   {
-    key: "available_qty",
-    header: "Tồn sẵn sàng",
-    cell: (item) => item.available_qty ?? 0,
-    className: "text-right",
-    headerClassName: "text-right",
+    key: "driver_code",
+    header: "Mã tài xế",
+    cell: (item) => <span className="font-semibold">{item.driver_code}</span>,
   },
   {
-    key: "reserved_qty",
-    header: "Giữ chỗ",
-    cell: (item) => item.reserved_qty ?? 0,
-    className: "text-right",
-    headerClassName: "text-right",
+    key: "full_name",
+    header: "Họ tên",
+    cell: (item) => (
+      <div className="flex flex-col">
+        <span className="font-medium text-sm">{item.full_name}</span>
+        <span className="text-xs text-muted-foreground">{item.phone}</span>
+      </div>
+    ),
   },
-  {
-    key: "damaged_qty",
-    header: "Hư hỏng",
-    cell: (item) => item.damaged_qty ?? 0,
-    className: "text-right",
-    headerClassName: "text-right",
-  },
-  {
-    key: "hold_qty",
-    header: "Chờ duyệt",
-    cell: (item) => item.hold_qty ?? 0,
-    className: "text-right",
-    headerClassName: "text-right",
-  },
+  { key: "vehicle_type", header: "Loại xe", cell: (item) => item.vehicle_type || "—" },
+  { key: "license_plate", header: "Biển số", cell: (item) => item.license_plate || "—" },
+  { key: "status", header: "Trạng thái", cell: (item) => getStatusBadge(item.status) },
   {
     key: "updated_at",
     header: "Cập nhật",
@@ -65,18 +70,16 @@ function errorMessage(error: unknown): string {
 }
 
 export default function Page() {
-  const params = useParams<{ workspace_id: string }>()
-  const workspaceId = params.workspace_id
   const [formOpen, setFormOpen] = useState(false)
-  const [selectedInventory, setSelectedInventory] = useState<Inventory | undefined>()
+  const [selectedDriver, setSelectedDriver] = useState<Driver | undefined>()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-  const [inventoryToDelete, setInventoryToDelete] = useState<Inventory | undefined>()
-  const { data, isLoading, isError, error, refetch } = useInventory()
+  const [driverToDelete, setDriverToDelete] = useState<Driver | undefined>()
+  const { data, isLoading, isError, error, refetch } = useDrivers()
 
   useEffect(() => {
     if (isError && error) {
       toast.add({
-        title: "Không thể tải danh sách tồn kho",
+        title: "Không thể tải danh sách tài xế",
         description: errorMessage(error),
         type: "error",
         timeout: 6000,
@@ -84,25 +87,25 @@ export default function Page() {
     }
   }, [isError, error])
 
-  const deleteMutation = useDeleteInventory(() => {
+  const deleteMutation = useDeleteDriver(() => {
     toast.add({
       title: "Xóa thành công",
-      description: `Bản ghi tồn kho sản phẩm ${inventoryToDelete?.product_id} tại kho ${inventoryToDelete?.warehouse_id} đã được loại bỏ khỏi hệ thống.`,
+      description: `Tài xế ${driverToDelete?.driver_code} đã được loại bỏ khỏi hệ thống.`,
       type: "success",
     })
     setDeleteConfirmOpen(false)
-    setInventoryToDelete(undefined)
+    setDriverToDelete(undefined)
   })
 
   const isDeleting = deleteMutation.isPending
 
   const confirmDelete = async () => {
-    if (!inventoryToDelete?.id) return
-    deleteMutation.mutate(inventoryToDelete.id, {
+    if (!driverToDelete?.id) return
+    deleteMutation.mutate(driverToDelete.id, {
       onError: (err: unknown) => {
         toast.add({
           title: "Xoá thất bại",
-          description: err instanceof Error ? err.message : "Đã xảy ra lỗi khi xoá bản ghi tồn kho này.",
+          description: err instanceof Error ? err.message : "Đã xảy ra lỗi khi xoá tài xế này.",
           type: "error",
         })
       }
@@ -124,7 +127,7 @@ export default function Page() {
       <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card px-6 py-14 text-center">
         <HugeiconsIcon icon={Alert02Icon} className="size-8 text-destructive" />
         <div>
-          <p className="font-medium">Không thể tải danh sách tồn kho</p>
+          <p className="font-medium">Không thể tải danh sách tài xế</p>
           <p className="mt-1 text-sm text-muted-foreground">{errorMessage(error)}</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => void refetch()}>
@@ -137,42 +140,42 @@ export default function Page() {
   const items = data?.items ?? []
 
   const openCreateForm = () => {
-    setSelectedInventory(undefined)
+    setSelectedDriver(undefined)
     setFormOpen(true)
   }
 
-  const openEditForm = (inventory: Inventory) => {
-    setSelectedInventory(inventory)
+  const openEditForm = (driver: Driver) => {
+    setSelectedDriver(driver)
     setFormOpen(true)
   }
 
-  const handleDeleteClick = (inventory: Inventory) => {
-    setInventoryToDelete(inventory)
+  const handleDeleteClick = (driver: Driver) => {
+    setDriverToDelete(driver)
     setDeleteConfirmOpen(true)
   }
 
-  const tableColumns: Column<Inventory>[] = [
+  const tableColumns: Column<Driver>[] = [
     ...columns,
     {
       key: "actions",
       header: "Thao tác",
       className: "text-right",
       headerClassName: "text-right",
-      cell: (inventory) => (
+      cell: (driver) => (
         <div className="flex justify-end gap-1">
           <Button
             variant="ghost"
             size="icon-sm"
-            title="Sửa tồn kho"
-            onClick={() => openEditForm(inventory)}
+            title="Sửa tài xế"
+            onClick={() => openEditForm(driver)}
           >
             <HugeiconsIcon icon={Edit02Icon} className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
-            title="Xoá tồn kho"
-            onClick={() => handleDeleteClick(inventory)}
+            title="Xoá tài xế"
+            onClick={() => handleDeleteClick(driver)}
             className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           >
             <HugeiconsIcon icon={Delete01Icon} className="size-4" />
@@ -184,48 +187,48 @@ export default function Page() {
 
   return (
     <AppShell
-      title="Tồn kho"
-      description="Danh sách tồn kho theo sản phẩm và kho"
+      title="Tài xế"
+      description="Danh sách tài xế vận tải"
       actions={
         <div className="flex items-center gap-2">
-          <Link href={`/${workspaceId}/logistics`}>
+          <Link href={`/admin/logistics`}>
             <Button variant="outline" size="sm" className="gap-1">
               <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" /> Quay lại
             </Button>
           </Link>
-          <Button size="sm" onClick={openCreateForm}>Thêm tồn kho</Button>
+          <Button size="sm" onClick={openCreateForm}>Thêm tài xế</Button>
         </div>
       }
     >
       <DataTable
         columns={tableColumns}
         rows={items}
-        rowKey={(item) => item.id ?? `${item.product_id}-${item.warehouse_id}`}
-        emptyText="Chưa có dữ liệu tồn kho"
-        emptyDescription="Bấm “Thêm tồn kho” để tạo bản ghi mới."
+        rowKey={(item) => item.id ?? item.driver_code ?? ""}
+        emptyText="Chưa có dữ liệu tài xế"
+        emptyDescription="Bấm “Thêm tài xế” để đăng ký tài xế mới."
       />
-      <InventoryFormModal
-        key={`${formOpen}-${selectedInventory?.id ?? "new"}`}
+      <DriverFormModal
+        key={`${formOpen}-${selectedDriver?.id ?? "new"}`}
         open={formOpen}
         onOpenChange={setFormOpen}
-        inventory={selectedInventory}
+        driver={selectedDriver}
         onSuccess={() => void refetch()}
       />
 
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Xác nhận xoá tồn kho</DialogTitle>
+            <DialogTitle>Xác nhận xoá tài xế</DialogTitle>
             <DialogDescription>
-              Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xoá vĩnh viễn bản ghi tồn kho của sản phẩm{" "}
+              Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xoá vĩnh viễn tài xế{" "}
               <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                {inventoryToDelete?.product_id}
+                {driverToDelete?.driver_code}
               </span>{" "}
-              tại kho{" "}
+              (họ tên{" "}
               <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                {inventoryToDelete?.warehouse_id}
-              </span>{" "}
-              khỏi hệ thống?
+                {driverToDelete?.full_name}
+              </span>
+              ) khỏi hệ thống?
             </DialogDescription>
           </DialogHeader>
 

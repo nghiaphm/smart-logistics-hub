@@ -132,14 +132,14 @@ func TestOrderRepositoryListAndCount(t *testing.T) {
 		}
 	}
 
-	orders, err := repo.List(ctx, 0, 10)
+	orders, err := repo.List(ctx, 0, 10, nil)
 	if err != nil {
 		t.Fatalf("List() error = %v", err)
 	}
 	if len(orders) != 3 {
 		t.Errorf("List() len = %d, want 3", len(orders))
 	}
-	count, err := repo.Count(ctx)
+	count, err := repo.Count(ctx, nil)
 	if err != nil {
 		t.Fatalf("Count() error = %v", err)
 	}
