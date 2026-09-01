@@ -63,6 +63,8 @@ func applyMigrations(db *sql.DB) error {
 	vehiclesDownPath := filepath.Join("..", "..", "migrations", "000008_vehicles.down.sql")
 	orderIDPath := filepath.Join("..", "..", "migrations", "000007_tracking_order_id.up.sql")
 	vehiclesPath := filepath.Join("..", "..", "migrations", "000008_vehicles.up.sql")
+	orderWorkspacePath := filepath.Join("..", "..", "migrations", "000009_order_sender_workspace.up.sql")
+	workspacesPath := filepath.Join("..", "..", "migrations", "000002_workspaces.up.sql")
 
 	// Reset: migration 000001 down chỉ drop các bảng gốc — bảng tạo bởi
 	// migration sau phải drop riêng ở đây (nếu không, chạy lần 2 sẽ lỗi
@@ -74,6 +76,13 @@ func applyMigrations(db *sql.DB) error {
 	}
 	if _, err := db.Exec(string(vehiclesDownContent)); err != nil {
 		return fmt.Errorf("reset vehicles migration: %w", err)
+	}
+
+	// workspaces (000002) không có down file và không thuộc 000001 — phải drop
+	// riêng ở đây (nếu không, chạy lần 2 lỗi "table already exists"). Cần có
+	// bảng này vì 000009 (orders.sender_workspace_id) FK → workspaces.id.
+	if _, err := db.Exec("DROP TABLE IF EXISTS workspaces"); err != nil {
+		return fmt.Errorf("reset workspaces migration: %w", err)
 	}
 
 	downContent, err := os.ReadFile(downPath)
@@ -95,6 +104,14 @@ func applyMigrations(db *sql.DB) error {
 		return fmt.Errorf("apply migrations: %w", err)
 	}
 
+	workspacesContent, err := os.ReadFile(workspacesPath)
+	if err != nil {
+		return fmt.Errorf("read workspaces migration file: %w", err)
+	}
+	if _, err := db.Exec(string(workspacesContent)); err != nil {
+		return fmt.Errorf("apply workspaces migration: %w", err)
+	}
+
 	orderIDContent, err := os.ReadFile(orderIDPath)
 	if err != nil {
 		return fmt.Errorf("read tracking order_id migration file: %w", err)
@@ -109,6 +126,14 @@ func applyMigrations(db *sql.DB) error {
 	}
 	if _, err := db.Exec(string(vehiclesContent)); err != nil {
 		return fmt.Errorf("apply vehicles migration: %w", err)
+	}
+
+	orderWorkspaceContent, err := os.ReadFile(orderWorkspacePath)
+	if err != nil {
+		return fmt.Errorf("read order sender_workspace migration file: %w", err)
+	}
+	if _, err := db.Exec(string(orderWorkspaceContent)); err != nil {
+		return fmt.Errorf("apply order sender_workspace migration: %w", err)
 	}
 	return nil
 }

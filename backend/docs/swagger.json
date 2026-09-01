@@ -1341,6 +1341,12 @@
                         "description": "Max items per page",
                         "name": "limit",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by sender workspace ID (chỉ trả đơn của workspace đó)",
+                        "name": "workspace_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -4281,6 +4287,9 @@
                 "sender_ward": {
                     "type": "string"
                 },
+                "sender_workspace_id": {
+                    "type": "integer"
+                },
                 "status": {
                     "type": "string",
                     "enum": [
@@ -4409,6 +4418,9 @@
                 },
                 "sender_ward": {
                     "type": "string"
+                },
+                "sender_workspace_id": {
+                    "type": "integer"
                 },
                 "status": {
                     "type": "string"

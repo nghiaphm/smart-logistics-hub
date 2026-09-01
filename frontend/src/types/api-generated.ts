@@ -1387,6 +1387,8 @@ export interface paths {
                     skip?: number;
                     /** @description Max items per page */
                     limit?: number;
+                    /** @description Filter by sender workspace ID (chỉ trả đơn của workspace đó) */
+                    workspace_id?: number;
                 };
                 header?: never;
                 path?: never;
@@ -3998,6 +4000,7 @@ export interface components {
             sender_postal_code?: string;
             sender_province?: string;
             sender_ward?: string;
+            sender_workspace_id?: number;
             /** @enum {string} */
             status?: "PENDING" | "RESERVED" | "PICKING" | "PACKING" | "SORTING" | "SHIPPING" | "COMPLETED" | "PICKING_UP";
             warehouse_id: number;
@@ -4037,6 +4040,7 @@ export interface components {
             sender_postal_code?: string;
             sender_province?: string;
             sender_ward?: string;
+            sender_workspace_id?: number;
             status?: string;
             updated_at?: string;
         };

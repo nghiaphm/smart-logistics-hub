@@ -79,10 +79,12 @@ export function AppSidebar() {
       <Drawer.Root open={openMobile} onOpenChange={setOpenMobile}>
         <Drawer.Portal>
           <Drawer.Backdrop className="fixed inset-0 z-40 bg-black/40 lg:hidden" />
-          <Drawer.Popup className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-sidebar shadow-2xl outline-none transition-transform duration-200 motion-reduce:transition-none data-[open]:translate-x-0 data-[closed]:-translate-x-full lg:hidden">
-            <Drawer.Title className="sr-only">Menu điều hướng</Drawer.Title>
-            <SidebarContent />
-          </Drawer.Popup>
+          <Drawer.Viewport className="fixed inset-0 z-50 lg:hidden">
+            <Drawer.Popup className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-sidebar shadow-2xl outline-none transition-transform duration-200 motion-reduce:transition-none data-[open]:translate-x-0 data-[closed]:-translate-x-full">
+              <Drawer.Title className="sr-only">Menu điều hướng</Drawer.Title>
+              <SidebarContent />
+            </Drawer.Popup>
+          </Drawer.Viewport>
         </Drawer.Portal>
       </Drawer.Root>
     </>

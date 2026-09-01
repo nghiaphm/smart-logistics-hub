@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Alert02Icon, ArrowLeft01Icon, Edit02Icon, Delete01Icon } from "@hugeicons/core-free-icons"
 
@@ -16,46 +15,53 @@ import { DataTable } from "@/components/shared/DataTable"
 import type { Column } from "@/components/shared/DataTable"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FormActions } from "@/components/shared/form/Form"
-import { useTrips, useDeleteTrip } from "@/hooks/use-trips"
-import { TripFormModal } from "./TripFormModal"
+import { formatDateTime } from "@/lib/format"
+import { useVehicles, useDeleteVehicle } from "@/hooks/use-vehicles"
+import { VehicleFormModal } from "@/components/system-admin/logistic/VehicleFormModal"
 
-type Trip = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_trip_dto.TripResponse"]
+type Vehicle = components["schemas"]["my-web-app_com_smart-logistic-hub_internal_vehicle_dto.VehicleResponse"]
 
 function getStatusBadge(status?: string) {
   switch (status?.toUpperCase()) {
-    case "PLANNED":
-      return <Badge variant="secondary">Đã lên kế hoạch</Badge>
-    case "IN_TRANSIT":
-      return <Badge variant="default">Đang chạy</Badge>
-    case "COMPLETED":
+    case "ACTIVE":
       return (
         <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-          Hoàn thành
+          Đang hoạt động
         </Badge>
       )
+    case "MAINTENANCE":
+      return (
+        <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+          Đang bảo trì
+        </Badge>
+      )
+    case "INACTIVE":
+      return <Badge variant="secondary">Ngừng hoạt động</Badge>
     default:
       return <Badge variant="outline">{status || "—"}</Badge>
   }
 }
 
-const columns: Column<Trip>[] = [
-  { key: "trip_code", header: "Mã chuyến", cell: (item) => <span className="font-semibold">{item.trip_code}</span> },
-  { key: "driver_id", header: "Tài xế", cell: (item) => item.driver_id ?? "—" },
-  { key: "vehicle_license_plate", header: "Biển số", cell: (item) => item.vehicle_license_plate ?? "—" },
-  { key: "status", header: "Trạng thái", cell: (item) => getStatusBadge(item.status) },
+const columns: Column<Vehicle>[] = [
   {
-    key: "total_distance_km",
-    header: "Quãng đường (km)",
-    cell: (item) => item.total_distance_km ?? "—",
+    key: "license_plate",
+    header: "Biển số",
+    cell: (item) => <span className="font-semibold">{item.license_plate}</span>,
+  },
+  { key: "type", header: "Loại xe", cell: (item) => item.type || "—" },
+  {
+    key: "capacity",
+    header: "Tải trọng (kg)",
+    cell: (item) => (item.capacity != null ? item.capacity.toLocaleString("vi-VN") : "—"),
     className: "text-right",
     headerClassName: "text-right",
   },
+  { key: "status", header: "Trạng thái", cell: (item) => getStatusBadge(item.status) },
   {
-    key: "estimated_duration_min",
-    header: "Thời lượng (phút)",
-    cell: (item) => item.estimated_duration_min ?? "—",
-    className: "text-right",
-    headerClassName: "text-right",
+    key: "updated_at",
+    header: "Cập nhật",
+    cell: (item) => formatDateTime(item.updated_at),
+    className: "text-muted-foreground",
   },
 ]
 
@@ -64,18 +70,16 @@ function errorMessage(error: unknown): string {
 }
 
 export default function Page() {
-  const params = useParams<{ workspace_id: string }>()
-  const workspaceId = params.workspace_id
   const [formOpen, setFormOpen] = useState(false)
-  const [selectedTrip, setSelectedTrip] = useState<Trip | undefined>()
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | undefined>()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-  const [tripToDelete, setTripToDelete] = useState<Trip | undefined>()
-  const { data, isLoading, isError, error, refetch } = useTrips()
+  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | undefined>()
+  const { data, isLoading, isError, error, refetch } = useVehicles()
 
   useEffect(() => {
     if (isError && error) {
       toast.add({
-        title: "Không thể tải danh sách chuyến xe",
+        title: "Không thể tải danh sách phương tiện",
         description: errorMessage(error),
         type: "error",
         timeout: 6000,
@@ -83,25 +87,25 @@ export default function Page() {
     }
   }, [isError, error])
 
-  const deleteMutation = useDeleteTrip(() => {
+  const deleteMutation = useDeleteVehicle(() => {
     toast.add({
       title: "Xóa thành công",
-      description: `Chuyến xe ${tripToDelete?.trip_code} đã được loại bỏ khỏi hệ thống.`,
+      description: `Phương tiện ${vehicleToDelete?.license_plate} đã được loại bỏ khỏi hệ thống.`,
       type: "success",
     })
     setDeleteConfirmOpen(false)
-    setTripToDelete(undefined)
+    setVehicleToDelete(undefined)
   })
 
   const isDeleting = deleteMutation.isPending
 
   const confirmDelete = async () => {
-    if (!tripToDelete?.id) return
-    deleteMutation.mutate(tripToDelete.id, {
+    if (!vehicleToDelete?.id) return
+    deleteMutation.mutate(vehicleToDelete.id, {
       onError: (err: unknown) => {
         toast.add({
           title: "Xoá thất bại",
-          description: err instanceof Error ? err.message : "Đã xảy ra lỗi khi xoá chuyến xe này.",
+          description: err instanceof Error ? err.message : "Đã xảy ra lỗi khi xoá phương tiện này.",
           type: "error",
         })
       }
@@ -123,7 +127,7 @@ export default function Page() {
       <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card px-6 py-14 text-center">
         <HugeiconsIcon icon={Alert02Icon} className="size-8 text-destructive" />
         <div>
-          <p className="font-medium">Không thể tải danh sách chuyến xe</p>
+          <p className="font-medium">Không thể tải danh sách phương tiện</p>
           <p className="mt-1 text-sm text-muted-foreground">{errorMessage(error)}</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => void refetch()}>
@@ -136,42 +140,42 @@ export default function Page() {
   const items = data?.items ?? []
 
   const openCreateForm = () => {
-    setSelectedTrip(undefined)
+    setSelectedVehicle(undefined)
     setFormOpen(true)
   }
 
-  const openEditForm = (trip: Trip) => {
-    setSelectedTrip(trip)
+  const openEditForm = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle)
     setFormOpen(true)
   }
 
-  const handleDeleteClick = (trip: Trip) => {
-    setTripToDelete(trip)
+  const handleDeleteClick = (vehicle: Vehicle) => {
+    setVehicleToDelete(vehicle)
     setDeleteConfirmOpen(true)
   }
 
-  const tableColumns: Column<Trip>[] = [
+  const tableColumns: Column<Vehicle>[] = [
     ...columns,
     {
       key: "actions",
       header: "Thao tác",
       className: "text-right",
       headerClassName: "text-right",
-      cell: (trip) => (
+      cell: (vehicle) => (
         <div className="flex justify-end gap-1">
           <Button
             variant="ghost"
             size="icon-sm"
-            title="Sửa chuyến xe"
-            onClick={() => openEditForm(trip)}
+            title="Sửa phương tiện"
+            onClick={() => openEditForm(vehicle)}
           >
             <HugeiconsIcon icon={Edit02Icon} className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
-            title="Xoá chuyến xe"
-            onClick={() => handleDeleteClick(trip)}
+            title="Xoá phương tiện"
+            onClick={() => handleDeleteClick(vehicle)}
             className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           >
             <HugeiconsIcon icon={Delete01Icon} className="size-4" />
@@ -183,42 +187,42 @@ export default function Page() {
 
   return (
     <AppShell
-      title="Chuyến xe"
-      description="Danh sách chuyến vận chuyển"
+      title="Phương tiện"
+      description="Danh sách phương tiện vận tải (Fleet)"
       actions={
         <div className="flex items-center gap-2">
-          <Link href={`/${workspaceId}/logistics`}>
+          <Link href={`/admin/logistics`}>
             <Button variant="outline" size="sm" className="gap-1">
               <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" /> Quay lại
             </Button>
           </Link>
-          <Button size="sm" onClick={openCreateForm}>Tạo chuyến xe</Button>
+          <Button size="sm" onClick={openCreateForm}>Thêm phương tiện</Button>
         </div>
       }
     >
       <DataTable
         columns={tableColumns}
         rows={items}
-        rowKey={(item) => item.id ?? item.trip_code ?? ""}
-        emptyText="Chưa có dữ liệu chuyến xe"
-        emptyDescription="Bấm “Tạo chuyến xe” để bắt đầu."
+        rowKey={(item) => item.id ?? item.license_plate ?? ""}
+        emptyText="Chưa có dữ liệu phương tiện"
+        emptyDescription="Bấm “Thêm phương tiện” để đăng ký xe mới."
       />
-      <TripFormModal
-        key={`${formOpen}-${selectedTrip?.id ?? "new"}`}
+      <VehicleFormModal
+        key={`${formOpen}-${selectedVehicle?.id ?? "new"}`}
         open={formOpen}
         onOpenChange={setFormOpen}
-        trip={selectedTrip}
+        vehicle={selectedVehicle}
         onSuccess={() => void refetch()}
       />
 
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Xác nhận xoá chuyến xe</DialogTitle>
+            <DialogTitle>Xác nhận xoá phương tiện</DialogTitle>
             <DialogDescription>
-              Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xoá vĩnh viễn chuyến xe{" "}
+              Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xoá vĩnh viễn phương tiện{" "}
               <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                {tripToDelete?.trip_code}
+                {vehicleToDelete?.license_plate}
               </span>{" "}
               khỏi hệ thống?
             </DialogDescription>

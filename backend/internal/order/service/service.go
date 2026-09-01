@@ -17,8 +17,8 @@ type OrderRepository interface {
 	Create(ctx context.Context, o *entity.Order) error
 	GetByID(ctx context.Context, id int64) (*entity.Order, error)
 	GetByCode(ctx context.Context, code string) (*entity.Order, error)
-	List(ctx context.Context, offset, limit int) ([]entity.Order, error)
-	Count(ctx context.Context) (int, error)
+	List(ctx context.Context, offset, limit int, workspaceID *int64) ([]entity.Order, error)
+	Count(ctx context.Context, workspaceID *int64) (int, error)
 	Update(ctx context.Context, id int64, o *entity.Order) error
 	Delete(ctx context.Context, id int64) error
 	CreateItem(ctx context.Context, item *entity.OrderItem) error
@@ -90,6 +90,7 @@ func (s *Service) Create(ctx context.Context, req *dto.CreateOrderRequest) (*ent
 	now := time.Now().UTC()
 	o := &entity.Order{
 		OrderCode:          req.OrderCode,
+		SenderWorkspaceID:  req.SenderWorkspaceID,
 		SenderName:         req.SenderName,
 		SenderPhone:        req.SenderPhone,
 		SenderAddress:      req.SenderAddress,
@@ -151,12 +152,12 @@ func (s *Service) GetItems(ctx context.Context, orderID int64) ([]entity.OrderIt
 	return s.repo.GetItemsByOrder(ctx, orderID)
 }
 
-func (s *Service) List(ctx context.Context, offset, limit int) ([]entity.Order, int, error) {
-	orders, err := s.repo.List(ctx, offset, limit)
+func (s *Service) List(ctx context.Context, offset, limit int, workspaceID *int64) ([]entity.Order, int, error) {
+	orders, err := s.repo.List(ctx, offset, limit, workspaceID)
 	if err != nil {
 		return nil, 0, err
 	}
-	count, err := s.repo.Count(ctx)
+	count, err := s.repo.Count(ctx, workspaceID)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -474,6 +474,8 @@ definitions:
         type: string
       sender_ward:
         type: string
+      sender_workspace_id:
+        type: integer
       status:
         enum:
         - PENDING
@@ -571,6 +573,8 @@ definitions:
         type: string
       sender_ward:
         type: string
+      sender_workspace_id:
+        type: integer
       status:
         type: string
       updated_at:
@@ -2119,6 +2123,10 @@ paths:
         description: Max items per page
         in: query
         name: limit
+        type: integer
+      - description: Filter by sender workspace ID (chỉ trả đơn của workspace đó)
+        in: query
+        name: workspace_id
         type: integer
       produces:
       - application/json

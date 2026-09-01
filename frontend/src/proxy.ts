@@ -7,6 +7,7 @@ import { isSystemAdmin, type JwtUser } from "@/lib/permissions";
 const AUTH_COOKIE_NAME = "slh_access_token";
 const ADMIN_PREFIX = "/admin";
 const ADMIN_ROUTES = ["/admin", "/admin/users", "/admin/warehouses"];
+const ADMIN_WORKSPACE_LOGISTICS_RE = /^\/admin\/logistics($|\/)/;
 
 function getToken(request: NextRequest): string | null {
   return request.cookies.get(AUTH_COOKIE_NAME)?.value ?? null;
@@ -33,10 +34,12 @@ function hasAdminRole(request: NextRequest): boolean {
 }
 
 function isAdminRoute(pathname: string): boolean {
-  return ADMIN_ROUTES.some((route) =>
-    route === "/admin"
-      ? pathname === route
-      : pathname === route || pathname.startsWith(`${route}/`)
+  return (
+    ADMIN_ROUTES.some((route) =>
+      route === "/admin"
+        ? pathname === route
+        : pathname === route || pathname.startsWith(`${route}/`)
+    ) || ADMIN_WORKSPACE_LOGISTICS_RE.test(pathname)
   );
 }
 

@@ -5,6 +5,7 @@ import "time"
 type Order struct {
 	ID                 int64     `json:"id" db:"id"`
 	OrderCode          string    `json:"order_code" db:"order_code"`
+	SenderWorkspaceID  *int64    `json:"sender_workspace_id" db:"sender_workspace_id"`
 	SenderName         string    `json:"sender_name" db:"sender_name"`
 	SenderPhone        string    `json:"sender_phone" db:"sender_phone"`
 	SenderAddress      string    `json:"sender_address" db:"sender_address"`

@@ -4,11 +4,13 @@ import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  Car01Icon,
-  DashboardSquare01Icon,
+  AlertCircleIcon,
+  BankIcon,
+  Invoice01Icon,
+  KeyIcon,
   Location01Icon,
-  TruckIcon,
-  UserCircleIcon,
+  Store01Icon,
+  WalletIcon,
 } from "@hugeicons/core-free-icons"
 
 import { cn } from "@/lib/utils"
@@ -16,7 +18,7 @@ import { cn } from "@/lib/utils"
 type NavItem = {
   label: string
   href: string
-  icon: typeof DashboardSquare01Icon
+  icon: typeof Invoice01Icon
 }
 
 type NavSection = {
@@ -26,24 +28,26 @@ type NavSection = {
 
 const sections: NavSection[] = [
   {
-    label: "Điều hành vận tải",
+    label: "Quản lý Vận đơn",
     items: [
-      { label: "Tổng quan", href: "/logistics", icon: DashboardSquare01Icon },
-      { label: "Theo dõi Đơn hàng", href: "/logistics/tracking", icon: Location01Icon },
-      { label: "Chuyến xe", href: "/logistics/trips", icon: TruckIcon },
+      { label: "Danh sách đơn hàng", href: "/logistic/orders", icon: Invoice01Icon },
+      { label: "Tra cứu hành trình", href: "/tracking", icon: Location01Icon },
+      { label: "Xử lý sự cố", href: "/incidents", icon: AlertCircleIcon },
     ],
   },
   {
-    label: "Đội xe & Tài xế",
+    label: "Tài chính & COD",
     items: [
-      { label: "Phương tiện", href: "/logistics/vehicles", icon: Car01Icon },
-      { label: "Tài xế", href: "/logistics/drivers", icon: UserCircleIcon },
+      { label: "Ví tiền thu hộ COD", href: "/cod-wallet", icon: WalletIcon },
+      { label: "Lịch sử cước phí & Báo cáo đối soát", href: "/billing", icon: BankIcon },
     ],
   },
   {
-    // Nhóm trống — chưa có nội dung; bị ẩn ở render (khung cho tính năng tương lai).
-    label: "Tích hợp & Tối ưu",
-    items: [],
+    label: "Cài đặt Cửa hàng",
+    items: [
+      { label: "Địa chỉ lấy hàng", href: "/settings/pickup", icon: Store01Icon },
+      { label: "Thông tin tài khoản & Kết nối API", href: "/settings/api", icon: KeyIcon },
+    ],
   },
 ]
 
