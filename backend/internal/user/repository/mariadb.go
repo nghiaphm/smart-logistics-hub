@@ -67,8 +67,8 @@ func (r *Repository) GetByUsername(ctx context.Context, username string) (*entit
 }
 
 // GetByKeycloakSub tra user theo keycloak_sub (JWT "sub"). Lưu ý WN-012:
-// nhiều user chưa link Keycloak có keycloak_sub = '' — gọi với sub rỗng sẽ
-// trả ErrNotFound (không khớp hàng '' nào có ý nghĩa).
+// nhiều user chưa link Keycloak có keycloak_sub = ” — gọi với sub rỗng sẽ
+// trả ErrNotFound (không khớp hàng ” nào có ý nghĩa).
 func (r *Repository) GetByKeycloakSub(ctx context.Context, sub string) (*entity.User, error) {
 	query := `SELECT ` + userColumns + ` FROM users WHERE keycloak_sub = ?`
 	u := &entity.User{}

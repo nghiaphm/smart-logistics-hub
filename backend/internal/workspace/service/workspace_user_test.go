@@ -12,9 +12,9 @@ import (
 )
 
 type mockMemberRepo struct {
-	upsertFn        func(ctx context.Context, workspaceID, userID int64, isAdmin bool, actorID *int64) error
-	getByFn         func(ctx context.Context, workspaceID, userID int64) (*wksentity.WorkspaceUser, error)
-	isAdminFn       func(ctx context.Context, userID, workspaceID int64) (bool, error)
+	upsertFn  func(ctx context.Context, workspaceID, userID int64, isAdmin bool, actorID *int64) error
+	getByFn   func(ctx context.Context, workspaceID, userID int64) (*wksentity.WorkspaceUser, error)
+	isAdminFn func(ctx context.Context, userID, workspaceID int64) (bool, error)
 }
 
 func (m *mockMemberRepo) Upsert(ctx context.Context, workspaceID, userID int64, isAdmin bool, actorID *int64) error {
@@ -50,8 +50,8 @@ func (m *mockWorkspaceLookup) GetByID(ctx context.Context, id int64) (*wksentity
 }
 
 type mockUserLookup struct {
-	getByIDFn     func(ctx context.Context, id int64) (*userentity.User, error)
-	getBySubFn    func(ctx context.Context, sub string) (*userentity.User, error)
+	getByIDFn  func(ctx context.Context, id int64) (*userentity.User, error)
+	getBySubFn func(ctx context.Context, sub string) (*userentity.User, error)
 }
 
 func (m *mockUserLookup) GetByID(ctx context.Context, id int64) (*userentity.User, error) {
@@ -83,7 +83,7 @@ func TestSetIsAdminGrantsAdmin(t *testing.T) {
 		return &wksentity.Workspace{ID: id}, nil
 	}}
 	users := &mockUserLookup{
-		getByIDFn: func(ctx context.Context, id int64) (*userentity.User, error) { return &userentity.User{ID: id}, nil },
+		getByIDFn:  func(ctx context.Context, id int64) (*userentity.User, error) { return &userentity.User{ID: id}, nil },
 		getBySubFn: func(ctx context.Context, sub string) (*userentity.User, error) { return &userentity.User{ID: 42}, nil },
 	}
 	svc := newTestMembership(member, ws, users)
