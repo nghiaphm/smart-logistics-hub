@@ -1239,6 +1239,11 @@ definitions:
       total:
         type: integer
     type: object
+  my-web-app_com_smart-logistic-hub_internal_workspace_dto.SetMemberAdminRequest:
+    properties:
+      is_admin:
+        type: boolean
+    type: object
   my-web-app_com_smart-logistic-hub_internal_workspace_dto.UpdateWorkspaceRequest:
     properties:
       description:
@@ -1266,6 +1271,27 @@ definitions:
         type: string
       workspace_code:
         type: string
+    type: object
+  my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceUserResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_admin:
+        type: boolean
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+      user_id:
+        type: integer
+      workspace_id:
+        type: integer
     type: object
 host: localhost:8000
 info:
@@ -3554,6 +3580,50 @@ paths:
       security:
       - BearerAuth: []
       summary: Update a workspace
+      tags:
+      - Workspaces
+  /workspaces/{id}/members/{user_id}:
+    put:
+      consumes:
+      - application/json
+      description: Upsert membership (workspace_id, user_id) and set is_admin.
+      parameters:
+      - description: Workspace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User ID (users.id)
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - description: is_admin flag
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.SetMemberAdminRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Set / unset a user as admin of a workspace
       tags:
       - Workspaces
 securityDefinitions:

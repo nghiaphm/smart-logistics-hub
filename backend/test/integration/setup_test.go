@@ -65,11 +65,25 @@ func applyMigrations(db *sql.DB) error {
 	vehiclesPath := filepath.Join("..", "..", "migrations", "000008_vehicles.up.sql")
 	orderWorkspacePath := filepath.Join("..", "..", "migrations", "000009_order_sender_workspace.up.sql")
 	workspacesPath := filepath.Join("..", "..", "migrations", "000002_workspaces.up.sql")
+	usersPath := filepath.Join("..", "..", "migrations", "000004_users.up.sql")
+	workspaceMembershipPath := filepath.Join("..", "..", "migrations", "000012_workspace_membership.up.sql")
 
 	// Reset: migration 000001 down chỉ drop các bảng gốc — bảng tạo bởi
 	// migration sau phải drop riêng ở đây (nếu không, chạy lần 2 sẽ lỗi
 	// "table already exists"). Thêm migration tạo bảng mới nào sau này cũng
 	// phải bổ sung down file tương ứng vào reset này.
+	// workspace_users: KHÔNG chạy cả down file 000012 (phần ALTER workspaces
+	// sẽ fail "column not exists" trên DB mới) — chỉ cần drop bảng, vì
+	// workspaces được drop nguyên bảng ở dưới (cột mới mất theo bảng).
+	// BẬT FOREIGN_KEY_CHECKS=0: thứ tự drop giữa các bảng có FK chéo nhau
+	// (VD orders FK → workspaces từ 000009) không còn quan trọng.
+	if _, err := db.Exec("SET FOREIGN_KEY_CHECKS=0"); err != nil {
+		return fmt.Errorf("disable FK checks for reset: %w", err)
+	}
+	if _, err := db.Exec("DROP TABLE IF EXISTS workspace_users"); err != nil {
+		return fmt.Errorf("reset workspace_users migration: %w", err)
+	}
+
 	vehiclesDownContent, err := os.ReadFile(vehiclesDownPath)
 	if err != nil {
 		return fmt.Errorf("read vehicles down migration file: %w", err)
@@ -78,9 +92,12 @@ func applyMigrations(db *sql.DB) error {
 		return fmt.Errorf("reset vehicles migration: %w", err)
 	}
 
-	// workspaces (000002) không có down file và không thuộc 000001 — phải drop
-	// riêng ở đây (nếu không, chạy lần 2 lỗi "table already exists"). Cần có
-	// bảng này vì 000009 (orders.sender_workspace_id) FK → workspaces.id.
+	// workspaces (000002) và users (000004) không có down file và không thuộc
+	// 000001 — phải drop riêng ở đây (nếu không, chạy lần 2 lỗi "table already
+	// exists"). workspace_users đã drop ở trên (FK → workspaces/users).
+	if _, err := db.Exec("DROP TABLE IF EXISTS users"); err != nil {
+		return fmt.Errorf("reset users migration: %w", err)
+	}
 	if _, err := db.Exec("DROP TABLE IF EXISTS workspaces"); err != nil {
 		return fmt.Errorf("reset workspaces migration: %w", err)
 	}
@@ -94,6 +111,9 @@ func applyMigrations(db *sql.DB) error {
 		if !strings.Contains(err.Error(), "Error 1051") {
 			return fmt.Errorf("reset migrations: %w", err)
 		}
+	}
+	if _, err := db.Exec("SET FOREIGN_KEY_CHECKS=1"); err != nil {
+		return fmt.Errorf("enable FK checks after reset: %w", err)
 	}
 
 	content, err := os.ReadFile(upPath)
@@ -110,6 +130,14 @@ func applyMigrations(db *sql.DB) error {
 	}
 	if _, err := db.Exec(string(workspacesContent)); err != nil {
 		return fmt.Errorf("apply workspaces migration: %w", err)
+	}
+
+	usersContent, err := os.ReadFile(usersPath)
+	if err != nil {
+		return fmt.Errorf("read users migration file: %w", err)
+	}
+	if _, err := db.Exec(string(usersContent)); err != nil {
+		return fmt.Errorf("apply users migration: %w", err)
 	}
 
 	orderIDContent, err := os.ReadFile(orderIDPath)
@@ -135,6 +163,14 @@ func applyMigrations(db *sql.DB) error {
 	if _, err := db.Exec(string(orderWorkspaceContent)); err != nil {
 		return fmt.Errorf("apply order sender_workspace migration: %w", err)
 	}
+
+	workspaceMembershipContent, err := os.ReadFile(workspaceMembershipPath)
+	if err != nil {
+		return fmt.Errorf("read workspace_membership migration file: %w", err)
+	}
+	if _, err := db.Exec(string(workspaceMembershipContent)); err != nil {
+		return fmt.Errorf("apply workspace_membership migration: %w", err)
+	}
 	return nil
 }
 
@@ -152,6 +188,9 @@ func truncateTables(t *testing.T) {
 		t.Fatalf("disable FK checks: %v", err)
 	}
 	tables := []string{
+		"workspace_users",
+		"users",
+		"workspaces",
 		"tracking_events",
 		"order_items",
 		"orders",
