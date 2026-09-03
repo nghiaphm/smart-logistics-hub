@@ -3562,6 +3562,73 @@
                     }
                 }
             }
+        },
+        "/workspaces/{id}/members/{user_id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upsert membership (workspace_id, user_id) and set is_admin.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Workspaces"
+                ],
+                "summary": "Set / unset a user as admin of a workspace",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Workspace ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "User ID (users.id)",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "is_admin flag",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.SetMemberAdminRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -5427,6 +5494,14 @@
                 }
             }
         },
+        "my-web-app_com_smart-logistic-hub_internal_workspace_dto.SetMemberAdminRequest": {
+            "type": "object",
+            "properties": {
+                "is_admin": {
+                    "type": "boolean"
+                }
+            }
+        },
         "my-web-app_com_smart-logistic-hub_internal_workspace_dto.UpdateWorkspaceRequest": {
             "type": "object",
             "properties": {
@@ -5467,6 +5542,38 @@
                 },
                 "workspace_code": {
                     "type": "string"
+                }
+            }
+        },
+        "my-web-app_com_smart-logistic-hub_internal_workspace_dto.WorkspaceUserResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "workspace_id": {
+                    "type": "integer"
                 }
             }
         }

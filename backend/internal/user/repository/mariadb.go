@@ -66,6 +66,24 @@ func (r *Repository) GetByUsername(ctx context.Context, username string) (*entit
 	return u, nil
 }
 
+// GetByKeycloakSub tra user theo keycloak_sub (JWT "sub"). Lưu ý WN-012:
+// nhiều user chưa link Keycloak có keycloak_sub = ” — gọi với sub rỗng sẽ
+// trả ErrNotFound (không khớp hàng ” nào có ý nghĩa).
+func (r *Repository) GetByKeycloakSub(ctx context.Context, sub string) (*entity.User, error) {
+	query := `SELECT ` + userColumns + ` FROM users WHERE keycloak_sub = ?`
+	u := &entity.User{}
+	err := r.db.QueryRowContext(ctx, query, sub).Scan(
+		&u.ID, &u.KeycloakSub, &u.Username, &u.FullName, &u.Email, &u.Phone, &u.Role, &u.IsActive, &u.CreatedAt, &u.UpdatedAt, &u.CreatedBy,
+	)
+	if err == sql.ErrNoRows {
+		return nil, apierrors.ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get user by keycloak sub: %w", err)
+	}
+	return u, nil
+}
+
 func (r *Repository) List(ctx context.Context, offset, limit int) ([]entity.User, error) {
 	query := `SELECT ` + userColumns + ` FROM users ORDER BY id DESC LIMIT ? OFFSET ?`
 	rows, err := r.db.QueryContext(ctx, query, limit, offset)
